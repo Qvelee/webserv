@@ -1,2 +1,6 @@
 *.[oa]
 *test*
+/cmake-build-debug/
+/CMakeLists.txt
+/text
+/.idea/
