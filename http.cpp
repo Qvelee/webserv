@@ -1,20 +1,9 @@
 #include "http.hpp"
 #include <cstring>
+#include "utility_http.hpp"
+#include "error_http.hpp"
 
-namespace http
-{
-	void error(int code) {
-		throw code;
-	}
-
-	message::e_method str_to_method(char *, size_t n)
-	{
-		if (n > 5)
-			error(501);
-		message::e_method method = message::GET;
-		return method;
-	}
-
+namespace http {
 	message::message(char *bytes)
 	{
 		parse_start_line(bytes);
@@ -25,31 +14,43 @@ namespace http
 	void message::parse_start_line(char *&bytes)
 	{
 		char *begin_word = bytes;
-		char *end_word = bytes;
 
-		bytes = strstr(bytes, CRLF);
-		if (bytes == NULL)
+		while (istchar(*bytes)) {
+			++bytes;
+		}
+
+		start_line_.method_ = str_to_method(begin_word, bytes - begin_word);
+		if (*bytes != *SP)
 			error(400);
 
-		end_word = strchr(begin_word, *SP);
-		if (end_word == NULL || end_word >= bytes)
-			error(400);
-		start_line_.method_ = str_to_method(begin_word, end_word - begin_word);
-		begin_word = end_word + 1;
+		++bytes;
+		begin_word = bytes;
 
-		end_word = strchr(begin_word, *SP);
-		if (end_word == NULL || end_word >= bytes)
+		while (*bytes != *SP && *bytes != '\0')
+			++bytes;
+		if (*bytes != *SP)
 			error(400);
-		if (end_word - begin_word > 8000 || end_word - begin_word == 0)
-			error(414);
-		start_line_.request_target_.assign(begin_word, end_word - begin_word);
-		begin_word = end_word + 1;
+		start_line_.request_target_.assign(begin_word, bytes - begin_word);
 
-		if (static_cast<size_t>(bytes - begin_word) != strlen("HTTP/x.x"))
+		++bytes;
+		begin_word = bytes;
+		if (strncmp(bytes, "HTTP/", 5) != 0)
 			error(400);
+		bytes += 5;
+		if (!isdigit(*bytes))
+			error(400);
+		++bytes;
+		if (*bytes != '.')
+			error(400);
+		++bytes;
+		if (!isdigit(*bytes))
+			error(400);
+		++bytes;
+
 		start_line_.http_version.assign(begin_word, bytes - begin_word);
-
-		bytes += strlen(CRLF);
+		if (strncmp(bytes, "\r\n", 2) != 0)
+			error(400);
+		bytes += 2;
 	}
 
 	void message::parse_headers(char *&bytes)
