@@ -3,18 +3,11 @@
 #include <cctype>
 
 namespace http {
-	bool	istchar(int c) {
-		return (isalpha(c) || isdigit(c) || c == '!' || c ==  '#' || c ==  '$'
-		|| c ==  '%' || c ==  '&' || c ==  '\'' || c ==  '*' || c ==  '+' ||
-		c ==  '-' || c ==  '.' || c ==  '^' || c ==  '_' || c ==  '`' ||
-		c ==  '|' || c ==  '~');
-	}
-
-	message::e_method str_to_method(char *, size_t n)
+	bool istchar(int c)
 	{
-		if (n > 5)
-			error(501);
-		message::e_method method = message::GET;
-		return method;
+		return (isalpha(c) || isdigit(c) || c == '!' || c == '#' || c == '$'
+				|| c == '%' || c == '&' || c == '\'' || c == '*' || c == '+' ||
+				c == '-' || c == '.' || c == '^' || c == '_' || c == '`' ||
+				c == '|' || c == '~');
 	}
 }

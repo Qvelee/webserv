@@ -28,16 +28,11 @@ namespace http {
 	public:
 		message(char *bytes);
 
-		enum e_method
-		{
-			GET
-		};
-
 
 //	protected:
 		struct request_line
 		{
-			e_method method_;
+			std::string method_;
 			std::string request_target_;
 			std::string http_version;
 

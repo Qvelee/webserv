@@ -15,13 +15,13 @@ namespace http {
 	{
 		char *begin_word = bytes;
 
-		while (istchar(*bytes)) {
+		while (istchar(*bytes))
 			++bytes;
-		}
-
-		start_line_.method_ = str_to_method(begin_word, bytes - begin_word);
+		if (bytes - begin_word > 15)
+			error(501);
 		if (*bytes != *SP)
 			error(400);
+		start_line_.method_.assign(begin_word, bytes - begin_word);
 
 		++bytes;
 		begin_word = bytes;
@@ -30,10 +30,13 @@ namespace http {
 			++bytes;
 		if (*bytes != *SP)
 			error(400);
+		if (bytes - begin_word > 8000)
+			error(414);
 		start_line_.request_target_.assign(begin_word, bytes - begin_word);
 
 		++bytes;
 		begin_word = bytes;
+
 		if (strncmp(bytes, "HTTP/", 5) != 0)
 			error(400);
 		bytes += 5;
@@ -56,37 +59,41 @@ namespace http {
 	void message::parse_headers(char *&bytes)
 	{
 		char		*begin_word = bytes;
-		char		*end_word = bytes;
 		std::string	field_name;
 		std::string field_value;
 
-		if (*bytes == ' ')
+		if (*bytes == *SP)
 			error(400);
 
-		while (strncmp(CRLF, begin_word, 3) != 0)
+		while (strncmp(CRLF, bytes, 2) != 0)
 		{
-			end_word = strchr(begin_word, ':');
-			if (end_word == NULL)
+			while (istchar(*bytes))
+				++bytes;
+			if (*bytes != ':')
 				error(400);
-			if (isblank(*(end_word - 1)))
-				error(400);
-			field_name.assign(begin_word, end_word - begin_word);
+			field_name.assign(begin_word, bytes - begin_word);
+			++bytes;
 
-			begin_word = end_word + 1;
-			while (isblank(*begin_word))
-				++begin_word;
+			while (isblank(*bytes))
+				++bytes;
+			begin_word = bytes;
+
 			do
 			{
-				end_word = strstr(begin_word, CRLF);
-				if (end_word == NULL)
+				bytes = begin_word;
+				while (!(*bytes >= 0 && *bytes <= 127) || isgraph(*bytes) ||
+				isblank(*bytes))
+					++bytes;
+				if (strncmp(CRLF, bytes, 2) != 0)
 					error(400);
-				field_value.append(begin_word, end_word - begin_word);
-				begin_word = end_word + 2;
+				field_value.append(begin_word, bytes - begin_word);
+				field_value.append(SP);
+				begin_word = bytes + 2;
 				while (isblank(*begin_word))
 					++begin_word;
-			} while (isblank(*(end_word + 2)));
+			} while (isblank(*(bytes + 2)));
 
-			begin_word = end_word + 2;
+			bytes = begin_word;
 			while (isblank(*field_value.rbegin()))
 				field_value.erase(field_value.end() - 1);
 
@@ -94,6 +101,6 @@ namespace http {
 			field_value.clear();
 			field_name.clear();
 		}
-		bytes = begin_word;
+		bytes += 2;
 	}
 }
