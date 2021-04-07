@@ -2,7 +2,10 @@
 #define WEBSERV_UTILITY_HTTP_HPP
 
 namespace http {
-	bool istchar(int c);
+
+bool istchar(int c);
+void tolower(std::string &str);
+
 }
 
 #endif

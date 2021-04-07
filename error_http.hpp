@@ -2,7 +2,9 @@
 #define WEBSERV_ERROR_HTTP_HPP
 
 namespace http {
-	void error(int code);
+
+void error(int code);
+
 }
 
 #endif
