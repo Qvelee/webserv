@@ -70,7 +70,7 @@ message::message(char *bytes) {
   parse_request_line(bytes);
   parse_headers(bytes);
   header_analysis();
-//  parse_message_body(bytes);
+  calculate_length_message();
 }
 
 /*
@@ -223,11 +223,13 @@ void message::content_length() {
   ss >> message_info_.content_length_;
   if (ss.fail())
 	error(400);
+  if (message_info_.content_length_ < 0)
+	error(400);
 }
 
 void message::check_valid_name(const std::string& name) const {
   if (transfer_coding_registration.count(name) == 0)
-	error(400);
+	error(501);
 }
 
 /*
@@ -336,4 +338,22 @@ void message::transfer_encoding() {
 	tmp.transfer_parameter_.value_.clear();
   }
 }
+
+void message::calculate_length_message() {
+  if (headers_.count("transfer-encoding") == 1 &&
+  headers_.count("content-length") == 1)
+	error(400);
+  if (headers_.count("transfer-encoding") == 1) {
+    if (message_info_.transfer_coding_.back().token_ == "chunked") {
+	  message_info_.length_ = "chunked";
+	} else {
+	  error(400);
+    }
+  } else if (headers_.count("content-length") == 1) {
+    message_info_.length_ = "content-length";
+  } else {
+    message_info_.length_ = "empty";
+  }
+}
+
 }

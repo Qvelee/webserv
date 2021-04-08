@@ -61,11 +61,14 @@ class message {
   struct message_info {
     std::size_t content_length_;
     std::vector<transfer_extension> transfer_coding_;
+	std::string length_;
 
-    bool operator==(const http::message::message_info &rhs) const {
+	bool operator==(const http::message::message_info &rhs) const {
       if (content_length_ != rhs.content_length_)
 		return false;
       if (transfer_coding_ != rhs.transfer_coding_)
+		return false;
+	  if (length_ != rhs.length_)
 		return false;
 	  return true;
     }
@@ -75,7 +78,7 @@ class message {
   void parse_request_line(char *&bytes);
   void parse_headers(char *&bytes);
   void header_analysis();
-  void parse_message_body(char *&bytes);
+  void calculate_length_message();
 
   // header_field_handlers
   static const std::map<std::string, int> transfer_coding_registration;
@@ -84,7 +87,7 @@ class message {
   void transfer_encoding();
 
 // private:
-  message();
+  message() {}
 
   request_line							start_line_;
   std::map<std::string, std::string>	headers_;
