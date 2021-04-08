@@ -11,6 +11,12 @@ bool istchar(int c) {
   c == '.' || c == '^' || c == '_' || c == '`' || c == '|' || c == '~');
 }
 
+bool isqdtext(int c) {
+  return (isalpha(c) || isdigit(c) || c == '!' || c == '#' || c == '$' ||
+	  c == '%' || c == '&' || c == '\'' || c == '*' || c == '+' || c == '-' ||
+	  c == '.' || c == '^' || c == '_' || c == '`' || c == '|' || c == '~');
+}
+
 void tolower(std::string &str) {
   std::string::iterator begin = str.begin();
   std::string::iterator end = str.end();
