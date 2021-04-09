@@ -79,11 +79,16 @@ class message {
   void parse_headers(char *&bytes);
   void header_analysis();
   void calculate_length_message();
+  void read_message_body(char *&bytes);
+
+  std::size_t	read_chunk_size(char *&bytes);
+  void			decoding_chunked(char *&bytes);
 
   // header_field_handlers
   static const std::map<std::string, int> transfer_coding_registration;
+
   void content_length();
-  void check_valid_name(const std::string& name) const;
+  static void validate_transfer_coding(const std::string& name);
   void transfer_encoding();
 
 // private:
@@ -91,7 +96,7 @@ class message {
 
   request_line							start_line_;
   std::map<std::string, std::string>	headers_;
-  char									*message_body_;
+  std::string							decoded_body_;
   message_info							message_info_;
 };
 }

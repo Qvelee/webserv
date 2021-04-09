@@ -6,38 +6,14 @@
 
 namespace http {
 
-//const char* const CR = "\r"; // %x0D
-const char *const CRLF = "\r\n";
 //				  CTL = %x00-1F / %x7F ; isctrl()
 //				  DIGIT = %x30-39 ; 0-9, isdigit()
 const char        DQUOTE = '\"';
 //				  HEXDIG = DIGIT / "A" / "B" / "C" / "D" / "E" / "F" / G" ;
 //				  													isxdigit()
-const char		  HTAB = '\t'; // %x09
-//const char* const LF = "\n"; // %x0A
 //				  LWSP = *(WSP / CRLF WSP);
 //				  OCTET = %x00-FF ; isprint() || iscntrl()
-const char		  SP = ' '; // %x20
 //				  VCHAR = %x21-7E ; isgraph()
-//				  WSP = SP / HTAB ; isblank()
-
-//				  OWS = *(SP / HTAB)
-//				  BWS = OWS
-//				  RWS = 1*(SP/ HTAB)
-
-// token = 1*tchar
-// tchar = "!" / "#" / "$" / "%" / "&" / "’" / "*"
-// / "+" / "-" / "." / "^" / "_" / "‘" / "|" / "~"
-// / DIGIT / ALPHA
-
-// quoted-string = DQUOTE *( qdtext / quoted-pair ) DQUOTE
-// qdtext = HTAB / SP /%x21 / %x23-5B / %x5D-7E / obs-text
-// obs-text = %x80-FF
-
-// comment = "(" *( ctext / quoted-pair / comment ) ")"
-// ctext = HTAB / SP / %x21-27 / %x2A-5B / %x5D-7E / obs-text
-
-//quoted-pair = "\" ( HTAB / SP / VCHAR / obs-text )
 
 // cписки генерировать так
 // 1#elem => elem *(OWS "," OWS elem)
@@ -46,6 +22,15 @@ const char		  SP = ' '; // %x20
 // принимать так
 // #element => [ ( "," / element ) *( OWS "," [ OWS element ] ) ]
 // 1#element => *( "," OWS ) element *( OWS "," [ OWS element ] )
+
+
+
+
+
+
+
+// comment = "(" *( ctext / quoted-pair / comment ) ")"
+// ctext = HTAB / SP / %x21-27 / %x2A-5B / %x5D-7E / obs-text
 
 
 
@@ -63,6 +48,7 @@ const std::map<std::string, int> message::transfer_coding_registration = {
 	{"x-compress", 1},
 	{"x-gzip", 1},
 };
+
 /*
  * HTTP-message = start-line *( header-field CRLF ) CRLF [ message-body ]
  */
@@ -71,78 +57,29 @@ message::message(char *bytes) {
   parse_headers(bytes);
   header_analysis();
   calculate_length_message();
+  read_message_body(bytes);
 }
 
 /*
  * request-line = method SP request-target SP HTTP-version CRLF
  */
 void message::parse_request_line(char *&bytes) {
-  char *begin_word = bytes;
-
-  // method = token
-  while (istchar(*bytes))
-	++bytes;
-  if (bytes == begin_word)
-	error(400);
-  if (bytes - begin_word > 15)
-	error(501);
-  if (*bytes != SP)
-	error(400);
-  start_line_.method_.assign(begin_word, bytes - begin_word);
-
-  // SP
-  ++bytes;
-  begin_word = bytes;
-
-  /*
-   *
-   */
-  while (*bytes != SP && *bytes != '\0')
-	++bytes;
-  if (*bytes != SP)
-	error(400);
-  if (bytes - begin_word > 8000)
-	error(414);
-  start_line_.request_target_.assign(begin_word, bytes - begin_word);
-
-  // SP
-  ++bytes;
-  begin_word = bytes;
-
-  /*
-   * HTTP-version = HTTP-name "/" DIGIT "." DIGIT
-   * HTTP-name = %x48.54.54.50 ; "HTTP", case-sensitive
-   */
-
-  if (strncmp(bytes, "HTTP/", 5) != 0)
-	error(400);
-  bytes += 5;
-  if (!isdigit(*bytes))
-	error(400);
-  ++bytes;
-  if (*bytes != '.')
-	error(400);
-  ++bytes;
-  if (!isdigit(*bytes))
-	error(400);
-  ++bytes;
-  start_line_.http_version.assign(begin_word, bytes - begin_word);
-
-  // CRLF
-  if (strncmp(bytes, "\r\n", 2) != 0)
-	error(400);
-  bytes += 2;
+  //skip first CRLF (3.5)
+  if (strncmp("\r\n", bytes, 2) == 0)
+    bytes += skip_crlf(bytes);
+  bytes += get_token(start_line_.method_, bytes);
+//  validate_method();
+  bytes += skip_space(bytes, SP);
+  bytes += get_request_target(start_line_.request_target_, bytes);
+//  if (bytes - begin_word > 8000)
+//	error(414);
+  bytes += skip_space(bytes, SP);
+  bytes += get_http_version(start_line_.http_version, bytes);
+  bytes += skip_crlf(bytes);
 }
 
 /*
  * header-field = field-name ":" OWS field-value OWS
- *
- * field-name = token
- * field-value = *( field-content / obs-fold )
- * field-content = field-vchar [ 1*( SP / HTAB ) field-vchar ]
- * field-vchar = VCHAR / obs-text
- *
- * obs-fold = CRLF 1*( SP / HTAB )
  */
 void message::parse_headers(char *&bytes) {
   char *begin_word = bytes;
@@ -152,40 +89,37 @@ void message::parse_headers(char *&bytes) {
   if (*bytes == SP)
 	error(400);
 
-  while (strncmp(CRLF, bytes, 2) != 0) {
-	// token
-	while (istchar(*bytes))
-	  ++bytes;
-	if (bytes == begin_word)
-	  error(400);
+  while (strncmp("\r\n", bytes, 2) != 0) {
+    // field-name = token
+	bytes += get_token(field_name, bytes);
+	tolower(field_name);
+
 	if (*bytes != ':')
 	  error(400);
-	field_name.assign(begin_word, bytes - begin_word);
-	tolower(field_name);
-	// ":"
 	++bytes;
 
-	// OWS
-	while (isblank(*bytes))
-	  ++bytes;
+	bytes += skip_space(bytes, OWS);
 	begin_word = bytes;
 
-	// fields-value
+	// field-value = *( field-content / obs-fold )
+	// field-content = field-vchar [ 1*( SP / HTAB ) field-vchar ]
+	// field-vchar = VCHAR / obs-text
+
+	// obs-fold = CRLF 1*( SP / HTAB )
 	do {
 	  bytes = begin_word;
 	  while (*bytes < 0 || isgraph(*bytes) || isblank(*bytes))
 		++bytes;
-	  if (strncmp(CRLF, bytes, 2) != 0)
+	  if (strncmp("\r\n", bytes, 2) != 0)
 		error(400);
 	  field_value.append(begin_word, bytes - begin_word);
-	  field_value.append(1, SP);
+	  field_value.append(1, ' ');
 	  begin_word = bytes + 2;
 	  while (isblank(*begin_word))
 		++begin_word;
 	} while (isblank(*(bytes + 2)));
 
 	bytes = begin_word;
-
 	// OWS
 	while (isblank(*field_value.rbegin()))
 	  field_value.erase(field_value.end() - 1);
@@ -227,7 +161,7 @@ void message::content_length() {
 	error(400);
 }
 
-void message::check_valid_name(const std::string& name) const {
+void message::validate_transfer_coding(const std::string& name) {
   if (transfer_coding_registration.count(name) == 0)
 	error(501);
 }
@@ -242,95 +176,44 @@ void message::transfer_encoding() {
   transfer_extension tmp;
 
   while (begin_word != extension.size()) {
-	// token
-	while (istchar(extension[end_word]) && end_word < extension.size())
-	  ++end_word;
-	if (begin_word == end_word)
-	  error(400);
-	tmp.token_.assign(extension, begin_word, end_word - begin_word);
+	end_word += get_token(tmp.token_, extension.c_str() + begin_word);
 	tolower(tmp.token_);
-	check_valid_name(tmp.token_);
-	begin_word = end_word;
+	validate_transfer_coding(tmp.token_);
 
-	// OWS
-	while (isblank(extension[end_word]) && end_word < extension.size())
-	  ++end_word;
+	end_word += skip_space(extension.c_str() + end_word, OWS);
 
-	// ";"
-	if (end_word != extension.size() && extension[end_word] == ';') {
+	if (extension[end_word] == ';') {
 	  ++end_word;
-	  // OWS
-	  while (isblank(extension[end_word]) && end_word < extension.size())
-		++end_word;
+	  end_word += skip_space(extension.c_str() + end_word, OWS);
 	  /*
 	   * transfer-parameter = token BWS "=" BWS ( token / quoted-string )
-	   *
-	   * quoted-string = DQUOTE *( qdtext / quoted-pair ) DQUOTE
-	   * qdtext = HTAB / SP /%x21 / %x23-5B / %x5D-7E / obs-text
-	   * obs-text = %x80-FF
-	   *
-	   * quoted-pair = "\" ( HTAB / SP / VCHAR / obs-text )
 	   */
 	  begin_word = end_word;
-	  // token
-	  while (istchar(extension[end_word]) && end_word < extension.size())
-		++end_word;
-	  if (begin_word == end_word)
-		error(400);
-	  tmp.transfer_parameter_.name_.assign(extension, begin_word, end_word -
-	  begin_word);
-	  // BWS
-	  while (isblank(extension[end_word]) && end_word < extension.size())
-		++end_word;
-	  // "="
-	  if (end_word >= extension.size() || extension[end_word] != '=')
+	  end_word += get_token(tmp.transfer_parameter_.name_, extension.c_str() +
+	  	begin_word);
+
+	  end_word += skip_space(extension.c_str() + end_word, BWS);
+
+	  if (extension[end_word] != '=')
 		error(400);
 	  ++end_word;
-	  // BWS
-	  while (isblank(extension[end_word]) && end_word < extension.size())
-		++end_word;
+
+	  end_word += skip_space(extension.c_str() + end_word, BWS);
+
 	  begin_word = end_word;
-	  if (begin_word >= extension.size())
-		error(400);
 	  // quoted-string / token
-	  if (extension[end_word] == DQUOTE) {
+	  if (extension[end_word] == '\"') {
 	    ++end_word;
 		++begin_word;
-		while (end_word < extension.size() && (isqdtext(extension[end_word])
-		|| extension[end_word] == '\\')) {
-		  if (extension[end_word] == '\\') {
-		    tmp.transfer_parameter_.value_.append(extension, begin_word,
-											end_word - begin_word);
-		    ++end_word;
-		    if (end_word == extension.size())
-			  error(400);
-		    if (extension[end_word] != HTAB && extension[end_word] != SP &&
-		    !isgraph(extension[end_word]) && extension[end_word] >= 0)
-			  error(400);
-		    tmp.transfer_parameter_.value_.append(1, extension[end_word]);
-		    ++end_word;
-		    begin_word = end_word;
-		  } else {
-			++end_word;
-		  }
-		}
-		if (end_word == extension.size() || extension[end_word] != '"')
-		  error(400);
-		else
-		  tmp.transfer_parameter_.value_.append(extension, begin_word,
-										  end_word - begin_word);
-		++end_word;
-		begin_word = end_word;
+		end_word += get_quoted_string(tmp.transfer_parameter_.value_,
+								extension.c_str() + begin_word);
 	  } else {
-	    while (istchar(extension[end_word]) && end_word < extension.size())
-		  ++end_word;
-	    tmp.transfer_parameter_.value_.assign(extension, begin_word, end_word
-	    - begin_word);
+	    end_word += get_token(tmp.transfer_parameter_.value_, extension.c_str
+	    () + begin_word);
 	  }
 	}
 	message_info_.transfer_coding_.push_back(tmp);
-	while (end_word != extension.size() && (extension[end_word] == ',' ||
-	isblank(extension[end_word])))
+	while (extension[end_word] == ',' || isblank(extension[end_word]))
 	  ++end_word;
 	begin_word = end_word;
 	tmp.token_.clear();
@@ -354,6 +237,91 @@ void message::calculate_length_message() {
   } else {
     message_info_.length_ = "empty";
   }
+}
+
+void message::read_message_body(char *&bytes) {
+  if (message_info_.length_ == "chunked")
+    decoding_chunked(bytes);
+}
+
+/*
+ * chunked-body = *chunk
+ * last-chunk
+ * trailer-part
+ * CRLF
+ *
+ * chunk = chunk-size [ chunk-ext ] CRLF
+ * chunk-data CRLF
+ * last-chunk = 1*("0") [ chunk-ext ] CRLF
+ *
+ * chunk-data = 1*OCTET ; a sequence of chunk-size octets
+ *
+ * trailer-part = *( header-field CRLF )
+ */
+void message::decoding_chunked(char *&bytes) {
+  std::size_t chunk_size;
+
+  // read chunk-size, chunk-ext(if any), and CRLF
+  chunk_size = read_chunk_size(bytes);
+
+  //read chunk-data
+  while (chunk_size > 0) {
+    //read chunk-data and CRLF
+    if (strlen(bytes) < chunk_size)
+	  error(400);
+    decoded_body_.append(bytes, chunk_size);
+    bytes += chunk_size;
+    if (strncmp("\r\n", bytes, 2) != 0)
+	  error(400);
+    chunk_size = read_chunk_size(bytes);
+  }
+
+  //read trailer field
+  parse_headers(bytes);
+}
+
+/*
+ * chunk-size = 1*HEXDIG
+ *
+ * chunk-ext = *( ";" chunk-ext-name [ "=" chunk-ext-val ] )
+ * chunk-ext-name = token
+ * chunk-ext-val = token / quoted-string
+ */
+std::size_t message::read_chunk_size(char *&bytes) {
+  char *end_word = bytes;
+  std::size_t chunk_size;
+  std::string ext_name;
+  std::string ext_val;
+
+  //read chunk-size
+  while (isxdigit(*end_word))
+	++end_word;
+  if (end_word == bytes)
+	error(400);
+  std::stringstream ss(std::string(bytes, end_word - bytes));
+  ss >> std::hex >> chunk_size;
+  if (ss.fail())
+	error(400);
+  bytes = end_word;
+
+  // chunk-ext(if any)
+  while (*bytes == ';') {
+	++bytes;
+	bytes += get_token(ext_name, bytes);
+	if (*bytes == '=') {
+	  ++bytes;
+	  if (*bytes == DQUOTE) {
+		++bytes;
+		bytes += get_quoted_string(ext_val, bytes);
+	  }
+	} else {
+	  bytes += get_token(ext_name, bytes);
+	}
+  }
+
+  bytes += skip_crlf(bytes);
+
+  return chunk_size;
 }
 
 }
