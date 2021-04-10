@@ -6,7 +6,7 @@ TEST(TestMessageBody, CalculateLength1) {
 	   "\r\n";
   char *ptr = message;
   http::message current;
-  current.parse_headers(ptr);
+  current.parse_headers(current.headers_, ptr);
   current.header_analysis();
   current.calculate_length_message();
   ASSERT_EQ(current.message_info_.length_, "chunked");
@@ -17,7 +17,7 @@ TEST(TestMessageBody, CalculateLength2) {
 				   "\r\n";
   char *ptr = message;
   http::message current;
-  current.parse_headers(ptr);
+  current.parse_headers(current.headers_, ptr);
   current.header_analysis();
   ASSERT_ANY_THROW(current.calculate_length_message());
 }
@@ -28,7 +28,7 @@ TEST(TestMessageBody, CalculateLength3) {
 				   "\r\n";
   char *ptr = message;
   http::message current;
-  current.parse_headers(ptr);
+  current.parse_headers(current.headers_, ptr);
   current.header_analysis();
   ASSERT_ANY_THROW(current.calculate_length_message());
 }
@@ -38,7 +38,7 @@ TEST(TestMessageBody, CalculateLength4) {
 				   "\r\n";
   char *ptr = message;
   http::message current;
-  current.parse_headers(ptr);
+  current.parse_headers(current.headers_, ptr);
   current.header_analysis();
   current.calculate_length_message();
   ASSERT_EQ(current.message_info_.length_, "content-length");
@@ -48,7 +48,7 @@ TEST(TestMessageBody, CalculateLength5) {
   char message[] = "\r\n";
   char *ptr = message;
   http::message current;
-  current.parse_headers(ptr);
+  current.parse_headers(current.headers_, ptr);
   current.header_analysis();
   current.calculate_length_message();
   ASSERT_EQ(current.message_info_.length_, "empty");

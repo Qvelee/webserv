@@ -52,9 +52,9 @@ const std::map<std::string, int> message::transfer_coding_registration = {
 /*
  * HTTP-message = start-line *( header-field CRLF ) CRLF [ message-body ]
  */
-message::message(char *bytes) {
-  parse_request_line(bytes);
-  parse_headers(bytes);
+message::message(const char *bytes) {
+  bytes += parse_request_line(start_line_, bytes);
+  bytes += parse_headers(headers_, bytes);
   header_analysis();
   calculate_length_message();
   read_message_body(bytes);
@@ -63,74 +63,84 @@ message::message(char *bytes) {
 /*
  * request-line = method SP request-target SP HTTP-version CRLF
  */
-void message::parse_request_line(char *&bytes) {
+std::size_t message::parse_request_line(request_line &rl, const char *bytes) {
+  std::size_t size = 0;
   //skip first CRLF (3.5)
-  if (strncmp("\r\n", bytes, 2) == 0)
-    bytes += skip_crlf(bytes);
-  bytes += get_token(start_line_.method_, bytes);
+  if (strncmp("\r\n", bytes + size, 2) == 0)
+    size += skip_crlf(bytes);
+  size += get_token(rl.method_, bytes + size);
+//  validate_method();  501
+  size += skip_space(bytes + size, SP);
+  size += get_request_target(rl.request_target_, bytes + size);
 //  validate_method();
-  bytes += skip_space(bytes, SP);
-  bytes += get_request_target(start_line_.request_target_, bytes);
 //  if (bytes - begin_word > 8000)
 //	error(414);
-  bytes += skip_space(bytes, SP);
-  bytes += get_http_version(start_line_.http_version, bytes);
-  bytes += skip_crlf(bytes);
+  size += skip_space(bytes + size, SP);
+  size += get_http_version(rl.http_version, bytes + size);
+  size += skip_crlf(bytes + size);
+  return size;
 }
 
 /*
  * header-field = field-name ":" OWS field-value OWS
  */
-void message::parse_headers(char *&bytes) {
-  char *begin_word = bytes;
+std::size_t message::parse_headers(std::map<std::string, std::string> &dst,
+							const char *bytes) {
+  std::size_t size = 0;
   std::string field_name;
   std::string field_value;
 
-  if (*bytes == SP)
+  if (*(bytes + size) == SP)
 	error(400);
 
-  while (strncmp("\r\n", bytes, 2) != 0) {
+  while (strncmp("\r\n", bytes + size, 2) != 0) {
     // field-name = token
-	bytes += get_token(field_name, bytes);
+	size += get_token(field_name, bytes + size);
 	tolower(field_name);
 
-	if (*bytes != ':')
+	if (*(bytes + size) != ':')
 	  error(400);
-	++bytes;
+	++size;
 
-	bytes += skip_space(bytes, OWS);
-	begin_word = bytes;
+	size += skip_space(bytes + size, OWS);
 
 	// field-value = *( field-content / obs-fold )
 	// field-content = field-vchar [ 1*( SP / HTAB ) field-vchar ]
 	// field-vchar = VCHAR / obs-text
 
 	// obs-fold = CRLF 1*( SP / HTAB )
+	bool obs_fold = false;
 	do {
-	  bytes = begin_word;
-	  while (*bytes < 0 || isgraph(*bytes) || isblank(*bytes))
-		++bytes;
-	  if (strncmp("\r\n", bytes, 2) != 0)
+	  std::size_t local_size = 0;
+	  while (*(bytes + size + local_size) < 0 || isgraph(*(bytes + size + local_size)
+	  ) || isblank(*(bytes + size + local_size)))
+		++local_size;
+	  if (strncmp("\r\n", bytes + size + local_size, 2) != 0)
 		error(400);
-	  field_value.append(begin_word, bytes - begin_word);
+	  field_value.append(bytes + size, local_size);
 	  field_value.append(1, ' ');
-	  begin_word = bytes + 2;
-	  while (isblank(*begin_word))
-		++begin_word;
-	} while (isblank(*(bytes + 2)));
+	  size += local_size;
+	  size += 2;
+	  if (isblank(*(bytes + size)))
+	    obs_fold = true;
+	  else
+	    obs_fold = false;
+	  while (isblank(*(bytes + size)))
+	    ++size;
+	} while (obs_fold);
 
-	bytes = begin_word;
 	// OWS
 	while (isblank(*field_value.rbegin()))
 	  field_value.erase(field_value.end() - 1);
 
-	if (headers_.count(field_name) == 1)
-	  headers_[field_name].append(",");
-	headers_[field_name].append(field_value);
+	if (dst.count(field_name) == 1)
+	  dst[field_name].append(",");
+	dst[field_name].append(field_value);
 	field_value.clear();
 	field_name.clear();
   }
-  bytes += 2;
+  size += 2;
+  return size;
 }
 
 void message::header_analysis() {
@@ -239,7 +249,7 @@ void message::calculate_length_message() {
   }
 }
 
-void message::read_message_body(char *&bytes) {
+void message::read_message_body(const char *bytes) {
   if (message_info_.length_ == "chunked")
     decoding_chunked(bytes);
 }
@@ -258,7 +268,7 @@ void message::read_message_body(char *&bytes) {
  *
  * trailer-part = *( header-field CRLF )
  */
-void message::decoding_chunked(char *&bytes) {
+void message::decoding_chunked(const char *bytes) {
   std::size_t chunk_size;
 
   // read chunk-size, chunk-ext(if any), and CRLF
@@ -277,7 +287,8 @@ void message::decoding_chunked(char *&bytes) {
   }
 
   //read trailer field
-  parse_headers(bytes);
+  std::map<std::string, std::string> trailer_headers;
+  parse_headers(trailer_headers, bytes);
 }
 
 /*
@@ -287,8 +298,8 @@ void message::decoding_chunked(char *&bytes) {
  * chunk-ext-name = token
  * chunk-ext-val = token / quoted-string
  */
-std::size_t message::read_chunk_size(char *&bytes) {
-  char *end_word = bytes;
+std::size_t message::read_chunk_size(const char *bytes) {
+  const char *end_word = bytes;
   std::size_t chunk_size;
   std::string ext_name;
   std::string ext_val;
@@ -317,6 +328,8 @@ std::size_t message::read_chunk_size(char *&bytes) {
 	} else {
 	  bytes += get_token(ext_name, bytes);
 	}
+	ext_name.clear();
+	ext_val.clear();
   }
 
   bytes += skip_crlf(bytes);

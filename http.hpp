@@ -10,7 +10,7 @@ namespace http {
 
 class message {
  public:
-  message(char *bytes);
+  message(const char *bytes);
 // protected:
   struct request_line {
     std::string method_;
@@ -75,14 +75,14 @@ class message {
   };
 
   static const std::map<std::string, void (message::*)()> header_field_handlers;
-  void parse_request_line(char *&bytes);
-  void parse_headers(char *&bytes);
+  static std::size_t parse_request_line(request_line &rl, const char *bytes);
+  static std::size_t parse_headers(std::map<std::string, std::string>& dst, const char *bytes);
   void header_analysis();
   void calculate_length_message();
-  void read_message_body(char *&bytes);
+  void read_message_body(const char *bytes);
 
-  std::size_t	read_chunk_size(char *&bytes);
-  void			decoding_chunked(char *&bytes);
+  std::size_t read_chunk_size(const char *bytes);
+  void decoding_chunked(const char *bytes);
 
   // header_field_handlers
   static const std::map<std::string, int> transfer_coding_registration;

@@ -155,7 +155,7 @@ void tolower(std::string &str) {
   std::string::iterator begin = str.begin();
   std::string::iterator end = str.end();
   for (; begin != end; ++begin)
-    *begin = std::tolower(*begin);
+    *begin = static_cast<char>(std::tolower(*begin));
 }
 
 }
