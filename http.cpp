@@ -252,6 +252,13 @@ void message::calculate_length_message() {
 void message::read_message_body(const char *bytes) {
   if (message_info_.length_ == "chunked")
     decoding_chunked(bytes);
+  else if (message_info_.length_ == "content-length") {
+    if (strlen(bytes) >= message_info_.content_length_) {
+	  decoded_body_.assign(bytes, message_info_.content_length_);
+	} else {
+	  error(400);
+	}
+  }
 }
 
 /*
@@ -270,9 +277,10 @@ void message::read_message_body(const char *bytes) {
  */
 void message::decoding_chunked(const char *bytes) {
   std::size_t chunk_size;
+  size_decoded_body_ = 0;
 
   // read chunk-size, chunk-ext(if any), and CRLF
-  chunk_size = read_chunk_size(bytes);
+  bytes += read_chunk_size(chunk_size, bytes);
 
   //read chunk-data
   while (chunk_size > 0) {
@@ -281,9 +289,11 @@ void message::decoding_chunked(const char *bytes) {
 	  error(400);
     decoded_body_.append(bytes, chunk_size);
     bytes += chunk_size;
+	size_decoded_body_ += chunk_size;
     if (strncmp("\r\n", bytes, 2) != 0)
 	  error(400);
-    chunk_size = read_chunk_size(bytes);
+    bytes += 2;
+    bytes += read_chunk_size(chunk_size, bytes);
   }
 
   //read trailer field
@@ -298,43 +308,42 @@ void message::decoding_chunked(const char *bytes) {
  * chunk-ext-name = token
  * chunk-ext-val = token / quoted-string
  */
-std::size_t message::read_chunk_size(const char *bytes) {
-  const char *end_word = bytes;
-  std::size_t chunk_size;
+std::size_t message::read_chunk_size(std::size_t& chunk_size, const char
+*bytes) {
+  std::size_t size = 0;
   std::string ext_name;
   std::string ext_val;
 
   //read chunk-size
-  while (isxdigit(*end_word))
-	++end_word;
-  if (end_word == bytes)
+  while (isxdigit(*(bytes + size)))
+	++size;
+  if (size == 0)
 	error(400);
-  std::stringstream ss(std::string(bytes, end_word - bytes));
+  std::stringstream ss(std::string(bytes, size));
   ss >> std::hex >> chunk_size;
   if (ss.fail())
 	error(400);
-  bytes = end_word;
 
   // chunk-ext(if any)
-  while (*bytes == ';') {
-	++bytes;
-	bytes += get_token(ext_name, bytes);
-	if (*bytes == '=') {
-	  ++bytes;
-	  if (*bytes == DQUOTE) {
-		++bytes;
-		bytes += get_quoted_string(ext_val, bytes);
+  while (*(bytes + size) == ';') {
+	++size;
+	size += get_token(ext_name, bytes + size);
+	if (*(bytes + size) == '=') {
+	  ++size;
+	  if (*(bytes + size) == DQUOTE) {
+		++size;
+		size += get_quoted_string(ext_val, bytes + size);
+	  } else {
+		size += get_token(ext_name, bytes + size);
 	  }
-	} else {
-	  bytes += get_token(ext_name, bytes);
 	}
 	ext_name.clear();
 	ext_val.clear();
   }
 
-  bytes += skip_crlf(bytes);
+  size += skip_crlf(bytes + size);
 
-  return chunk_size;
+  return size;
 }
 
 }

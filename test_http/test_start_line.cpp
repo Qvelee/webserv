@@ -17,58 +17,42 @@ TEST(TestParserStartLine, NoFail) {
   ASSERT_EQ(current, expected);
 }
 
-TEST(TestParserStartLine, SpaceBeforeMethod) {
-  char message[] = " GET /me HTTP/1.1\r\n\r\n";
-  char *ptr = message;
-  http::message current;
-  ASSERT_ANY_THROW(current.parse_request_line(current.start_line_, ptr));
-}
-
-TEST(TestParserStartLine, NotTcharInMethod) {
-  char message[] = "G(ET /me HTTP/1.1\r\n\r\n";
-  char *ptr = message;
-  http::message current;
-  ASSERT_ANY_THROW(current.parse_request_line(current.start_line_, ptr));
+TEST(TestParserStartLine, EmptyMethod) {
+  char message[] = " /me HTTP/1.1\r\n";
+  http::message::request_line current;
+  ASSERT_ANY_THROW(http::message::parse_request_line(current, message));
 }
 
 TEST(TestParserStartLine, OddSpace1) {
-  char message[] = "GET  /me HTTP/1.1\r\n\r\n";
-  char *ptr = message;
-  http::message current;
-  ASSERT_ANY_THROW(current.parse_request_line(current.start_line_, ptr));
+  char message[] = "GET  /me HTTP/1.1\r\n";
+  http::message::request_line current;
+  ASSERT_ANY_THROW(http::message::parse_request_line(current, message));
 }
 
 TEST(TestParserStartLine, OddSpace2) {
-  char message[] = "GET /me HTTP/1.1 \r\n\r\n";
-  char *ptr = message;
-  http::message current;
-  ASSERT_ANY_THROW(current.parse_request_line(current.start_line_, ptr));
+  char message[] = "GET /me HTTP/1.1 \r\n";
+  http::message::request_line current;
+  ASSERT_ANY_THROW(http::message::parse_request_line(current, message));
 }
 
 TEST(TestParserStartLine, OddSpace3) {
-  char message[] = "GET /me  HTTP/1.1\r\n\r\n";
-  char *ptr = message;
-  http::message current;
-  ASSERT_ANY_THROW(current.parse_request_line(current.start_line_, ptr));
+  char message[] = "GET /me  HTTP/1.1\r\n";
+  http::message::request_line current;
+  ASSERT_ANY_THROW(http::message::parse_request_line(current, message));
 }
 
-TEST(TestParserStartLine, WrongProtoco1) {
-  char message[] = "GET /me HTTp/1.1\r\n\r\n";
-  char *ptr = message;
-  http::message current;
-  ASSERT_ANY_THROW(current.parse_request_line(current.start_line_, ptr));
+TEST(TestParserStartLine, WrongProtocol) {
+  char message[] = "GET /me HTTP/1.10\r\n";
+  http::message::request_line current;
+  ASSERT_ANY_THROW(http::message::parse_request_line(current, message));
 }
 
-TEST(TestParserStartLine, WrongProtoco2) {
-  char message[] = "GET /me HTTP/10.1\r\n\r\n";
-  char *ptr = message;
-  http::message current;
-  ASSERT_ANY_THROW(current.parse_request_line(current.start_line_, ptr));
+TEST(TestParserStartLine, NoCRLF) {
+  char message[] = "GET /me HTTP/1.1";
+  http::message::request_line current;
+  ASSERT_ANY_THROW(http::message::parse_request_line(current, message));
 }
 
-TEST(TestParserStartLine, WrongProtoco3) {
-  char message[] = "GET /me HTTP/1,1\r\n\r\n";
-  char *ptr = message;
-  http::message current;
-  ASSERT_ANY_THROW(current.parse_request_line(current.start_line_, ptr));
-}
+/*
+ * ADD validate test, big string test
+ */

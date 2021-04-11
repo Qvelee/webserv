@@ -2,20 +2,20 @@
 #include <gtest/gtest.h>
 
 
-std::ostream& operator<<(std::ostream& os, const
-http::message::transfer_parameter& tp) {
+std::ostream&
+operator<<(std::ostream& os, const http::message::transfer_parameter& tp) {
   os << tp.name_ << "=" << tp.value_;
   return os;
 }
 
-std::ostream& operator<<(std::ostream& os, const
-http::message::transfer_extension& te) {
+std::ostream&
+operator<<(std::ostream& os, const http::message::transfer_extension& te) {
   os << te.token_ << ";" << te.transfer_parameter_;
   return os;
 }
 
-std::ostream& operator<<(std::ostream& os, const http::message::message_info&
-rl) {
+std::ostream&
+operator<<(std::ostream& os, const http::message::message_info& rl) {
   os << rl.content_length_ << "\n";
   os << rl.content_length_ << "\n";
   for (auto& i : rl.transfer_coding_)
@@ -35,10 +35,20 @@ TEST(TestParserHeaders, SimpleMessage) {
   expected["field2"] = "value2";
   expected["field3"] = "value3";
 
-  http::message current;
-  char *ptr = message;
-  current.parse_headers(current.headers_, ptr);
-  ASSERT_EQ(current.headers_, expected);
+  std::map<std::string, std::string> current;
+  std::size_t size = http::message::parse_headers(current, message);
+  ASSERT_EQ(size, strlen(message));
+  ASSERT_EQ(current, expected);
+}
+
+TEST(TestParserHeaders, NoSemicolons) {
+  char message[] = "field1;value1\r\n"
+				   "field2:value2\r\n"
+				   "field3:value3\r\n"
+				   "\r\n";
+
+  std::map<std::string, std::string> current;
+  ASSERT_ANY_THROW(http::message::parse_headers(current, message));
 }
 
 TEST(TestParserHeaders, SpaceAroundFieldValue) {
@@ -52,10 +62,10 @@ TEST(TestParserHeaders, SpaceAroundFieldValue) {
   expected["field2"] = "value2";
   expected["field3"] = "value3";
 
-  http::message current;
-  char *ptr = message;
-  current.parse_headers(current.headers_, ptr);
-  ASSERT_EQ(current.headers_, expected);
+  std::map<std::string, std::string> current;
+  std::size_t size = http::message::parse_headers(current, message);
+  ASSERT_EQ(size, strlen(message));
+  ASSERT_EQ(current, expected);
 }
 
 TEST(TestParserHeaders, SpaceIntoFieldValue) {
@@ -69,10 +79,10 @@ TEST(TestParserHeaders, SpaceIntoFieldValue) {
   expected["field2"] = "value2";
   expected["field3"] = "va lu  e3";
 
-  http::message current;
-  char *ptr = message;
-  current.parse_headers(current.headers_, ptr);
-  ASSERT_EQ(current.headers_, expected);
+  std::map<std::string, std::string> current;
+  std::size_t size = http::message::parse_headers(current, message);
+  ASSERT_EQ(size, strlen(message));
+  ASSERT_EQ(current, expected);
 }
 
 TEST(TestParserHeaders, ObsFold) {
@@ -86,11 +96,22 @@ TEST(TestParserHeaders, ObsFold) {
   expected["field2"] = "v alu e2";
   expected["field3"] = "value3";
 
-  http::message current;
-  char *ptr = message;
-  current.parse_headers(current.headers_, ptr);
-  ASSERT_EQ(current.headers_, expected);
+  std::map<std::string, std::string> current;
+  std::size_t size = http::message::parse_headers(current, message);
+  ASSERT_EQ(size, strlen(message));
+  ASSERT_EQ(current, expected);
 }
+
+TEST(TestParserHeaders, ForbiddenSymbol) {
+  char message[] = "field1:va\nue1\r\n"
+				   "field2:value2\r\n"
+				   "field3:value3\r\n"
+				   "\r\n";
+
+  std::map<std::string, std::string> current;
+  ASSERT_ANY_THROW(http::message::parse_headers(current, message));
+}
+
 
 TEST(TestParserHeaders, TwoSameNames) {
   char message[] = 	 "field1:value1\r\n"
@@ -104,17 +125,18 @@ TEST(TestParserHeaders, TwoSameNames) {
   expected["field2"] = "val ue2";
   expected["field3"] = "value3";
 
-  http::message current;
-  char *ptr = message;
-  current.parse_headers(current.headers_, ptr);
-  ASSERT_EQ(current.headers_, expected);
+  std::map<std::string, std::string> current;
+  std::size_t size = http::message::parse_headers(current, message);
+  ASSERT_EQ(size, strlen(message));
+  ASSERT_EQ(current, expected);
 }
 
 TEST(TestParserHeaders, SpaceAfterStartLine) {
-  char message[] = "GET /me HTTP/1.1\r\n \r\n";
-  http::message current;
-  char *ptr = message;
-  ASSERT_ANY_THROW(current.parse_headers(current.headers_, ptr));
+  char message[] = " \r\n"
+				   "field1:value1";
+
+  std::map<std::string, std::string> current;
+  ASSERT_ANY_THROW(http::message::parse_headers(current, message));
 }
 
 TEST(TestParserHeaders, SpaceAfterFieldName) {
@@ -123,9 +145,8 @@ TEST(TestParserHeaders, SpaceAfterFieldName) {
 					 "field3:value3\r\n"
 					 "\r\n";
 
-  http::message current;
-  char *ptr = message;
-  ASSERT_ANY_THROW(current.parse_headers(current.headers_, ptr));
+  std::map<std::string, std::string> current;
+  ASSERT_ANY_THROW(http::message::parse_headers(current, message));
 }
 
 TEST(TestParserHeaders, NoCRLF) {
@@ -134,9 +155,8 @@ TEST(TestParserHeaders, NoCRLF) {
 					 "field3:value3\r\n"
 					 "field1:value4\r\n";
 
-  http::message current;
-  char *ptr = message;
-  ASSERT_ANY_THROW(current.parse_headers(current.headers_, ptr));
+  std::map<std::string, std::string> current;
+  ASSERT_ANY_THROW(http::message::parse_headers(current, message));
 }
 
 TEST(TestParserHeaders, CaseSensitive) {
@@ -151,22 +171,20 @@ TEST(TestParserHeaders, CaseSensitive) {
   expected["field2"] = "val ue2";
   expected["field3"] = "value3";
 
-  http::message current;
-  char *ptr = message;
-  current.parse_headers(current.headers_, ptr);
-  ASSERT_EQ(current.headers_, expected);
+  std::map<std::string, std::string> current;
+  std::size_t size = http::message::parse_headers(current, message);
+  ASSERT_EQ(size, strlen(message));
+  ASSERT_EQ(current, expected);
 }
 
 // content-length
 TEST(TestParserContentLength, ContentLength) {
   char message[] = "Content-Length:42\r\n"
 	               "\r\n";
-  http::message::message_info expected = {.content_length_ = 42};
   http::message current;
-  char *ptr = message;
-  current.parse_headers(current.headers_, ptr);
+  http::message::parse_headers(current.headers_, message);
   current.content_length();
-  ASSERT_EQ(expected, current.message_info_);
+  ASSERT_EQ(42, current.message_info_.content_length_);
 }
 
 TEST(TestParserContentLength, TwoHeadersWithContentLength) {
@@ -174,8 +192,7 @@ TEST(TestParserContentLength, TwoHeadersWithContentLength) {
 				   "Content-Length:42\r\n"
 				   "\r\n";
   http::message current;
-  char *ptr = message;
-  current.parse_headers(current.headers_, ptr);
+  http::message::parse_headers(current.headers_, message);
   ASSERT_ANY_THROW(current.content_length());
 }
 
@@ -183,8 +200,7 @@ TEST(TestParserContentLength, TwoValueInContentLength) {
   char message[] = "Content-Length:42,42\r\n"
 				   "\r\n";
   http::message current;
-  char *ptr = message;
-  current.parse_headers(current.headers_, ptr);
+  http::message::parse_headers(current.headers_, message);
   ASSERT_ANY_THROW(current.content_length());
 }
 
@@ -192,8 +208,7 @@ TEST(TestParserContentLength, MoreValueInContentLength) {
   char message[] = "Content-Length:42, 42,,  ,   42  \r\n"
 				   "\r\n";
   http::message current;
-  char *ptr = message;
-  current.parse_headers(current.headers_, ptr);
+  http::message::parse_headers(current.headers_, message);
   ASSERT_ANY_THROW(current.content_length());
 }
 
@@ -202,8 +217,7 @@ TEST(TestParserContentLength, DifferentValueInContentLength) {
 				   "Content-Length:43\r\n"
 				   "\r\n";
   http::message current;
-  char *ptr = message;
-  current.parse_headers(current.headers_, ptr);
+  http::message::parse_headers(current.headers_, message);
   ASSERT_ANY_THROW(current.content_length());
 }
 
@@ -211,8 +225,7 @@ TEST(TestParserContentLength, DifferentValueInOneHeader) {
   char message[] = "Content-Length:42, 43\r\n"
 				   "\r\n";
   http::message current;
-  char *ptr = message;
-  current.parse_headers(current.headers_, ptr);
+  http::message::parse_headers(current.headers_, message);
   ASSERT_ANY_THROW(current.content_length());
 }
 
@@ -220,8 +233,7 @@ TEST(TestParserContentLength, EmptyContentLength) {
   char message[] = "Content-Length:  , , \r\n"
 				   "\r\n";
   http::message current;
-  char *ptr = message;
-  current.parse_headers(current.headers_, ptr);
+  http::message::parse_headers(current.headers_, message);
   ASSERT_ANY_THROW(current.content_length());
 }
 
@@ -229,8 +241,7 @@ TEST(TestParserContentLength, BigNumber) {
   char message[] = "Content-Length:99999999999999999999999\r\n"
 				   "\r\n";
   http::message current;
-  char *ptr = message;
-  current.parse_headers(current.headers_, ptr);
+  http::message::parse_headers(current.headers_, message);
   ASSERT_ANY_THROW(current.content_length());
 }
 
@@ -242,8 +253,7 @@ TEST(TestParserTransferEncoding, TransferEncoding) {
 	  {"gzip", {"", ""}},
   };
   http::message current;
-  char *ptr = message;
-  current.parse_headers(current.headers_, ptr);
+  http::message::parse_headers(current.headers_, message);
   current.transfer_encoding();
   ASSERT_EQ(current.message_info_.transfer_coding_, expected);
 }
@@ -255,8 +265,7 @@ TEST(TestParserTransferEncoding, TransferEncoding2) {
 	  {"gzip", {"size", "1"}},
   };
   http::message current;
-  char *ptr = message;
-  current.parse_headers(current.headers_, ptr);
+  http::message::parse_headers(current.headers_, message);
   current.transfer_encoding();
   ASSERT_EQ(current.message_info_.transfer_coding_, expected);
 }
@@ -268,8 +277,7 @@ TEST(TestParserTransferEncoding, TransferEncoding3) {
 	  {"gzip", {"size", "1"}},
   };
   http::message current;
-  char *ptr = message;
-  current.parse_headers(current.headers_, ptr);
+  http::message::parse_headers(current.headers_, message);
   current.transfer_encoding();
   ASSERT_EQ(current.message_info_.transfer_coding_, expected);
 }
@@ -281,8 +289,7 @@ TEST(TestParserTransferEncoding, TransferEncoding4) {
 	  {"gzip", {"size", "1"}},
   };
   http::message current;
-  char *ptr = message;
-  current.parse_headers(current.headers_, ptr);
+  http::message::parse_headers(current.headers_, message);
   current.transfer_encoding();
   ASSERT_EQ(current.message_info_.transfer_coding_, expected);
 }
@@ -295,8 +302,7 @@ TEST(TestParserTransferEncoding, TransferEncoding5) {
 	  {"chunked", {"", ""},}
   };
   http::message current;
-  char *ptr = message;
-  current.parse_headers(current.headers_, ptr);
+  http::message::parse_headers(current.headers_, message);
   current.transfer_encoding();
   ASSERT_EQ(current.message_info_.transfer_coding_, expected);
 }
@@ -309,8 +315,7 @@ TEST(TestParserTransferEncoding, TransferEncoding6) {
 	  {"chunked", {"size", "23"},}
   };
   http::message current;
-  char *ptr = message;
-  current.parse_headers(current.headers_, ptr);
+  http::message::parse_headers(current.headers_, message);
   current.transfer_encoding();
   ASSERT_EQ(current.message_info_.transfer_coding_, expected);
 }
@@ -323,8 +328,7 @@ TEST(TestParserTransferEncoding, TransferEncoding7) {
 	  {"chunked", {"size", "23"},}
   };
   http::message current;
-  char *ptr = message;
-  current.parse_headers(current.headers_, ptr);
+  http::message::parse_headers(current.headers_, message);
   current.transfer_encoding();
   ASSERT_EQ(current.message_info_.transfer_coding_, expected);
 }
@@ -338,8 +342,7 @@ TEST(TestParserTransferEncoding, TransferEncoding8) {
 	  {"chunked", {"size", "2\"3"},}
   };
   http::message current;
-  char *ptr = message;
-  current.parse_headers(current.headers_, ptr);
+  http::message::parse_headers(current.headers_, message);
   current.transfer_encoding();
   ASSERT_EQ(current.message_info_.transfer_coding_, expected);
 }
@@ -349,8 +352,7 @@ TEST(TestParserTransferEncoding, TransferEncodingFail1) {
 				   "23\r\n"
 				   "\r\n";
   http::message current;
-  char *ptr = message;
-  current.parse_headers(current.headers_, ptr);
+  http::message::parse_headers(current.headers_, message);
   ASSERT_ANY_THROW(current.transfer_encoding());
 }
 
@@ -360,7 +362,6 @@ TEST(TestParserTransferEncoding, TransferEncodingFail2) {
 				   "23\r\n"
 				   "\r\n";
   http::message current;
-  char *ptr = message;
-  current.parse_headers(current.headers_, ptr);
+  http::message::parse_headers(current.headers_, message);
   ASSERT_ANY_THROW(current.transfer_encoding());
 }

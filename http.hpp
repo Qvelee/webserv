@@ -81,7 +81,7 @@ class message {
   void calculate_length_message();
   void read_message_body(const char *bytes);
 
-  std::size_t read_chunk_size(const char *bytes);
+  static std::size_t read_chunk_size(std::size_t& size, const char *bytes);
   void decoding_chunked(const char *bytes);
 
   // header_field_handlers
@@ -97,6 +97,7 @@ class message {
   request_line							start_line_;
   std::map<std::string, std::string>	headers_;
   std::string							decoded_body_;
+  std::size_t							size_decoded_body_;
   message_info							message_info_;
 };
 }
