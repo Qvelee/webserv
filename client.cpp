@@ -6,99 +6,75 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/05 17:40:26 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/05/05 17:43:05 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/05/07 15:41:29 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 # include "client.hpp"
 
-int		create_socket(t_addrinfo *address)
+int		create_socket(void)
 {
 	int		socket_ID;
 
-	if ((socket_ID = socket(address->ai_family, address->ai_socktype, address->ai_protocol)))
+	if ((socket_ID = socket(AF_INET, SOCK_STREAM, 0)) == -1)
 	{
-		int		set_value = 1;
-
-		if (setsockopt(socket_ID, SOL_SOCKET, SO_REUSEADDR, &set_value, sizeof(set_value)) == -1)
-		{
-			std::cerr << "Error setsockopt(): " << strerror(errno) << std::endl;
-			close(socket_ID);
-			return -1;
-		}
-		return socket_ID;
+		std::cout << "Error crearing socket\n";
+		return -1;
 	}
-	return -1;
-}
-
-int		read_data(int socket_ID)
-{
-	int		buffer_size = 52000;
-	char	buffer[buffer_size];
-	int		bytes;
-	
-	if ((bytes = recv(socket_ID, buffer, buffer_size - 1, 0)) < 0)
+	int		set_value = 1;
+	if (setsockopt(socket_ID, SOL_SOCKET, SO_REUSEADDR, \
+		&set_value, sizeof(set_value)) == -1)
 	{
-		std::cout << "Error: recv " << strerror(errno) << std::endl;
-		return 1;
+		std::cout << "Error set socket options\n";
+		return -1;
 	}
-	buffer[bytes] = '\0';
-	std::cout << "Bytes readed: " << bytes << std::endl;
-	std::cout << "Data readed: " << buffer << std::endl;
-	return 0;
-}
-
-int		send_data(int socket_ID)
-{
-	std::string	message;
-
-	std::cout << "Print your message: ";
-	std::cin >> message;
-	std::cout << std::endl;
-
-	send(socket_ID, message.c_str(), message.size(), 0);
-	return 0;
-}
-
-int		setup_connection(const char *port)
-{
-	int			socket_ID = 1;
-	t_addrinfo	socket_info;
-	t_addrinfo	*result_addresses;
-
-	bzero(&socket_info, sizeof(socket_info));
-	socket_info.ai_family = AF_INET;		// IPv4 address
-	socket_info.ai_socktype = SOCK_STREAM;	// connection type - TCP
-	socket_info.ai_flags = AI_PASSIVE;		// host IP address will set auto.
-
-	int		status;
-	if ((status = getaddrinfo(NULL, port, &socket_info, &result_addresses)))
-	{
-		std::cerr << "Error: " << gai_strerror(status) << std::endl;
-		return 1;
-	}
-	for (t_addrinfo *list = result_addresses; list; list = list->ai_next)
-		if ((socket_ID = create_socket(list)))
-			break ;
-	if (socket_ID == -1)
-	{
-		freeaddrinfo(result_addresses);
-		close(socket_ID);
-		return 2;
-	}
-	std::cout << "Success" << std::endl;
-
-	read_data();
-	
-	freeaddrinfo(result_addresses);
-	close(socket_ID);
-	close(new_peer);
-	return 0;
+	return socket_ID;
 }
 
 int		main(void)
 {
-	if (setup_connection(SERVER_PORT))
+	int		socket_ID = create_socket();
+
+	if (socket_ID == -1)
 		return 1;
+	t_sockaddr_in	server;
+
+	memset(&server, 0, sizeof(server));
+	server.sin_family = AF_INET;
+	if ((server.sin_addr.s_addr = inet_addr("192.168.151.101")) == -1)
+	{
+		std::cout << "Error inet_addr\n";
+		close(socket_ID);
+		return 1;
+	}
+	server.sin_port = htons(8080);
+	if (connect(socket_ID, (sockaddr*)&server, sizeof(server)) == -1)
+	{
+		std::cout << "Error connect " << strerror(errno) << std::endl;
+		close(socket_ID);
+		return 1;
+	}
+	while (true)
+	{
+		std::string	message;
+		std::cout << "Input your message to server: ";
+		std::cin >> message;
+	
+		send(socket_ID, message.c_str(), message.length(), 0);
+	
+		int		buffer_size = 64000;
+		char	buffer[buffer_size];
+		
+		int bytes;
+		if ((bytes = recv(socket_ID, buffer, buffer_size - 1, 0)) == -1)
+		{
+			std::cout << "Error recv\n";
+			return 1;
+		}
+		std::cout << "Bytes recieved: " << bytes << std::endl;
+		std::cout << "Data \n";
+		std::cout << buffer << std::endl;
+	}
+	close(socket_ID);
 	return 0;
 }
