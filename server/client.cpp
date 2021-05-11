@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/05 17:40:26 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/05/07 15:41:29 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/05/11 16:11:36 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,6 +29,24 @@ int		create_socket(void)
 		return -1;
 	}
 	return socket_ID;
+}
+
+bool	parse_request(char const *reqest, char **response)
+{
+	if (reqest)
+	{
+		std::cout << "Request: ";
+		std::cout << reqest << std::endl << "ENDL" << std::endl;
+	}
+	
+	std::cout << "Create your response: ";
+	int		buffert;
+	// std::getline(std::cin, resp);
+	std::cin >> buffert;
+
+	*response = new char[buffert];
+	memset(*response, 'a', buffert);
+	return false;
 }
 
 int		main(void)
@@ -56,11 +74,12 @@ int		main(void)
 	}
 	while (true)
 	{
-		std::string	message;
-		std::cout << "Input your message to server: ";
-		std::cin >> message;
+
+		char	*response;
+		
+		parse_request(NULL, &response);
 	
-		send(socket_ID, message.c_str(), message.length(), 0);
+		send(socket_ID, response, strlen(response), 0);
 	
 		int		buffer_size = 64000;
 		char	buffer[buffer_size];
@@ -71,6 +90,8 @@ int		main(void)
 			std::cout << "Error recv\n";
 			return 1;
 		}
+		if (!bytes)
+			break ;
 		std::cout << "Bytes recieved: " << bytes << std::endl;
 		std::cout << "Data \n";
 		std::cout << buffer << std::endl;

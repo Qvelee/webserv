@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/06 12:56:25 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/05/11 10:36:10 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/05/11 16:02:12 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,10 +25,12 @@
 # include <netdb.h>
 # include <unistd.h>
 # include <errno.h>
+# include <fcntl.h>
 
 // -- server settings --
 # define SERVER_PORT 8080
 # define MAX_CONNECTIONS 5
+# define BUFFER 120000
 // ---------------------
 
 typedef	struct sockaddr_in	t_sockaddr_in;
@@ -46,8 +48,6 @@ class Server
 
 		bool	setup(int port);
 		bool	connection(void);
-		bool	recvData(int socket_ID, uchar **buffer);
-		bool	sendData(int socket_ID, char const *buffer) const;
 	private:
 		Server(Server const &);
 
@@ -55,12 +55,19 @@ class Server
 
 		bool	_error(std::string const error) const;
 		bool	_create_socket(void);
+		void	_accept_new_clients(void);
+		int		_init_read_set(fd_set &set);
+		bool	_handle_income_requests(fd_set const &set);
+		bool	_parse_request(char const *request, char **response) const;
+		bool	_recvData(int socket_ID, char **buffer);
+		bool	_sendData(int socket_ID, char const *buffer) const;
 
 		ushort				_serverPort;
 		int					_max_connections;
 		int					_socket_ID;
 		t_sockaddr_in		_socket_address; // struct with address info for socket
 		std::vector<int>	_clients;
+
 		int	const			_read_buffer_size;
 };
 
