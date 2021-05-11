@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/06 12:56:02 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/05/07 15:40:17 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/05/11 10:39:45 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,7 @@
 Server::Server(void) : _socket_ID(-1), _read_buffer_size(64000)
 {
 	memset(&_socket_address, 0, sizeof(_socket_address));
+	FD_ZERO(&_clients);
 }
 
 Server::Server(Server const &) : _read_buffer_size(0) {}
@@ -33,7 +34,7 @@ bool	Server::setup(int port)
 	if ((_serverPort = port) < 1024)
 		return _error("Set port is forbidden");
 	if (_create_socket())
-		return 2;
+		return true;
 	if (bind(_socket_ID, reinterpret_cast<t_sockaddr*>(&_socket_address), \
 		sizeof(_socket_address)))
 		return _error("cannot bind socket to port");
@@ -45,36 +46,63 @@ bool	Server::setup(int port)
 
 bool	Server::connection(void)
 {
-	t_addrinfo	client_address;
-	uint		addrinfo_size = sizeof(client_address);
+	fd_set	buffer;
+	int		readyFds;
 
-	if ((_client_socket_ID = accept(_socket_ID, \
-		reinterpret_cast<t_sockaddr*>(&client_address), \
-		reinterpret_cast<socklen_t*>(&addrinfo_size))) == -1)
-		return _error("cannot accept incoming connection");
+	if ((readyFds = select(FD_SETSIZE, &buffer, NULL, NULL, NULL)) == -1)
+		return _error("select");
+	for (int i = 0; i < readyFds; i++)
+	{
+		int		tmpSocket = tempBuffer.fds_bits[i];
+		std::cout << "Socket_ID: " << _socket_ID << std::endl;
+		std::cout << "Fd: " << tmpSocket << std::endl;
+		
+		/*
+		if (tmpSocket == _socket_ID)
+		{ // Accept new connection
+			int		newSocket;
+
+			if ((newSocket = accept(_socket_ID, NULL, NULL)) == -1)
+				_error("cannot accept incoming connetion");
+			else
+				FD_SET(newSocket, &_clients);
+		}
+		else
+		{ // Recieve new message
+			uchar	*buffer;
+
+			recvData(tmpSocket, &buffer);
+			std::cout << "Data recieved: " << std::endl;
+			std::cout << buffer << std::endl;
+			delete buffer;
+			
+			sendData(tmpSocket, "Hello from Server");
+		}
+		*/
+	}
 	return false;
 }
 
-bool	Server::readData(uchar **buffer)
+bool	Server::recvData(int socket_ID, uchar **buffer)
 {
 	int		bytes;
 
 	*buffer = new uchar[_read_buffer_size];
-	if ((bytes = recv(_client_socket_ID, *buffer, _read_buffer_size - 1, 0)) == -1)
+	if ((bytes = recv(socket_ID, *buffer, _read_buffer_size - 1, 0)) == -1)
 		return _error("cannot read data"); // forbidden by subject
 	if (!bytes)
-		close(_client_socket_ID);
+		close(socket_ID);
 	(*buffer)[bytes] = '\0';
-	std::cout << "Bytes readed: " << bytes << std::endl;
+	std::cout << "Bytes readed: " << bytes << std::endl; // remove
 	return false;
 }
 
-bool	Server::sendData(char const *buffer) const
+bool	Server::sendData(int socket_ID, char const *buffer) const
 {
 	int		bytes;
 
-	if ((bytes = send(_client_socket_ID, buffer, strlen(buffer), 0)) == -1)
-		return _error("cannot send data");
+	if ((bytes = send(socket_ID, buffer, strlen(buffer), 0)) == -1)
+		return _error("cannot send data"); // forbidden by subject
 	return false;
 }
 
