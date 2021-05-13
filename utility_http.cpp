@@ -5,6 +5,28 @@
 #include "utility_http.hpp"
 
 namespace http {
+/*
+CTL = %x00-1F / %x7F ; isctrl()
+DIGIT = %x30-39 ; 0-9, isdigit()
+HEXDIG = DIGIT / "A" / "B" / "C" / "D" / "E" / "F" / G" ;
+				  													isxdigit()
+LWSP = *(WSP / CRLF WSP);
+OCTET = %x00-FF ; isprint() || iscntrl()
+VCHAR = %x21-7E ; isgraph()
+
+cписки генерировать так
+1#elem => elem *(OWS "," OWS elem)
+#elem => [ 1#elem ]
+<n>#<m>element => element <n-1>*<m-1>( OWS "," OWS element )
+принимать так
+#element => [ ( "," / element ) *( OWS "," [ OWS element ] ) ]
+1#element => *( "," OWS ) element *( OWS "," [ OWS element ] )
+
+
+comment = "(" *( ctext / quoted-pair / comment ) ")"
+ctext = HTAB / SP / %x21-27 / %x2A-5B / %x5D-7E / obs-text
+
+ */
 
 /*
  * tchar = "!" / "#" / "$" / "%" / "&" / "’" / "*"

@@ -2,109 +2,139 @@
 #define WEBSERV_HTTP_HPP
 
 #include <string>
+#include <utility>
 #include <vector>
 #include <map>
 #include <iostream>
 
 namespace http {
 
-class message {
- public:
-  message(const char *bytes);
-// protected:
-  struct request_line {
-    std::string method_;
-    std::string request_target_;
-    std::string http_version;
-
-    bool operator==(const http::message::request_line &rhs) const {
-      if (method_ != rhs.method_)
-        return false;
-      if (request_target_ != rhs.request_target_)
-        return false;
-      if (http_version != rhs.http_version)
-        return false;
-      return true;
-    }
-  };
-
-  struct status_line {
-
-  };
-
-  struct transfer_parameter {
-    std::string name_;
-    std::string value_;
-
-    bool operator==(const http::message::transfer_parameter& rhs) const {
-      if (name_ != rhs.name_)
-		return false;
-      if (value_ != rhs.value_)
-		return false;
-	  return true;
-    }
-  };
-
-  struct transfer_extension {
-    std::string token_;
-    transfer_parameter transfer_parameter_;
-
-    bool operator==(const http::message::transfer_extension& rhs) const {
-      if (token_ != rhs.token_)
-		return false;
-      if (!(transfer_parameter_ == rhs.transfer_parameter_))
-		return false;
-	  return true;
-    }
-  };
-
-  struct message_info {
-    std::size_t content_length_;
-    std::vector<transfer_extension> transfer_coding_;
-	std::string length_;
-
-	bool operator==(const http::message::message_info &rhs) const {
-      if (content_length_ != rhs.content_length_)
-		return false;
-      if (transfer_coding_ != rhs.transfer_coding_)
-		return false;
-	  if (length_ != rhs.length_)
-		return false;
-	  return true;
-    }
-  };
-
-  static const std::map<std::string, void (message::*)()> header_field_handlers;
-  static std::size_t parse_request_line(request_line &rl, const char *bytes);
-  static std::size_t parse_headers(std::map<std::string, std::string>& dst, const char *bytes);
-  void header_analysis();
-  void calculate_length_message();
-  void read_message_body(const char *bytes);
-
-  static std::size_t read_chunk_size(std::size_t& size, const char *bytes);
-  void decoding_chunked(const char *bytes);
-
-  // header_field_handlers
-  static const std::map<std::string, int> transfer_coding_registration;
-
-  void content_length();
-  static void validate_transfer_coding(const std::string& name);
-  void transfer_encoding();
-
-// private:
-  message() {}
-
-  request_line							start_line_;
-  std::map<std::string, std::string>	headers_;
-  std::string							decoded_body_;
-  std::size_t							size_decoded_body_;
-  message_info							message_info_;
+enum Method {
+  GET,
+  HEAD,
+  POST,
+  PUT,
+  DELETE,
+  CONNECT,
+  OPTIONS,
+  TRACE
 };
-}
 
-std::ostream& operator<<(std::ostream&, const http::message::request_line&);
-std::ostream& operator<<(std::ostream&, const http::message::message_info&);
-std::ostream& operator<<(std::ostream&, const http::message::transfer_parameter&);
-std::ostream& operator<<(std::ostream&, const http::message::transfer_extension&);
+//struct URL {
+//
+//};
+
+struct transfer_parameter {
+  std::string name;
+  std::string value;
+
+  bool operator==(const http::transfer_parameter& rhs) const {
+	if (name != rhs.name)
+	  return false;
+	if (value != rhs.value)
+	  return false;
+	return true;
+  }
+};
+
+struct transfer_extension {
+  std::string token;
+  std::vector<transfer_parameter> transfer_parameter;
+
+  bool operator==(const http::transfer_extension& rhs) const {
+	if (token != rhs.token)
+	  return false;
+	if (!(transfer_parameter == rhs.transfer_parameter))
+	  return false;
+	return true;
+  }
+};
+
+typedef std::map<std::string, std::string>		Headers;
+typedef std::vector<transfer_extension>			TransferEncoding;
+
+typedef std::string URL;
+
+struct Request {
+  Method			method;
+  URL				url;
+  std::string		proto;
+  Headers			headers;
+  int64_t			content_length;
+  TransferEncoding	transfer_encoding;
+  Headers			trailer;
+
+  Request(Method m=GET, URL url="", std::string proto="", Headers headers=Headers{},
+		  int64_t content_length=-1, TransferEncoding te=TransferEncoding{},
+		  Headers t = Headers{})
+		  : method(m),
+		  url(std::move(url)),
+		  proto(std::move(proto)),
+		  headers(std::move(headers)),
+		  content_length(content_length),
+		  transfer_encoding(std::move(te)),
+		  trailer(std::move(t)) {
+  }
+
+  bool operator==(const http::Request &rhs) const {
+    if (method != rhs.method)
+      return false;
+    if (url != rhs.url)
+      return false;
+    if (proto != rhs.proto)
+      return false;
+    if (headers != rhs.headers)
+      return false;
+    if (content_length != rhs.content_length)
+      return false;
+    if (transfer_encoding != rhs.transfer_encoding)
+      return false;
+    if (trailer != rhs.trailer)
+      return false;
+    return true;
+  }
+};
+
+typedef const std::map<std::string, void (*)(Request& req, std::string const &field)>
+    HeaderHandlers;
+typedef const std::map<std::string, int> TransferCodingRegister;
+
+bool					parse_request(Request& req, const char *data);
+std::size_t				parse_request_line(Request &r, const char *bytes);
+std::size_t 			parse_headers(Headers& dst, const char *bytes);
+void					header_analysis(Request& r, Headers &h);
+HeaderHandlers& 		get_header_field_handlers();
+void					transfer_encoding(Request& req, std::string const &value);
+TransferCodingRegister&	get_transfer_coding_register();
+void					validate_transfer_coding(const std::string& name);
+void					content_length(Request& req, std::string const &value);
+void					calculate_length_message(Request& req);
+
+
+
+//struct Response {
+//};
+
+
+
+
+//void read_message_body(const char *bytes);
+//
+//static std::size_t read_chunk_size(std::size_t& size, const char *bytes);
+//void decoding_chunked(const char *bytes);
+//
+//static void	parse_request_target(URL &url, std::string const &src);
+//static void	parse_and_validate_method(Method &m, std::string const &src);
+//
+//
+
+
+}
+std::ostream& operator<<(std::ostream& os, const http::Headers& r);
+std::ostream& operator<<(std::ostream& os, const http::TransferEncoding & r);
+std::ostream& operator<<(std::ostream& os, const http::Request& r);
+std::ostream& operator<<(std::ostream&, const http::transfer_parameter&);
+std::ostream& operator<<(std::ostream&, const http::transfer_extension&);
+
 
 #endif

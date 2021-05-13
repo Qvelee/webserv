@@ -48,6 +48,7 @@ TEST(GetHttpVersion, Fail3) {
   ASSERT_ANY_THROW(http::get_http_version(current, "HTTP/1,5"));
 }
 
+
 TEST(GetHttpVersion, Fail4) {
   std::string current;
   ASSERT_ANY_THROW(http::get_http_version(current, "HTTP/1.k"));
