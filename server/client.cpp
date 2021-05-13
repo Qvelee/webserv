@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/05 17:40:26 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/05/11 16:11:36 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/05/13 13:05:20 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,12 +40,11 @@ bool	parse_request(char const *reqest, char **response)
 	}
 	
 	std::cout << "Create your response: ";
-	int		buffert;
-	// std::getline(std::cin, resp);
-	std::cin >> buffert;
+	std::string	resp;
+	std::getline(std::cin, resp);
 
-	*response = new char[buffert];
-	memset(*response, 'a', buffert);
+	*response = new char[resp.size()];
+	memcpy(response, resp.c_str(), resp.size());
 	return false;
 }
 

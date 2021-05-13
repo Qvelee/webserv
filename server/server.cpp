@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/06 12:56:02 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/05/11 16:35:10 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/05/13 13:11:41 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,8 +39,6 @@ bool	Server::setup(int port)
 		return _error("cannot bind socket to port");
 	if (listen(_socket_ID, _max_connections))
 		return _error("cannot listen port");
-	if (fcntl(_socket_ID, F_SETFL, O_NONBLOCK) == -1)
-		return _error("cannot modify fd flag");
 	std::cout << "Server setup finished successfully." << std::endl;
 	return false;
 }
@@ -51,10 +49,8 @@ bool	Server::connection(void)
 	int		readyFds;
 	int		maxFd = 0;
 	
-	_accept_new_clients();
 	if ((maxFd = _init_read_set(read_fds)) == -1)
 		return false;
-	// add timeout?
 	if ((readyFds = select(maxFd + 1, &read_fds, NULL, NULL, NULL)) == -1)
 		return _error("select");
 	_handle_income_requests(read_fds);
@@ -74,7 +70,6 @@ bool	Server::_create_socket(void)
 	// AF_INET - IPv4, SOCK_STREAM - TCP protocol
 	if ((_socket_ID = socket(AF_INET, SOCK_STREAM, 0)) == -1)
 		return _error("failed to create socket");
-
 	// SOL_SOCKET - protocol lvl is socket
 	// SO_REUSEADDR - let socket be reusable
 	if (setsockopt(_socket_ID, SOL_SOCKET, SO_REUSEADDR, \
@@ -106,9 +101,8 @@ int		Server::_init_read_set(fd_set &set)
 {
 	int		maxFd;
 
-	if (_clients.empty())
-		return -1;
 	FD_ZERO(&set);
+	FD_SET(_socket_ID, &set);
 	maxFd = 0;
 	for (std::vector<int>::iterator it = _clients.begin(); \
 		it < _clients.end(); it++)
@@ -122,6 +116,8 @@ int		Server::_init_read_set(fd_set &set)
 
 bool	Server::_handle_income_requests(fd_set const &set)
 {
+	if (FD_ISSET(_socket_ID, &set))
+		_accept_new_clients();
 	for (std::vector<int>::iterator it = _clients.begin(); \
 		it < _clients.end(); it++)
 		if (FD_ISSET(*it, &set))
