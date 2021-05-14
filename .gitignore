@@ -2,3 +2,9 @@
 CMakeLists.txt
 text
 /.idea
+*.[oa]
+a.out
+*test*
+.vscode/
+subject*
+client
