@@ -112,8 +112,8 @@ void					calculate_length_message(Request& req);
 
 
 
-//struct Response {
-//};
+struct Response {
+};
 
 
 

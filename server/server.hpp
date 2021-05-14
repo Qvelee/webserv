@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/06 12:56:25 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/05/13 14:08:33 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/05/14 17:48:58 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,8 +38,6 @@
 typedef	struct sockaddr_in	t_sockaddr_in;
 typedef	struct sockaddr		t_sockaddr;
 typedef struct addrinfo 	t_addrinfo;
-typedef unsigned int		uint;
-typedef unsigned short		ushort;
 typedef unsigned char		uchar;
 
 class Server
