@@ -6,7 +6,7 @@
 #    By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2021/05/14 16:22:01 by nelisabe          #+#    #+#              #
-#    Updated: 2021/05/14 16:58:51 by nelisabe         ###   ########.fr        #
+#    Updated: 2021/05/14 17:11:57 by nelisabe         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -51,6 +51,9 @@ D_FILES = 		$(patsubst %.o, %.d, $(OBJ))
 ###
 
 all: libs $(OBJ_DIR) $(NAME)
+
+client:	
+	@$(COMP) client_t.cpp -o client
 
 libs:
 	@$(MAKE) -C ./server/
