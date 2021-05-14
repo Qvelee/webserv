@@ -5,31 +5,28 @@
 /*                                                    +:+ +:+         +:+     */
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2021/05/06 12:56:25 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/05/07 15:05:23 by nelisabe         ###   ########.fr       */
+/*   Created: 2021/05/13 13:58:58 by nelisabe          #+#    #+#             */
+/*   Updated: 2021/05/13 14:05:55 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef SERVER_HPP
-# define SERVER_HPP
+#ifndef CLIENT_HPP
+# define CLIENT_HPP
 
-# include <iostream>
-# include <string>
-# include <cstring>
-# include <vector>
+class Client
+{
+	public:
+		Client(void);
+		~Client();
+		
+		int		getSocket(void) const;
+		void	setSocket(int socket_ID);
+	private:
+		Client(Client const &);
 
-# include <sys/socket.h>
-# include <netinet/in.h>
-# include <arpa/inet.h>
-# include <netdb.h>
-# include <unistd.h>
-# include <errno.h>
+		Client	&operator=(Client const &);
 
-typedef	struct sockaddr_in	t_sockaddr_in;
-typedef	struct sockaddr		t_sockaddr;
-typedef struct addrinfo 	t_addrinfo;
-typedef unsigned int		uint;
-typedef unsigned short		ushort;
-typedef unsigned char		uchar;
+		int		_socket_ID;
+};
 
 #endif
