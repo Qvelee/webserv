@@ -45,11 +45,18 @@ std::ostream& operator<<(std::ostream& os, const http::Headers& r) {
   return os;
 }
 
+std::ostream& operator<<(std::ostream& os, const http::URL& url) {
+  os << url.userinfo << url.host << url.raw_path << url.raw_query;
+  return os;
+}
+
 TEST(TestParserStartLine, NoFail) {
   char message[] = "GET /me HTTP/1.1\r\n";
   http::Request expected = {
     http::GET,
-	"/me",
+	{
+		.path = "/me",
+      },
 	"HTTP/1.1",
 	};
   http::Request current;
@@ -105,6 +112,34 @@ TEST(TestParserStartLine, WrongProtocol2) {
   ASSERT_ANY_THROW(http::parse_request_line(current, message));
 }
 
+TEST(TestParserStartLine, url) {
+  char message[] = "GET /me?param1=one&param2=two HTTP/1.1\r\n";
+  http::Request current;
+  http::Request expected = {
+  	http::GET,
+  	{
+  		.path = "/me",
+  		.raw_query = "param1=one&param2=two",
+  	},
+  	"HTTP/1.1",
+  };
+  http::parse_request_line(current, message);
+  ASSERT_EQ(current, expected);
+}
+
+TEST(TestParserStartLine, url2) {
+  char message[] = "CONNECT www.example.com:80 HTTP/1.1\r\n";
+  http::Request current;
+  http::Request expected = {
+	  http::CONNECT,
+	  {
+		  .host = "www.example.com:80"
+	  },
+	  "HTTP/1.1",
+  };
+  http::parse_request_line(current, message);
+  ASSERT_EQ(current, expected);
+}
 /*
  * ADD validate test, big string test
  */

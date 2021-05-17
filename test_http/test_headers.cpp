@@ -173,3 +173,11 @@ TEST(TestParserHeaders, CaseSensitive) {
   ASSERT_EQ(size, strlen(message));
   ASSERT_EQ(current, expected);
 }
+
+TEST(Host, one) {
+  char message[] =	"Host:123.23.23.3\r\n"
+				   "Host:www.ee.ru\r\n"
+					  "\r\n";
+  std::map<std::string, std::string> current;
+  ASSERT_ANY_THROW(http::parse_headers(current, message));
+}

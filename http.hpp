@@ -20,9 +20,39 @@ enum Method {
   TRACE
 };
 
-//struct URL {
-//
-//};
+struct URL {
+//  std::string scheme;
+//  std::string opaque;
+  std::string userinfo;
+  std::string host;
+  std::string path;
+  std::string raw_path;
+  std::string raw_query;
+//  std::string fragment;
+//  std::string raw_fragment;
+
+  bool operator==(const http::URL& rhs) const {
+//    if (scheme != rhs.scheme)
+//	  return false;
+//    if (opaque != rhs.opaque)
+//	  return false;
+	if (userinfo != rhs.userinfo)
+	  return false;
+	if (host != rhs.host)
+	  return false;
+	if (path != rhs.path)
+	  return false;
+	if (raw_path != rhs.raw_path)
+	  return false;
+	if (raw_query != rhs.raw_query)
+	  return false;
+//	if (fragment != rhs.fragment)
+//	  return false;
+//	if (raw_fragment != rhs.raw_fragment)
+//	  return false;
+	return true;
+  }
+};
 
 struct transfer_parameter {
   std::string name;
@@ -53,8 +83,6 @@ struct transfer_extension {
 typedef std::map<std::string, std::string>		Headers;
 typedef std::vector<transfer_extension>			TransferEncoding;
 
-typedef std::string URL;
-
 struct Request {
   Method			method;
   URL				url;
@@ -63,23 +91,25 @@ struct Request {
   int64_t			content_length;
   TransferEncoding	transfer_encoding;
   Headers			trailer;
+  std::string		body;
 
-  Request(Method m=GET, URL url="", std::string proto="", Headers headers=Headers{},
+  Request(Method m=GET, URL url={}, std::string proto="", Headers headers=Headers{},
 		  int64_t content_length=-1, TransferEncoding te=TransferEncoding{},
-		  Headers t = Headers{})
+		  Headers t = Headers{}, std::string body="")
 		  : method(m),
 		  url(std::move(url)),
 		  proto(std::move(proto)),
 		  headers(std::move(headers)),
 		  content_length(content_length),
 		  transfer_encoding(std::move(te)),
-		  trailer(std::move(t)) {
+		  trailer(std::move(t)),
+		  body(std::move(body)) {
   }
 
   bool operator==(const http::Request &rhs) const {
     if (method != rhs.method)
       return false;
-    if (url != rhs.url)
+    if (!(url == rhs.url))
       return false;
     if (proto != rhs.proto)
       return false;
@@ -101,40 +131,34 @@ typedef const std::map<std::string, int> TransferCodingRegister;
 
 bool					parse_request(Request& req, const char *data);
 std::size_t				parse_request_line(Request &r, const char *bytes);
+void					parse_and_validate_method(Method &m, std::string const &src);
+void					parse_request_target(URL &url, Method &m, std::string const &src);
 std::size_t 			parse_headers(Headers& dst, const char *bytes);
 void					header_analysis(Request& r, Headers &h);
 HeaderHandlers& 		get_header_field_handlers();
+//header_field_handlers
 void					transfer_encoding(Request& req, std::string const &value);
 TransferCodingRegister&	get_transfer_coding_register();
 void					validate_transfer_coding(const std::string& name);
 void					content_length(Request& req, std::string const &value);
-void					calculate_length_message(Request& req);
+void					host(Request& req, std::string const &value);
 
+void					calculate_length_message(Request& req);
+bool					read_body(Request &req, const char *bytes);
+bool					decoding_chunked(Request& req, const char *bytes);
+std::size_t				read_chunk_size(std::size_t& size, const char *bytes);
 
 
 //struct Response {
 //};
 
 
-
-
-//void read_message_body(const char *bytes);
-//
-//static std::size_t read_chunk_size(std::size_t& size, const char *bytes);
-//void decoding_chunked(const char *bytes);
-//
-//static void	parse_request_target(URL &url, std::string const &src);
-//static void	parse_and_validate_method(Method &m, std::string const &src);
-//
-//
-
-
 }
+
 std::ostream& operator<<(std::ostream& os, const http::Headers& r);
 std::ostream& operator<<(std::ostream& os, const http::TransferEncoding & r);
 std::ostream& operator<<(std::ostream& os, const http::Request& r);
 std::ostream& operator<<(std::ostream&, const http::transfer_parameter&);
 std::ostream& operator<<(std::ostream&, const http::transfer_extension&);
-
-
+std::ostream& operator<<(std::ostream&, const http::URL&);
 #endif

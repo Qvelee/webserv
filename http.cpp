@@ -12,6 +12,7 @@ HeaderHandlers& get_header_field_handlers() {
   static HeaderHandlers header_field_handlers = {
 	  {"content-length", &content_length},
 	  {"transfer-encoding", &transfer_encoding},
+	  {"host", &host},
   };
   return header_field_handlers;
 }
@@ -36,17 +37,40 @@ bool	parse_request(Request& req, const char *bytes) {
   bytes += parse_headers(req.headers, bytes);
   header_analysis(req, req.headers);
   calculate_length_message(req);
-//  read_message_body(bytes);
+  if (req.content_length != 0)
+    return read_body(req, bytes);
   return true;
 }
 
-void	parse_request_target(URL &, const std::string &) {
-//  if (src.length() > 8000)
-//    error(414);
+void	parse_request_target(URL &url, Method &method, const std::string &str) {
+  if (str.length() > 8000)
+    error(414);
+  if (method == OPTIONS) {
+    parse_asterisk_form(url, str);
+  } else if (method == CONNECT) {
+    parse_authority_form(url, str);
+  } else {
+    parse_origin_form(url, str);
+  }
 }
 
-void	parse_and_validate_method(Method &, const std::string &) {
-
+void	parse_and_validate_method(Method &m, const std::string &str) {
+  static std::map<const std::string, Method> methods = {
+	  {"GET", GET},
+	  {"HEAD", HEAD},
+	  {"POST", POST},
+	  {"PUT", PUT},
+	  {"DELETE", DELETE},
+	  {"CONNECT", CONNECT},
+	  {"OPTIONS", OPTIONS},
+	  {"TRACE", TRACE},
+  };
+  if (methods.count(str)) {
+    m = methods[str];
+  } else
+  {
+	error(400);
+  }
 }
 
 /*
@@ -62,8 +86,8 @@ std::size_t parse_request_line(Request &r, const char *bytes) {
   parse_and_validate_method(r.method, method);
   size += skip_space(bytes + size, SP);
   std::string request_target;
-  size += get_request_target(r.url, bytes + size);
-  parse_request_target(r.url, request_target);
+  size += get_request_target(request_target, bytes + size);
+  parse_request_target(r.url, r.method, request_target);
   size += skip_space(bytes + size, SP);
   size += get_http_version(r.proto, bytes + size);
   if (r.proto != "HTTP/1.1")
@@ -123,8 +147,11 @@ std::size_t parse_headers(Headers &dst, const char *bytes) {
 	while (isblank(*field_value.rbegin()))
 	  field_value.erase(field_value.end() - 1);
 
-	if (dst.count(field_name) == 1)
+	if (dst.count(field_name) == 1) {
+	  if (field_name == "host")
+		error(400);
 	  dst[field_name].append(",");
+	}
 	dst[field_name].append(field_value);
 	field_value.clear();
 	field_name.clear();
@@ -238,99 +265,126 @@ void calculate_length_message(Request& req) {
   }
 }
 
-//void message::read_message_body(const char *bytes) {
-//  if (message_info_.length_ == "chunked")
-//    decoding_chunked(bytes);
-//  else if (message_info_.length_ == "content-length") {
-//    if (strlen(bytes) >= message_info_.content_length_) {
-//	  source_data_.decoded_body_.assign(bytes, message_info_.content_length_);
-//	} else {
-//	  error(400);
-//	}
-//  }
-//}
-//
-///*
-// * chunked-body = *chunk
-// * last-chunk
-// * trailer-part
-// * CRLF
-// *
-// * chunk = chunk-size [ chunk-ext ] CRLF
-// * chunk-data CRLF
-// * last-chunk = 1*("0") [ chunk-ext ] CRLF
-// *
-// * chunk-data = 1*OCTET ; a sequence of chunk-size octets
-// *
-// * trailer-part = *( header-field CRLF )
-// */
-//void message::decoding_chunked(const char *bytes) {
-//  std::size_t chunk_size;
-//
-//  // read chunk-size, chunk-ext(if any), and CRLF
-//  bytes += read_chunk_size(chunk_size, bytes);
-//
-//  //read chunk-data
-//  while (chunk_size > 0) {
-//    //read chunk-data and CRLF
-//    if (strlen(bytes) < chunk_size)
-//	  error(400);
-//    source_data_.decoded_body_.append(bytes, chunk_size);
-//    bytes += chunk_size;
-//    if (strncmp("\r\n", bytes, 2) != 0)
-//	  error(400);
-//    bytes += 2;
-//    bytes += read_chunk_size(chunk_size, bytes);
-//  }
-//
-//  //read trailer field
-//  std::map<std::string, std::string> trailer_headers;
-//  parse_headers(trailer_headers, bytes);
-//}
-//
-///*
-// * chunk-size = 1*HEXDIG
-// *
-// * chunk-ext = *( ";" chunk-ext-name [ "=" chunk-ext-val ] )
-// * chunk-ext-name = token
-// * chunk-ext-val = token / quoted-string
-// */
-//std::size_t message::read_chunk_size(std::size_t& chunk_size, const char
-//*bytes) {
-//  std::size_t size = 0;
-//  std::string ext_name;
-//  std::string ext_val;
-//
-//  //read chunk-size
-//  while (isxdigit(*(bytes + size)))
-//	++size;
-//  if (size == 0)
-//	error(400);
-//  std::stringstream ss(std::string(bytes, size));
-//  ss >> std::hex >> chunk_size;
-//  if (ss.fail())
-//	error(400);
-//
-//  // chunk-ext(if any)
-//  while (*(bytes + size) == ';') {
-//	++size;
-//	size += get_token(ext_name, bytes + size);
-//	if (*(bytes + size) == '=') {
-//	  ++size;
-//	  if (*(bytes + size) == DQUOTE) {
-//		++size;
-//		size += get_quoted_string(ext_val, bytes + size);
-//	  } else {
-//		size += get_token(ext_name, bytes + size);
-//	  }
-//	}
-//	ext_name.clear();
-//	ext_val.clear();
-//  }
-//
-//  size += skip_crlf(bytes + size);
-//
-//  return size;
-//}
+bool read_body(Request& req, const char *bytes) {
+  bool answer = true;
+  if (req.content_length == -1) {
+	answer = decoding_chunked(req, bytes);
+  }
+  else {
+    uint64_t bytes_to_add = req.content_length;
+    bytes_to_add -= req.body.length();
+    if (bytes_to_add > strlen(bytes)) {
+      bytes_to_add = strlen(bytes);
+      answer = false;
+    }
+	req.body.append(bytes, bytes_to_add);
+  }
+  return answer;
+}
+
+/*
+ * chunked-body = *chunk
+ * last-chunk
+ * trailer-part
+ * CRLF
+ *
+ * chunk = chunk-size [ chunk-ext ] CRLF
+ * chunk-data CRLF
+ * last-chunk = 1*("0") [ chunk-ext ] CRLF
+ *
+ * chunk-data = 1*OCTET ; a sequence of chunk-size octets
+ *
+ * trailer-part = *( header-field CRLF )
+ */
+bool decoding_chunked(Request& req, const char *bytes) {
+  std::size_t chunk_size;
+
+  // read chunk-size, chunk-ext(if any), and CRLF
+  bytes += read_chunk_size(chunk_size, bytes);
+
+  //read chunk-data
+  while (chunk_size > 0) {
+    //read chunk-data and CRLF
+    if (strlen(bytes) < chunk_size)
+	  error(400);
+    req.body.append(bytes, chunk_size);
+    bytes += chunk_size;
+    if (strncmp("\r\n", bytes, 2) != 0)
+	  error(400);
+    bytes += 2;
+    if (strlen(bytes) == 0)
+	  return false;
+    bytes += read_chunk_size(chunk_size, bytes);
+  }
+
+  //read trailer field
+  std::map<std::string, std::string> trailer_headers;
+  parse_headers(trailer_headers, bytes);
+  return true;
+}
+
+/*
+ * chunk-size = 1*HEXDIG
+ *
+ * chunk-ext = *( ";" chunk-ext-name [ "=" chunk-ext-val ] )
+ * chunk-ext-name = token
+ * chunk-ext-val = token / quoted-string
+ */
+std::size_t read_chunk_size(std::size_t& chunk_size, const char
+*bytes) {
+  std::size_t size = 0;
+  std::string ext_name;
+  std::string ext_val;
+
+  //read chunk-size
+  while (isxdigit(*(bytes + size)))
+	++size;
+  if (size == 0)
+	error(400);
+  std::stringstream ss(std::string(bytes, size));
+  ss >> std::hex >> chunk_size;
+  if (ss.fail())
+	error(400);
+
+  // chunk-ext(if any)
+  while (*(bytes + size) == ';') {
+	++size;
+	size += get_token(ext_name, bytes + size);
+	if (*(bytes + size) == '=') {
+	  ++size;
+	  if (*(bytes + size) == DQUOTE) {
+		++size;
+		size += get_quoted_string(ext_val, bytes + size);
+	  } else {
+		size += get_token(ext_name, bytes + size);
+	  }
+	}
+	ext_name.clear();
+	ext_val.clear();
+  }
+
+  size += skip_crlf(bytes + size);
+
+  return size;
+}
+
+/*
+ * Host = uri-host [":" port]
+ */
+void host(Request& req, std::string const &value) {
+  size_t host = 0;
+  host += get_host(req.url.host, value, host);
+  size_t port = host + 1;
+  if (host != value.length()) {
+	if (value[host] == ':') {
+	  req.url.host += ":";
+	  port += get_port(req.url.host, value, port);
+	  if (port != value.length())
+		error(400);
+	} else {
+	  error(400);
+	}
+  }
+}
 
 }
