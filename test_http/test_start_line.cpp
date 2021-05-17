@@ -51,7 +51,7 @@ std::ostream& operator<<(std::ostream& os, const http::URL& url) {
 }
 
 TEST(TestParserStartLine, NoFail) {
-  char message[] = "GET /me HTTP/1.1\r\n";
+  std::string message = "GET /me HTTP/1.1\r\n";
   http::Request expected = {
     http::GET,
 	{
@@ -60,60 +60,60 @@ TEST(TestParserStartLine, NoFail) {
 	"HTTP/1.1",
 	};
   http::Request current;
-  http::parse_request_line(current, message);
+  http::parse_request_line(current, message, 0);
   ASSERT_EQ(current, expected);
 }
 
 TEST(TestParserStartLine, EmptyMethod) {
-  char message[] = " /me HTTP/1.1\r\n";
+  std::string message = " /me HTTP/1.1\r\n";
   http::Request current;
-  ASSERT_ANY_THROW(http::parse_request_line(current, message));
+  ASSERT_ANY_THROW(http::parse_request_line(current, message, 0));
 }
 
 TEST(TestParserStartLine, OddSpace1) {
-  char message[] = "GET  /me HTTP/1.1\r\n";
+  std::string message = "GET  /me HTTP/1.1\r\n";
   http::Request current;
-  ASSERT_ANY_THROW(http::parse_request_line(current, message));
+  ASSERT_ANY_THROW(http::parse_request_line(current, message, 0));
 }
 
 TEST(TestParserStartLine, OddSpace2) {
-  char message[] = "GET /me HTTP/1.1 \r\n";
+  std::string message = "GET /me HTTP/1.1 \r\n";
   http::Request current;
-  ASSERT_ANY_THROW(http::parse_request_line(current, message));
+  ASSERT_ANY_THROW(http::parse_request_line(current, message, 0));
 }
 
 TEST(TestParserStartLine, OddSpace3) {
-  char message[] = "GET /me  HTTP/1.1\r\n";
+  std::string message = "GET /me  HTTP/1.1\r\n";
   http::Request current;
-  ASSERT_ANY_THROW(http::parse_request_line(current, message));
+  ASSERT_ANY_THROW(http::parse_request_line(current, message, 0));
 }
 
 TEST(TestParserStartLine, WrongProtocol) {
-  char message[] = "GET /me HTTP/1.10\r\n";
+  std::string message = "GET /me HTTP/1.10\r\n";
   http::Request current;
-  ASSERT_ANY_THROW(http::parse_request_line(current, message));
+  ASSERT_ANY_THROW(http::parse_request_line(current, message, 0));
 }
 
 TEST(TestParserStartLine, NoCRLF) {
-  char message[] = "GET /me HTTP/1.1";
+  std::string message = "GET /me HTTP/1.1";
   http::Request current;
-  ASSERT_ANY_THROW(http::parse_request_line(current, message));
+  ASSERT_ANY_THROW(http::parse_request_line(current, message, 0));
 }
 
 TEST(TestParserStartLine, CaseSensetive) {
-  char message[] = "GET /me HTtP/1.1\r\n";
+  std::string message = "GET /me HTtP/1.1\r\n";
   http::Request current;
-  ASSERT_ANY_THROW(http::parse_request_line(current, message));
+  ASSERT_ANY_THROW(http::parse_request_line(current, message, 0));
 }
 
 TEST(TestParserStartLine, WrongProtocol2) {
-  char message[] = "GET /me HTTP/1.2\r\n";
+  std::string message = "GET /me HTTP/1.2\r\n";
   http::Request current;
-  ASSERT_ANY_THROW(http::parse_request_line(current, message));
+  ASSERT_ANY_THROW(http::parse_request_line(current, message, 0));
 }
 
 TEST(TestParserStartLine, url) {
-  char message[] = "GET /me?param1=one&param2=two HTTP/1.1\r\n";
+  std::string message = "GET /me?param1=one&param2=two HTTP/1.1\r\n";
   http::Request current;
   http::Request expected = {
   	http::GET,
@@ -123,12 +123,12 @@ TEST(TestParserStartLine, url) {
   	},
   	"HTTP/1.1",
   };
-  http::parse_request_line(current, message);
+  http::parse_request_line(current, message, 0);
   ASSERT_EQ(current, expected);
 }
 
 TEST(TestParserStartLine, url2) {
-  char message[] = "CONNECT www.example.com:80 HTTP/1.1\r\n";
+  std::string message = "CONNECT www.example.com:80 HTTP/1.1\r\n";
   http::Request current;
   http::Request expected = {
 	  http::CONNECT,
@@ -137,7 +137,7 @@ TEST(TestParserStartLine, url2) {
 	  },
 	  "HTTP/1.1",
   };
-  http::parse_request_line(current, message);
+  http::parse_request_line(current, message, 0);
   ASSERT_EQ(current, expected);
 }
 /*

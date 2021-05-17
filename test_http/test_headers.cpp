@@ -20,15 +20,15 @@ operator<<(std::ostream& os, const http::transfer_extension& te) {
 
 
 TEST(TestParserHeaders, SpaceAfterStartLine) {
-  char message[] = " \r\n"
+  std::string message = " \r\n"
 				   "field1:value1\r\n";
 
   std::map<std::string, std::string> current;
-  ASSERT_ANY_THROW(http::parse_headers(current, message));
+  ASSERT_ANY_THROW(http::parse_headers(current, message, 0));
 }
 
 TEST(TestParserHeaders, SimpleMessage) {
-  char message[] = "field1:value1\r\n"
+  std::string message = "field1:value1\r\n"
 	   			   "field2:value2\r\n"
 		  		   "field3:value3\r\n"
 		           "\r\n";
@@ -39,23 +39,23 @@ TEST(TestParserHeaders, SimpleMessage) {
   expected["field3"] = "value3";
 
   std::map<std::string, std::string> current;
-  std::size_t size = http::parse_headers(current, message);
-  ASSERT_EQ(size, strlen(message));
+  std::size_t size = http::parse_headers(current, message, 0);
+  ASSERT_EQ(size, message.length());
   ASSERT_EQ(current, expected);
 }
 
 TEST(TestParserHeaders, NoSemicolons) {
-  char message[] = "field1;value1\r\n"
+  std::string message = "field1;value1\r\n"
 				   "field2:value2\r\n"
 				   "field3:value3\r\n"
 				   "\r\n";
 
   std::map<std::string, std::string> current;
-  ASSERT_ANY_THROW(http::parse_headers(current, message));
+  ASSERT_ANY_THROW(http::parse_headers(current, message, 0));
 }
 
 TEST(TestParserHeaders, SpaceAroundFieldValue) {
-  char message[] = "field1: value1 \r\n"
+  std::string message = "field1: value1 \r\n"
 				   "field2:  value2  \r\n"
 	   			   "field3:  value3  \r\n"
 		  		   "\r\n";
@@ -66,13 +66,13 @@ TEST(TestParserHeaders, SpaceAroundFieldValue) {
   expected["field3"] = "value3";
 
   std::map<std::string, std::string> current;
-  std::size_t size = http::parse_headers(current, message);
-  ASSERT_EQ(size, strlen(message));
+  std::size_t size = http::parse_headers(current, message, 0);
+  ASSERT_EQ(size, message.length());
   ASSERT_EQ(current, expected);
 }
 
 TEST(TestParserHeaders, SpaceIntoFieldValue) {
-  char message[] = "field1:va lue1\r\n"
+  std::string message = "field1:va lue1\r\n"
 	   			   "field2:value2\r\n"
 		  		   "field3:va lu  e3\r\n"
 		 		   "\r\n";
@@ -83,13 +83,13 @@ TEST(TestParserHeaders, SpaceIntoFieldValue) {
   expected["field3"] = "va lu  e3";
 
   std::map<std::string, std::string> current;
-  std::size_t size = http::parse_headers(current, message);
-  ASSERT_EQ(size, strlen(message));
+  std::size_t size = http::parse_headers(current, message, 0);
+  ASSERT_EQ(size, message.length());
   ASSERT_EQ(current, expected);
 }
 
 TEST(TestParserHeaders, ObsFold) {
-  char message[] =  "field1:val\r\n   ue1\r\n"
+  std::string message =  "field1:val\r\n   ue1\r\n"
 	   				"field2:v\r\n \talu\r\n e2\r\n"
 					"field3:value3\r\n"
 	 				"\r\n";
@@ -100,24 +100,24 @@ TEST(TestParserHeaders, ObsFold) {
   expected["field3"] = "value3";
 
   std::map<std::string, std::string> current;
-  std::size_t size = http::parse_headers(current, message);
-  ASSERT_EQ(size, strlen(message));
+  std::size_t size = http::parse_headers(current, message, 0);
+  ASSERT_EQ(size, message.length());
   ASSERT_EQ(current, expected);
 }
 
 TEST(TestParserHeaders, ForbiddenSymbol) {
-  char message[] = "field1:va\nue1\r\n"
+  std::string message = "field1:va\nue1\r\n"
 				   "field2:value2\r\n"
 				   "field3:value3\r\n"
 				   "\r\n";
 
   std::map<std::string, std::string> current;
-  ASSERT_ANY_THROW(http::parse_headers(current, message));
+  ASSERT_ANY_THROW(http::parse_headers(current, message, 0));
 }
 
 
 TEST(TestParserHeaders, TwoSameNames) {
-  char message[] = 	 "field1:value1\r\n"
+  std::string message = 	 "field1:value1\r\n"
 					 "field2:val ue2\r\n"
 					 "field3:value3\r\n"
 	  				 "field1:value4\r\n"
@@ -129,35 +129,35 @@ TEST(TestParserHeaders, TwoSameNames) {
   expected["field3"] = "value3";
 
   std::map<std::string, std::string> current;
-  std::size_t size = http::parse_headers(current, message);
-  ASSERT_EQ(size, strlen(message));
+  std::size_t size = http::parse_headers(current, message, 0);
+  ASSERT_EQ(size, message.length());
   ASSERT_EQ(current, expected);
 }
 
 
 
 TEST(TestParserHeaders, SpaceAfterFieldName) {
-  char message[] = 	 "field1  :value1\r\n"
+  std::string message = 	 "field1  :value1\r\n"
 					 "field2:value2\r\n"
 					 "field3:value3\r\n"
 					 "\r\n";
 
   std::map<std::string, std::string> current;
-  ASSERT_ANY_THROW(http::parse_headers(current, message));
+  ASSERT_ANY_THROW(http::parse_headers(current, message, 0));
 }
 
 TEST(TestParserHeaders, NoCRLF) {
-  char message[] = 	 "field1:value1\r\n"
+  std::string message = 	 "field1:value1\r\n"
 					 "field2:val ue2\r\n"
 					 "field3:value3\r\n"
 					 "field1:value4\r\n";
 
   std::map<std::string, std::string> current;
-  ASSERT_ANY_THROW(http::parse_headers(current, message));
+  ASSERT_ANY_THROW(http::parse_headers(current, message, 0));
 }
 
 TEST(TestParserHeaders, CaseSensitive) {
-  char message[] =	"FIELD1:value1\r\n"
+  std::string message =	"FIELD1:value1\r\n"
 					 "fieLd2:val ue2\r\n"
 					 "field3:value3\r\n"
 					 "field1:value4\r\n"
@@ -169,15 +169,15 @@ TEST(TestParserHeaders, CaseSensitive) {
   expected["field3"] = "value3";
 
   std::map<std::string, std::string> current;
-  std::size_t size = http::parse_headers(current, message);
-  ASSERT_EQ(size, strlen(message));
+  std::size_t size = http::parse_headers(current, message, 0);
+  ASSERT_EQ(size, message.length());
   ASSERT_EQ(current, expected);
 }
 
 TEST(Host, one) {
-  char message[] =	"Host:123.23.23.3\r\n"
+  std::string message =	"Host:123.23.23.3\r\n"
 				   "Host:www.ee.ru\r\n"
 					  "\r\n";
   std::map<std::string, std::string> current;
-  ASSERT_ANY_THROW(http::parse_headers(current, message));
+  ASSERT_ANY_THROW(http::parse_headers(current, message, 0));
 }

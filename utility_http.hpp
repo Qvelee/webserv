@@ -10,12 +10,12 @@ enum SPACE {
   RWS
 };
 
-std::size_t get_token(std::string& dst, const char *src);
-std::size_t get_request_target(std::string& dst, const char *src);
-std::size_t get_http_version(std::string& dst, const char *src);
-std::size_t skip_space(const char *src, SPACE);
-std::size_t skip_crlf(const char *src);
-std::size_t get_quoted_string(std::string& dst, const char *src);
+size_t get_token(std::string& dst, std::string const &data, size_t begin);
+size_t get_request_target(std::string& dst, std::string const &data, size_t begin);
+size_t get_http_version(std::string& dst, std::string const &data, size_t begin);
+size_t skip_space(std::string const &data, size_t begin, SPACE);
+size_t skip_crlf(std::string const &str, size_t begin);
+size_t get_quoted_string(std::string& dst, std::string const &data, size_t begin);
 bool istchar(int c);
 bool isqdtext(int c);
 void tolower(std::string &str);

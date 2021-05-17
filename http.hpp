@@ -129,13 +129,13 @@ typedef const std::map<std::string, void (*)(Request& req, std::string const &fi
     HeaderHandlers;
 typedef const std::map<std::string, int> TransferCodingRegister;
 
-bool					parse_request(Request& req, const char *data);
-std::size_t				parse_request_line(Request &r, const char *bytes);
-void					parse_and_validate_method(Method &m, std::string const &src);
-void					parse_request_target(URL &url, Method &m, std::string const &src);
-std::size_t 			parse_headers(Headers& dst, const char *bytes);
-void					header_analysis(Request& r, Headers &h);
-HeaderHandlers& 		get_header_field_handlers();
+bool			parse_request(Request& req, std::string const &data);
+size_t			parse_request_line(Request &r, std::string const &data, size_t begin);
+void			parse_and_validate_method(Method &m, std::string const &src);
+void			parse_request_target(URL &url, Method &m, std::string const &src);
+size_t 			parse_headers(Headers& dst, std::string const& data, size_t begin);
+void			header_analysis(Request& r, Headers &h);
+HeaderHandlers&	get_header_field_handlers();
 //header_field_handlers
 void					transfer_encoding(Request& req, std::string const &value);
 TransferCodingRegister&	get_transfer_coding_register();
@@ -143,10 +143,10 @@ void					validate_transfer_coding(const std::string& name);
 void					content_length(Request& req, std::string const &value);
 void					host(Request& req, std::string const &value);
 
-void					calculate_length_message(Request& req);
-bool					read_body(Request &req, const char *bytes);
-bool					decoding_chunked(Request& req, const char *bytes);
-std::size_t				read_chunk_size(std::size_t& size, const char *bytes);
+void	calculate_length_message(Request& req);
+bool	read_body(Request &req, std::string const &data, size_t begin);
+bool	decoding_chunked(Request& req, std::string const &data, size_t begin);
+size_t	read_chunk_size(size_t& size, std::string const &data, size_t begin);
 
 
 //struct Response {

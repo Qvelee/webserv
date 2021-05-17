@@ -2,7 +2,7 @@
 #include <gtest/gtest.h>
 
 TEST(TestHost, one) {
-  char message[] = "GET /me HTTP/1.1\r\n"
+  std::string message = "GET /me HTTP/1.1\r\n"
 				   "Host:www.example.ru\r\n"
 	   "\r\n";
   http::Request expected = {

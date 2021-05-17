@@ -43,51 +43,46 @@ bool istchar(int c) {
 /*
  * token = 1*tchar
  */
-std::size_t get_token(std::string& dst, const char *src) {
-  std::size_t size = 0;
-
-  while (istchar(*(src + size)))
-    ++size;
-  if (size == 0)
+size_t get_token(std::string& dst, std::string const &data, size_t begin) {
+  size_t pos = begin;
+  while (istchar(data[pos]))
+    ++pos;
+  if (pos - begin == 0)
 	error(400);
-  dst.append(src, size);
-
-  return size;
+  dst.append(data, begin, pos - begin);
+  return pos - begin;
 }
 
-std::size_t get_request_target(std::string& dst, const char *src) {
-  std::size_t size = 0;
-
-  while (*(src + size) != ' ' && *(src + size) != '\0')
-    ++size;
-  if (*(src + size) != ' ')
+size_t get_request_target(std::string& dst, std::string const &data, size_t begin) {
+  size_t pos = begin;
+  while (data[pos] != ' ' && data[pos] != '\0')
+    ++pos;
+  if (data[pos] != ' ')
 	error(400);
-  dst.append(src, size);
-  return size;
+  dst.append(data, begin, pos - begin);
+  return pos - begin;
 }
 
 /*
  * HTTP-version = HTTP-name "/" DIGIT "." DIGIT
  * HTTP-name = %x48.54.54.50 ; "HTTP", case-sensitive
  */
-std::size_t get_http_version(std::string& dst, const char *src) {
-  std::size_t size = 0;
-
-  if (strncmp(src, "HTTP/", 5) != 0)
+size_t get_http_version(std::string& dst, std::string const &data, size_t begin) {
+  size_t pos = begin;
+  if (data.compare(begin, 5, "HTTP/") != 0)
 	error(400);
-  size += 5;
-  if (!isdigit(*(src + size)))
+  pos += 5;
+  if (!isdigit(data[pos]))
 	error(400);
-  ++size;
-  if (*(src + size) != '.')
+  ++pos;
+  if (data[pos] != '.')
 	error(400);
-  ++size;
-  if (!isdigit(*(src + size)))
+  ++pos;
+  if (!isdigit(data[pos]))
 	error(400);
-  ++size;
-  dst.append(src, size);
-
-  return size;
+  ++pos;
+  dst.append(data, begin, pos - begin);
+  return pos - begin;
 }
 
 // HTAB = '\t'; // %x09
@@ -97,28 +92,28 @@ std::size_t get_http_version(std::string& dst, const char *src) {
 // RWS = 1*(SP/ HTAB)
 // WSP = SP / HTAB ; isblank()
 
-std::size_t skip_space(const char *src, SPACE space) {
-  std::size_t size = 0;
+size_t skip_space(std::string const &data, size_t begin, SPACE space) {
+  size_t pos = begin;
 
   switch (space) {
 	case SP:
-	  if (*src != ' ')
+	  if (data[pos] != ' ')
 		error(400);
-	  size = 1;
+	  ++pos;
 	  break;
 	case OWS:
 	case BWS:
-	  while (isblank(*(src + size)))
-	    ++size;
+	  while (isblank(data[pos]))
+	    ++pos;
 	  break;
 	case RWS:
-	  if (!isblank(*src))
+	  if (!isblank(data[pos]))
 		error(400);
-	  while (isblank(*(src + size)))
-		++size;
+	  while (isblank(data[pos]))
+		++pos;
 	  break;
   }
-  return size;
+  return pos - begin;
 }
 
 /*
@@ -126,8 +121,8 @@ std::size_t skip_space(const char *src, SPACE space) {
  * CRLF = "\r\n";
  * LF = "\n"; // %x0A
 */
-std::size_t skip_crlf(const char *src) {
-  if (strncmp("\r\n", src, 2) != 0)
+size_t skip_crlf(std::string const &str, size_t begin) {
+  if (str.compare(begin, 2, "\r\n") != 0)
 	error(400);
   return 2;
 }
@@ -149,29 +144,28 @@ bool isquoted_pair(int c) {
   return (c == '\t' || c == ' ' || isgraph(c) || c > 127);
 }
 
-std::size_t get_quoted_string(std::string& dst, const char *src) {
-  std::size_t size = 0;
-  std::size_t begin_word = 0;
+size_t get_quoted_string(std::string& dst, std::string const &data, size_t begin) {
+  size_t pos = begin;
+  size_t begin_word = pos;
 
-  while (isqdtext(*(src + size)) || *(src + size) == '\\') {
-	if (*(src + size) == '\\') {
-	  dst.append(src + begin_word, size - begin_word);
-	  ++size;
-	  if (*(src + size) == '\0' || !isquoted_pair(*(src + size)))
+  while (isqdtext(data[pos]) || data[pos] == '\\') {
+	if (data[pos] == '\\') {
+	  dst.append(data, begin_word, pos - begin_word);
+	  ++pos;
+	  if (data[pos] == '\0' || !isquoted_pair(data[pos]))
 		error(400);
-	  dst.append(1, *(src + size));
-	  ++size;
-	  begin_word = size;
+	  dst.append(1, data[pos]);
+	  ++pos;
+	  begin_word = pos;
 	} else {
-	  ++size;
+	  ++pos;
 	}
   }
-  if (*(src + size) != '"')
+  if (data[pos] != '"')
 	error(400);
-  dst.append(src + begin_word, size - begin_word);
-  ++size;
-
-  return size;
+  dst.append(data, begin_word, pos - begin_word);
+  ++pos;
+  return pos - begin;
 }
 
 void tolower(std::string &str) {

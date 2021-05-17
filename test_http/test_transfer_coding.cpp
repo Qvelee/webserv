@@ -4,7 +4,7 @@
 
 
 TEST(TestParserTransferEncoding, TransferEncoding1) {
-  char message[] = "Transfer-Encoding: chunked  ;  size=1\r\n"
+  std::string message = "Transfer-Encoding: chunked  ;  size=1\r\n"
 				 "\r\n";
   std::vector<http::transfer_parameter> tp = {
 	  {"size", "1"},
@@ -13,13 +13,13 @@ TEST(TestParserTransferEncoding, TransferEncoding1) {
   	{"chunked", tp},
   	};
   http::Request req;
-  http::parse_headers(req.headers, message);
+  http::parse_headers(req.headers, message, 0);
   http::header_analysis(req, req.headers);
   ASSERT_EQ(req.transfer_encoding, expected);
 }
 
 TEST(TestParserTransferEncoding, TransferEncoding3) {
-  char message[] = "Transfer-Encoding:chunked  ;  size   =   1  \r\n"
+  std::string message = "Transfer-Encoding:chunked  ;  size   =   1  \r\n"
 				 "\r\n";
   std::vector<http::transfer_parameter> tp = {
 	  {"size", "1"},
@@ -28,13 +28,13 @@ TEST(TestParserTransferEncoding, TransferEncoding3) {
 	  {"chunked",tp},
   };
   http::Request req;
-  http::parse_headers(req.headers, message);
+  http::parse_headers(req.headers, message, 0);
   http::header_analysis(req, req.headers);
   ASSERT_EQ(req.transfer_encoding, expected);
 }
 
 TEST(TestParserTransferEncoding, TransferEncoding4) {
-  char message[] = "Transfer-Encoding:chunked;size=1\r\n"
+  std::string message = "Transfer-Encoding:chunked;size=1\r\n"
 				   "\r\n";
   std::vector<http::transfer_parameter> tp = {
 	  {"size", "1"},
@@ -43,13 +43,13 @@ TEST(TestParserTransferEncoding, TransferEncoding4) {
 	  {"chunked", tp},
   };
   http::Request req;
-  http::parse_headers(req.headers, message);
+  http::parse_headers(req.headers, message, 0);
   http::header_analysis(req, req.headers);
   ASSERT_EQ(req.transfer_encoding, expected);
 }
 
 TEST(TestParserTransferEncoding, TransferEncoding5) {
-  char message[] = "Transfer-Encoding:chunked,  chunked,  , ,  \r\n"
+  std::string message = "Transfer-Encoding:chunked,  chunked,  , ,  \r\n"
 				   "\r\n";
   std::vector<http::transfer_parameter> tp = {};
   http::TransferEncoding expected = {
@@ -57,13 +57,13 @@ TEST(TestParserTransferEncoding, TransferEncoding5) {
 	  {"chunked", tp},
   };
   http::Request req;
-  http::parse_headers(req.headers, message);
+  http::parse_headers(req.headers, message, 0);
   http::header_analysis(req, req.headers);
   ASSERT_EQ(req.transfer_encoding, expected);
 }
 
 TEST(TestParserTransferEncoding, TransferEncoding6) {
-  char message[] = "Transfer-Encoding:chunked ;size=45, chunked;   size  =  23\r\n"
+  std::string message = "Transfer-Encoding:chunked ;size=45, chunked;   size  =  23\r\n"
 				   "\r\n";
   std::vector<http::transfer_parameter> tp1 = {
 	  {"size", "45"},
@@ -76,13 +76,13 @@ TEST(TestParserTransferEncoding, TransferEncoding6) {
 	  {"chunked", tp2},
   };
   http::Request req;
-  http::parse_headers(req.headers, message);
+  http::parse_headers(req.headers, message, 0);
   http::header_analysis(req, req.headers);
   ASSERT_EQ(req.transfer_encoding, expected);
 }
 
 TEST(TestParserTransferEncoding, TransferEncoding7) {
-  char message[] = "Transfer-Encoding:chunkEd ;size=45, chunked;   size  =  23\r\n"
+  std::string message = "Transfer-Encoding:chunkEd ;size=45, chunked;   size  =  23\r\n"
 				   "\r\n";
   std::vector<http::transfer_parameter> tp1 = {
 	  {"size", "45"},
@@ -95,13 +95,13 @@ TEST(TestParserTransferEncoding, TransferEncoding7) {
   	{"chunked", tp2},
   };
   http::Request req;
-  http::parse_headers(req.headers, message);
+  http::parse_headers(req.headers, message, 0);
   http::header_analysis(req, req.headers);
   ASSERT_EQ(req.transfer_encoding, expected);
 }
 
 TEST(TestParserTransferEncoding, TransferEncoding8) {
-  char message[] = "Transfer-Encoding:chunked ;size=\"45\", chunked;   size"
+  std::string message = "Transfer-Encoding:chunked ;size=\"45\", chunked;   size"
 				   "  =   \"2\\\"3\"\r\n"
 	   "\r\n";
   std::vector<http::transfer_parameter> tp1 = {
@@ -115,30 +115,30 @@ TEST(TestParserTransferEncoding, TransferEncoding8) {
   	{"chunked", tp2},
   };
   http::Request req;
-  http::parse_headers(req.headers, message);
+  http::parse_headers(req.headers, message, 0);
   http::header_analysis(req, req.headers);
   ASSERT_EQ(req.transfer_encoding, expected);
 }
 
 TEST(TestParserTransferEncoding, TransferEncodingFail1) {
-  char message[] = "Transfer-Encoding:gzip ;size=\"45, chunked;   size  =  23\r\n"
+  std::string message = "Transfer-Encoding:gzip ;size=\"45, chunked;   size  =  23\r\n"
 				   "\r\n";
   http::Request req;
-  http::parse_headers(req.headers, message);
+  http::parse_headers(req.headers, message, 0);
   ASSERT_ANY_THROW(http::header_analysis(req, req.headers));
 }
 
 TEST(TestParserTransferEncoding, TransferEncodingFail2) {
-  char message[] = "Transfer-Encoding:gzi ;size=45, chunked;   size  =  23\r\n"
+  std::string message = "Transfer-Encoding:gzi ;size=45, chunked;   size  =  23\r\n"
 				   "\r\n";
 
   http::Request req;
-  http::parse_headers(req.headers, message);
+  http::parse_headers(req.headers, message, 0);
   ASSERT_ANY_THROW(http::header_analysis(req, req.headers));
 }
 
 TEST(TestParserTransferEncoding, TransferEncoding9) {
-  char message[] = "Transfer-Encoding:chunked ;size=45 ;size=87, chunked;   size  =  "
+  std::string message = "Transfer-Encoding:chunked ;size=45 ;size=87, chunked;   size  =  "
 				   "23\r\n"
 				   "\r\n";
   std::vector<http::transfer_parameter> tp1 = {
@@ -153,7 +153,7 @@ TEST(TestParserTransferEncoding, TransferEncoding9) {
 	  {"chunked", tp2},
   };
   http::Request req;
-  http::parse_headers(req.headers, message);
+  http::parse_headers(req.headers, message, 0);
   http::header_analysis(req, req.headers);
   ASSERT_EQ(req.transfer_encoding, expected);
 }
