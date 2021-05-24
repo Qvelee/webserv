@@ -1,24 +1,6 @@
 #include "../http.hpp"
 #include <gtest/gtest.h>
 
-
-std::ostream&
-operator<<(std::ostream& os, const http::transfer_parameter& tp) {
-  os << tp.name << "=" << tp.value;
-  return os;
-}
-
-std::ostream&
-operator<<(std::ostream& os, const http::transfer_extension& te) {
-  os << te.token;
-  for (auto &it : te.transfer_parameter) {
-    os << ";" << it;
-  }
-  return os;
-}
-
-
-
 TEST(TestParserHeaders, SpaceAfterStartLine) {
   std::string message = " \r\n"
 				   "field1:value1\r\n";

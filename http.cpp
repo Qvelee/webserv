@@ -8,27 +8,6 @@ namespace http {
 
 const char	DQUOTE = '\"';
 
-HeaderHandlers& get_header_field_handlers() {
-  static HeaderHandlers header_field_handlers = {
-	  {"content-length", &content_length},
-	  {"transfer-encoding", &transfer_encoding},
-	  {"host", &host},
-  };
-  return header_field_handlers;
-}
-
-TransferCodingRegister& get_transfer_coding_register() {
-  static const TransferCodingRegister transfer_coding_register = {
-	  {"chunked", 1},
-//	  {"compress", 1},
-//	  {"deflate", 1},
-//	  {"gzip", 1},
-//	  {"x-compress", 1},
-//	  {"x-gzip", 1},
-  };
-  return transfer_coding_register;
-}
-
 /*
  * HTTP-message = start-line *( header-field CRLF ) CRLF [ message-body ]
  */
@@ -43,7 +22,7 @@ bool	parse_request(Request& req, std::string const &data) {
   return true;
 }
 
-void	parse_request_target(URL &url, Method &method, const std::string &str) {
+void	parse_request_target(url::URL &url, Method &method, const std::string &str) {
   if (str.length() > 8000)
     error(414);
   if (method == OPTIONS) {
@@ -68,9 +47,8 @@ void	parse_and_validate_method(Method &m, const std::string &str) {
   };
   if (methods.count(str)) {
     m = methods[str];
-  } else
-  {
-	error(400);
+  } else {
+	error(501);
   }
 }
 
@@ -124,7 +102,7 @@ size_t parse_headers(Headers &dst, std::string const &data, size_t begin) {
 	// field-vchar = VCHAR / obs-text
 
 	// obs-fold = CRLF 1*( SP / HTAB )
-	bool obs_fold = false;
+	bool obs_fold;
 	do {
 	  size_t local_size = 0;
 	  while (data[pos + local_size] < 0 || isgraph(data[pos + local_size])
@@ -161,105 +139,13 @@ size_t parse_headers(Headers &dst, std::string const &data, size_t begin) {
   return pos - begin;
 }
 
-void header_analysis(Request &req, Headers &h) {
-  Headers::const_iterator first;
-  Headers::const_iterator last;
-  first = h.begin();
-  last = h.end();
-
-  HeaderHandlers &handlers = get_header_field_handlers();
-  for (; first != last; ++first) {
-	if (handlers.count(first->first))
-	  handlers.at(first->first)(req, first->second);
-  }
-}
-
-/*
- * Content-Length = 1*DIGIT
- */
-void content_length(Request& req, std::string const &value) {
-  if (value.find_first_not_of("0123456789") != std::string::npos)
-	error(400);
-  std::stringstream ss(value);
-  ss >> req.content_length;
-  if (ss.fail())
-	error(400);
-  if (req.content_length < 0)
-	error(400);
-}
-
-void validate_transfer_coding(const std::string& name) {
-  TransferCodingRegister& r = get_transfer_coding_register();
-  if (r.count(name) == 0)
-	error(501);
-}
-
-/*
- * transfer-extension = token *( OWS ";" OWS transfer-parameter )
- */
-void transfer_encoding(Request& req, std::string const &extension) {
-  size_t begin_word = 0;
-  size_t end_word = 0;
-  transfer_extension tmp_ext;
-  transfer_parameter tmp_par;
-
-  while (begin_word != extension.size()) {
-	end_word += get_token(tmp_ext.token, extension, begin_word);
-	tolower(tmp_ext.token);
-	validate_transfer_coding(tmp_ext.token);
-
-	end_word += skip_space(extension, end_word, OWS);
-
-	while (extension[end_word] == ';') {
-	  ++end_word;
-
-	  end_word += skip_space(extension, end_word, OWS);
-	  /*
-	   * transfer-parameter = token BWS "=" BWS ( token / quoted-string )
-	   */
-	  begin_word = end_word;
-	  end_word += get_token(tmp_par.name, extension, begin_word);
-
-	  end_word += skip_space(extension, end_word, BWS);
-
-	  if (extension[end_word] != '=')
-		error(400);
-	  ++end_word;
-
-	  end_word += skip_space(extension, end_word, BWS);
-
-	  begin_word = end_word;
-	  //quoted-string / token
-	  if (extension[end_word] == DQUOTE) {
-	    ++end_word;
-		++begin_word;
-		end_word += get_quoted_string(tmp_par.value,
-								extension, begin_word);
-	  } else {
-	    end_word += get_token(tmp_par.value, extension, begin_word);
-	  }
-	  tmp_ext.transfer_parameter.push_back(tmp_par);
-	  tmp_par.name.clear();
-	  tmp_par.value.clear();
-	  end_word += skip_space(extension, end_word, OWS);
-	}
-	req.transfer_encoding.push_back(tmp_ext);
-	while (extension[end_word] == ',' || isblank(extension[end_word]))
-	  ++end_word;
-	begin_word = end_word;
-	tmp_ext.token.clear();
-	tmp_ext.transfer_parameter.clear();
-  }
-}
-
 void calculate_length_message(Request& req) {
   if (req.headers.count("transfer-encoding") && req.headers.count("content-length"))
 	error(400);
   if (req.headers.count("transfer-encoding")) {
     if (req.transfer_encoding.back().token != "chunked") {
 	  error(400);
-    }
-  } else if (req.headers.count("content-length") == 0) {
+    }  } else if (req.headers.count("content-length") == 0) {
     req.content_length = 0;
   }
 }
@@ -362,25 +248,6 @@ size_t read_chunk_size(size_t& chunk_size, std::string const &data, size_t begin
   }
   pos += skip_crlf(data, pos);
   return pos - begin;
-}
-
-/*
- * Host = uri-host [":" port]
- */
-void host(Request& req, std::string const &value) {
-  size_t host = 0;
-  host += get_host(req.url.host, value, host);
-  size_t port = host + 1;
-  if (host != value.length()) {
-	if (value[host] == ':') {
-	  req.url.host += ":";
-	  port += get_port(req.url.host, value, port);
-	  if (port != value.length())
-		error(400);
-	} else {
-	  error(400);
-	}
-  }
 }
 
 }

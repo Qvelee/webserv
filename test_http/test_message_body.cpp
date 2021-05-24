@@ -1,12 +1,11 @@
 #include "../http.hpp"
 #include <gtest/gtest.h>
 
-
 // transfer-encoding
 TEST(TestParserTransferEncoding, Simple) {
   std::string message = "Transfer-Encoding:chunked\r\n"
 				   "\r\n";
-  std::vector<http::transfer_parameter> tp = {};
+  std::vector<http::parameter> tp = {};
   http::TransferEncoding expected = {
 	  {"chunked", tp},
   };

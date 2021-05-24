@@ -1,12 +1,10 @@
 #include "../http.hpp"
 #include <gtest/gtest.h>
 
-
-
 TEST(TestParserTransferEncoding, TransferEncoding1) {
   std::string message = "Transfer-Encoding: chunked  ;  size=1\r\n"
 				 "\r\n";
-  std::vector<http::transfer_parameter> tp = {
+  std::vector<http::parameter> tp = {
 	  {"size", "1"},
   };
   http::TransferEncoding expected = {
@@ -21,7 +19,7 @@ TEST(TestParserTransferEncoding, TransferEncoding1) {
 TEST(TestParserTransferEncoding, TransferEncoding3) {
   std::string message = "Transfer-Encoding:chunked  ;  size   =   1  \r\n"
 				 "\r\n";
-  std::vector<http::transfer_parameter> tp = {
+  std::vector<http::parameter> tp = {
 	  {"size", "1"},
   };
   http::TransferEncoding expected = {
@@ -36,7 +34,7 @@ TEST(TestParserTransferEncoding, TransferEncoding3) {
 TEST(TestParserTransferEncoding, TransferEncoding4) {
   std::string message = "Transfer-Encoding:chunked;size=1\r\n"
 				   "\r\n";
-  std::vector<http::transfer_parameter> tp = {
+  std::vector<http::parameter> tp = {
 	  {"size", "1"},
   };
   http::TransferEncoding expected = {
@@ -51,7 +49,7 @@ TEST(TestParserTransferEncoding, TransferEncoding4) {
 TEST(TestParserTransferEncoding, TransferEncoding5) {
   std::string message = "Transfer-Encoding:chunked,  chunked,  , ,  \r\n"
 				   "\r\n";
-  std::vector<http::transfer_parameter> tp = {};
+  std::vector<http::parameter> tp = {};
   http::TransferEncoding expected = {
 	  {"chunked", tp},
 	  {"chunked", tp},
@@ -65,10 +63,10 @@ TEST(TestParserTransferEncoding, TransferEncoding5) {
 TEST(TestParserTransferEncoding, TransferEncoding6) {
   std::string message = "Transfer-Encoding:chunked ;size=45, chunked;   size  =  23\r\n"
 				   "\r\n";
-  std::vector<http::transfer_parameter> tp1 = {
+  std::vector<http::parameter> tp1 = {
 	  {"size", "45"},
   };
-  std::vector<http::transfer_parameter> tp2 = {
+  std::vector<http::parameter> tp2 = {
 	  {"size", "23"},
   };
   http::TransferEncoding expected = {
@@ -84,10 +82,10 @@ TEST(TestParserTransferEncoding, TransferEncoding6) {
 TEST(TestParserTransferEncoding, TransferEncoding7) {
   std::string message = "Transfer-Encoding:chunkEd ;size=45, chunked;   size  =  23\r\n"
 				   "\r\n";
-  std::vector<http::transfer_parameter> tp1 = {
+  std::vector<http::parameter> tp1 = {
 	  {"size", "45"},
   };
-  std::vector<http::transfer_parameter> tp2 = {
+  std::vector<http::parameter> tp2 = {
 	  {"size", "23"},
   };
   http::TransferEncoding expected = {
@@ -104,10 +102,10 @@ TEST(TestParserTransferEncoding, TransferEncoding8) {
   std::string message = "Transfer-Encoding:chunked ;size=\"45\", chunked;   size"
 				   "  =   \"2\\\"3\"\r\n"
 	   "\r\n";
-  std::vector<http::transfer_parameter> tp1 = {
+  std::vector<http::parameter> tp1 = {
 	  {"size", "45"},
   };
-  std::vector<http::transfer_parameter> tp2 = {
+  std::vector<http::parameter> tp2 = {
 	  {"size", "2\"3"},
   };
   http::TransferEncoding expected = {
@@ -141,11 +139,11 @@ TEST(TestParserTransferEncoding, TransferEncoding9) {
   std::string message = "Transfer-Encoding:chunked ;size=45 ;size=87, chunked;   size  =  "
 				   "23\r\n"
 				   "\r\n";
-  std::vector<http::transfer_parameter> tp1 = {
+  std::vector<http::parameter> tp1 = {
 	  {"size", "45"},
 	  {"size", "87"}
   };
-  std::vector<http::transfer_parameter> tp2 = {
+  std::vector<http::parameter> tp2 = {
 	  {"size", "23"},
   };
   http::TransferEncoding expected = {
