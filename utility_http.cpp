@@ -1,5 +1,3 @@
-#include "http.hpp"
-#include "error_http.hpp"
 #include <cctype>
 #include <cstring>
 #include <sstream>
@@ -35,22 +33,27 @@ bool istchar(int c) {
 }
 
 // token = 1*tchar
-size_t get_token(std::string& dst, std::string const &data, size_t begin) {
+size_t get_token(std::string& dst, std::string const &data, size_t begin, int &err) {
   size_t pos = begin;
   while (istchar(data[pos]))
     ++pos;
-  if (pos - begin == 0)
-	error(400);
+  if (pos - begin == 0) {
+    err = 400;
+	return 0;
+  }
   dst.append(data, begin, pos - begin);
   return pos - begin;
 }
 
-size_t get_request_target(std::string& dst, std::string const &data, size_t begin) {
+size_t get_request_target(std::string& dst, std::string const &data, size_t begin,
+						  int &err) {
   size_t pos = begin;
   while (data[pos] != ' ' && data[pos] != '\0')
     ++pos;
-  if (data[pos] != ' ')
-	error(400);
+  if (data[pos] != ' ') {
+	err = 400;
+	return 0;
+  }
   dst.append(data, begin, pos - begin);
   return pos - begin;
 }
@@ -59,19 +62,28 @@ size_t get_request_target(std::string& dst, std::string const &data, size_t begi
  * HTTP-version = HTTP-name "/" DIGIT "." DIGIT
  * HTTP-name = %x48.54.54.50 ; "HTTP", case-sensitive
  */
-size_t get_http_version(std::string& dst, std::string const &data, size_t begin) {
+size_t get_http_version(std::string& dst, std::string const &data, size_t begin,
+						 int &err) {
   size_t pos = begin;
-  if (data.compare(begin, 5, "HTTP/") != 0)
-	error(400);
+  if (data.compare(begin, 5, "HTTP/") != 0)  {
+	err = 505;
+	return 0;
+  }
   pos += 5;
-  if (!isdigit(data[pos]))
-	error(400);
+  if (!isdigit(data[pos])) {
+	err = 400;
+	return 0;
+  }
   ++pos;
-  if (data[pos] != '.')
-	error(400);
+  if (data[pos] != '.') {
+	err = 400;
+	return 0;
+  }
   ++pos;
-  if (!isdigit(data[pos]))
-	error(400);
+  if (!isdigit(data[pos])) {
+	err = 400;
+	return 0;
+  }
   ++pos;
   dst.append(data, begin, pos - begin);
   return pos - begin;
@@ -86,13 +98,15 @@ size_t get_http_version(std::string& dst, std::string const &data, size_t begin)
  * WSP = SP / HTAB ; isblank()
  */
 
-size_t skip_space(std::string const &data, size_t begin, SPACE space) {
+size_t skip_space(std::string const &data, size_t begin, SPACE space, int &err) {
   size_t pos = begin;
 
   switch (space) {
 	case SP:
-	  if (data[pos] != ' ')
-		error(400);
+	  if (data[pos] != ' ') {
+		err = 400;
+	    return 0;
+	  }
 	  ++pos;
 	  break;
 	case OWS:
@@ -101,8 +115,10 @@ size_t skip_space(std::string const &data, size_t begin, SPACE space) {
 	    ++pos;
 	  break;
 	case RWS:
-	  if (!isblank(data[pos]))
-		error(400);
+	  if (!isblank(data[pos])) {
+	    err = 400;
+		return 0;
+	  }
 	  while (isblank(data[pos]))
 		++pos;
 	  break;
@@ -115,9 +131,11 @@ size_t skip_space(std::string const &data, size_t begin, SPACE space) {
  * CRLF = "\r\n";
  * LF = "\n"; // %x0A
 */
-size_t skip_crlf(std::string const &str, size_t begin) {
-  if (str.compare(begin, 2, "\r\n") != 0)
-	error(400);
+size_t skip_crlf(std::string const &str, size_t begin, int &err) {
+  if (str.compare(begin, 2, "\r\n") != 0) {
+    err = 400;
+	return 0;
+  }
   return 2;
 }
 
@@ -138,7 +156,8 @@ bool isquoted_pair(int c) {
   return (c == '\t' || c == ' ' || isgraph(c) || c > 127);
 }
 
-size_t get_quoted_string(std::string& dst, std::string const &data, size_t begin) {
+size_t get_quoted_string(std::string& dst, std::string const &data, size_t begin,
+						 int &err) {
   size_t pos = begin;
   size_t begin_word = pos;
 
@@ -146,8 +165,10 @@ size_t get_quoted_string(std::string& dst, std::string const &data, size_t begin
 	if (data[pos] == '\\') {
 	  dst.append(data, begin_word, pos - begin_word);
 	  ++pos;
-	  if (data[pos] == '\0' || !isquoted_pair(data[pos]))
-		error(400);
+	  if (data[pos] == '\0' || !isquoted_pair(data[pos])) {
+		err = 400;
+	    return 0;
+	  }
 	  dst.append(1, data[pos]);
 	  ++pos;
 	  begin_word = pos;
@@ -155,8 +176,10 @@ size_t get_quoted_string(std::string& dst, std::string const &data, size_t begin
 	  ++pos;
 	}
   }
-  if (data[pos] != '"')
-	error(400);
+  if (data[pos] != '"') {
+    err = 400;
+	return 0;
+  }
   dst.append(data, begin_word, pos - begin_word);
   ++pos;
   return pos - begin;
