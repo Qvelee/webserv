@@ -188,6 +188,9 @@ void calculate_length_message(Request& req, StatusCode &err) {
     if (req.transfer_encoding.back().token != "chunked") {
 	  err = StatusBadRequest;
       return;
+    } else
+    {
+      req.content_length = -1;
     }
   } else if (req.headers.count("content-length") == 0) {
     req.content_length = 0;
