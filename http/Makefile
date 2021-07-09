@@ -6,9 +6,11 @@
 #    By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2021/05/14 14:50:43 by nelisabe          #+#    #+#              #
-#    Updated: 2021/07/09 13:46:21 by nelisabe         ###   ########.fr        #
+#    Updated: 2021/07/09 13:40:23 by nelisabe         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
+
+MAKEFLAGS =			--no-print-directory
 
 ### colors ###
 RESET =				\033[0m
@@ -18,59 +20,55 @@ GREEN =				\033[32m
 GRAY =				\033[2m
 ##############
 
-NAME =				libserv.a
+NAME =				libhttp.a
 
 COMP ?=				clang++
 
 FLAGS ?=			-g #-Wall -Wextra -Werror -std=c++98
 
-INCLUDES ?=			-I. -I./../http/
+INCLUDES ?=			-I.
 
 #SRC DIRS
 
-SERV_SRC_DIR =		./
+HTTP_SRC_DIR =		./
 
 #SRC
 
-SERV_SRC =			server.cpp \
-					client.cpp
+HTTP_SRC =			header_handlers.cpp \
+					http.cpp \
+					url.cpp \
+					utility_http.cpp
 
 #OBJ DIRS
 
-SERV_OBJ_DIR =		./temp/
+HTTP_OBJ_DIR =		./temp/
 
 #OBJ
 
-SERV_OBJ =			$(addprefix $(SERV_OBJ_DIR), $(SERV_SRC:.cpp=.o))
+HTTP_OBJ =			$(addprefix $(HTTP_OBJ_DIR), $(HTTP_SRC:.cpp=.o))
 
-D_FILES = 			$(patsubst %.o, %.d, $(SERV_OBJ))
+D_FILES = 			$(patsubst %.o, %.d, $(HTTP_OBJ))
 
 ###
 
-all: libs $(SERV_OBJ_DIR) $(NAME)
+all: $(HTTP_OBJ_DIR) $(NAME)
 
-libs:
-	@$(MAKE) -C ./../http/
+$(HTTP_OBJ_DIR):
+	@mkdir -p $(HTTP_OBJ_DIR)
 
-$(SERV_OBJ_DIR):
-	@mkdir -p $(SERV_OBJ_DIR)
-
-$(NAME): $(SERV_OBJ)
+$(NAME): $(HTTP_OBJ)
 	@ar rcs $(NAME) $^
-	
 	@echo -e "$(GREEN)$(BOLD)$(NAME) created!$(RESET)"
 
-$(addprefix $(SERV_OBJ_DIR), %.o): %.cpp
+$(addprefix $(HTTP_OBJ_DIR), %.o): %.cpp
 	@$(COMP) -c $(FLAGS) $(INCLUDES) $< -o $@ -MMD
 
 clean:
 	@echo -e "$(GRAY)Deleting...$(RESET)"
-	@$(MAKE) clean -C ./../http/
 	@rm -rf temp
-	@echo -e "$(RED)$(BOLD)Server object files deleted!$(RESET)$(RED)$(RESET)"
+	@echo -e "$(RED)$(BOLD)Http object files deleted!$(RESET)$(RED)$(RESET)"
 
 fclean: clean
-	@$(MAKE) fclean -C ./../http/
 	@rm -rf $(NAME)
 	@echo -e "$(RED)$(BOLD)$(NAME) deleted!$(RESET)"
 

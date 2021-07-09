@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/06 12:56:25 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/05/14 17:48:58 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/09 15:18:37 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,6 +35,9 @@
 # define BUFFER 120000
 // ---------------------
 
+# define SUCCESS false
+# define FAILURE true
+
 typedef	struct sockaddr_in	t_sockaddr_in;
 typedef	struct sockaddr		t_sockaddr;
 typedef struct addrinfo 	t_addrinfo;
@@ -58,8 +61,7 @@ class Server
 		void	_accept_new_client(void);
 		int		_init_read_set(fd_set &set);
 		bool	_handle_income_requests(fd_set const &set);
-		bool	_parse_request(char const *request, char **response) const;
-		bool	_recvData(int socket_ID, char **buffer);
+		bool	_recvData(int socket_ID, char **buffer, int *bytes_recv);
 		bool	_sendData(int socket_ID, char const *buffer) const;
 
 		ushort					_serverPort;

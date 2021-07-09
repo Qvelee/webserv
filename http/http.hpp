@@ -6,135 +6,128 @@
 #include <vector>
 #include <map>
 #include <iostream>
+#include "url.hpp"
 
 namespace http {
 
 enum Method {
   GET,
-  HEAD,
   POST,
-  PUT,
-  DELETE,
-  CONNECT,
-  OPTIONS,
-  TRACE
+  DELETE
 };
 
-//struct URL {
-//
-//};
+enum StatusCode {
+  NoError						= 0,
+  StatusContinue				= 100,
+  StatusSwitchingProtocols		= 101,
+  StatusOK						= 200,
+  StatusCreated					= 201,
+  StatusAccepted				= 202,
+  StatusNonAuthoritativeInfo	= 203,
+  StatusNoContent				= 204,
+  StatusResetContent			= 205,
+  StatusMultipleChoices			= 300,
+  StatusMovedPermanently		= 301,
+  StatusFound					= 302,
+  StatusSeeOther				= 303,
+  StatusUseProxy				= 305,
+  StatusTemporaryRedirect		= 307,
+  StatusBadRequest				= 400,
+  StatusPaymentRequired			= 402,
+  StatusForbidden				= 403,
+  StatusNotFound				= 404,
+  StatusMethodNotAllowed		= 405,
+  StatusNotAcceptable			= 406,
+  StatusRequestTimeout			= 408,
+  StatusConflict				= 409,
+  StatusGone					= 410,
+  StatusLengthRequired			= 411,
+  StatusRequestEntityTooLarge	= 413,
+  StatusRequestURITooLong		= 414,
+  StatusUnsupportedMediaType	= 415,
+  StatusExpectationFailed		= 417,
+  StatusUpgradeRequired			= 426,
+  StatusInternalServerError		= 500,
+  StatusNotImplemented			= 501,
+  StatusBadGateway				= 502,
+  StatusServiceUnavailable		= 503,
+  StatusGatewayTimeout			= 504,
+  StatusHTTPVersionNotSupported	= 505
+};
 
-struct transfer_parameter {
+struct parameter {
   std::string name;
   std::string value;
-
-  bool operator==(const http::transfer_parameter& rhs) const {
-	if (name != rhs.name)
-	  return false;
-	if (value != rhs.value)
-	  return false;
-	return true;
-  }
 };
 
 struct transfer_extension {
   std::string token;
-  std::vector<transfer_parameter> transfer_parameter;
+  std::vector<parameter> transfer_parameter;
+};
 
-  bool operator==(const http::transfer_extension& rhs) const {
-	if (token != rhs.token)
-	  return false;
-	if (!(transfer_parameter == rhs.transfer_parameter))
-	  return false;
-	return true;
-  }
+struct media_type {
+  std::string type;
+  std::string subtype;
+  std::vector<parameter> parameters;
+};
+
+struct representation_metadata {
+  media_type				media_type;
+  std::vector<std::string>	content_language;
+  url::URL					content_location;
 };
 
 typedef std::map<std::string, std::string>		Headers;
 typedef std::vector<transfer_extension>			TransferEncoding;
 
-typedef std::string URL;
-
 struct Request {
-  Method			method;
-  URL				url;
-  std::string		proto;
-  Headers			headers;
-  int64_t			content_length;
-  TransferEncoding	transfer_encoding;
-  Headers			trailer;
-
-  Request(Method m=GET, URL url="", std::string proto="", Headers headers=Headers{},
-		  int64_t content_length=-1, TransferEncoding te=TransferEncoding{},
-		  Headers t = Headers{})
-		  : method(m),
-		  url(std::move(url)),
-		  proto(std::move(proto)),
-		  headers(std::move(headers)),
-		  content_length(content_length),
-		  transfer_encoding(std::move(te)),
-		  trailer(std::move(t)) {
-  }
-
-  bool operator==(const http::Request &rhs) const {
-    if (method != rhs.method)
-      return false;
-    if (url != rhs.url)
-      return false;
-    if (proto != rhs.proto)
-      return false;
-    if (headers != rhs.headers)
-      return false;
-    if (content_length != rhs.content_length)
-      return false;
-    if (transfer_encoding != rhs.transfer_encoding)
-      return false;
-    if (trailer != rhs.trailer)
-      return false;
-    return true;
-  }
+  Method					method;
+  url::URL					url;
+  std::string				proto;
+  Headers					headers;
+  int64_t					content_length;
+  TransferEncoding			transfer_encoding;
+  Headers					trailer;
+  std::string				body;
+  representation_metadata	metadata;
+  StatusCode				err;
 };
 
-typedef const std::map<std::string, void (*)(Request& req, std::string const &field)>
-    HeaderHandlers;
-typedef const std::map<std::string, int> TransferCodingRegister;
+typedef void (*field_handlers)(Request& req, std::string const &field, StatusCode &err);
+typedef const std::map<std::string, field_handlers>	HeaderHandlers;
+typedef const std::map<std::string, int>			TransferCodingRegister;
+typedef const std::map<std::string, int>			MediaTypeRegister;
 
-bool					parse_request(Request& req, const char *data);
-std::size_t				parse_request_line(Request &r, const char *bytes);
-std::size_t 			parse_headers(Headers& dst, const char *bytes);
-void					header_analysis(Request& r, Headers &h);
-HeaderHandlers& 		get_header_field_handlers();
-void					transfer_encoding(Request& req, std::string const &value);
+bool	parse_request(Request& req, std::string const &data);
+size_t	parse_request_line(Request &r, std::string const &data, size_t begin, StatusCode &err);
+void	parse_and_validate_method(Method &m, std::string const &src, StatusCode &err);
+void	parse_request_target(url::URL &url, Method &m, std::string const &src, StatusCode &err);
+size_t	parse_headers(Headers& dst, std::string const& data, size_t begin, StatusCode &err);
+void	header_analysis(Request& r, Headers &h, StatusCode &err);
+void	calculate_length_message(Request& req, StatusCode &err);
+bool	read_body(Request &req, std::string const &data, size_t begin, StatusCode &err);
+bool	add_body(Request &req, std::string const &date);
+bool	decoding_chunked(Request& req, std::string const &data, size_t begin, StatusCode &err);
+size_t	read_chunk_size(size_t& size, std::string const &data, size_t begin, StatusCode &err);
+
+//header_field_handlers
+HeaderHandlers&			get_header_field_handlers();
 TransferCodingRegister&	get_transfer_coding_register();
-void					validate_transfer_coding(const std::string& name);
-void					content_length(Request& req, std::string const &value);
-void					calculate_length_message(Request& req);
-
-
+MediaTypeRegister&		get_media_type_register();
+void	transfer_encoding(Request& req, std::string const &value, StatusCode &err);
+void	validate_transfer_coding(const std::string& name, StatusCode &err);
+void	content_length(Request& req, std::string const &value, StatusCode &err);
+void	host(Request& req, std::string const &value, StatusCode &err);
+void 	content_type(Request &req, std::string const &value, StatusCode &err);
+void	validate_media_type(const media_type& type, StatusCode &err);
+void	content_language(Request &req, std::string const &value, StatusCode &err);
+void	content_location(Request &req, std::string const &value, StatusCode &err);
 
 struct Response {
 };
 
-
-
-
-//void read_message_body(const char *bytes);
-//
-//static std::size_t read_chunk_size(std::size_t& size, const char *bytes);
-//void decoding_chunked(const char *bytes);
-//
-//static void	parse_request_target(URL &url, std::string const &src);
-//static void	parse_and_validate_method(Method &m, std::string const &src);
-//
-//
-
+std::string get_response(const Request& req, Response& resp);
 
 }
-std::ostream& operator<<(std::ostream& os, const http::Headers& r);
-std::ostream& operator<<(std::ostream& os, const http::TransferEncoding & r);
-std::ostream& operator<<(std::ostream& os, const http::Request& r);
-std::ostream& operator<<(std::ostream&, const http::transfer_parameter&);
-std::ostream& operator<<(std::ostream&, const http::transfer_extension&);
-
 
 #endif

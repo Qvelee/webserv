@@ -6,7 +6,7 @@
 #    By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2021/05/14 16:22:01 by nelisabe          #+#    #+#              #
-#    Updated: 2021/05/14 17:11:57 by nelisabe         ###   ########.fr        #
+#    Updated: 2021/07/09 13:48:56 by nelisabe         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -26,10 +26,9 @@ COMP ?=			clang++
 
 FLAGS ?=		-g #-Wall -Wextra -Werror -std=c++98
 
-INCLUDES ?=		-I./server/
+INCLUDES ?=		-I./server/ -I./http/ # delete
 
-LIBS =			-L./server/ -lserv
-
+LIBS =			-L./server/ -lserv -L./http/ -lhttp
 #SRC DIRS
 
 SRC_DIR =		./
@@ -62,11 +61,11 @@ $(OBJ_DIR):
 	@mkdir -p $(OBJ_DIR)
 
 $(NAME): $(OBJ)
-	$(COMP) $(FLAGS) $< $(INCLUDES) $(LIBS) -o $@ -MMD
+	@$(COMP) $(FLAGS) $< $(INCLUDES) $(LIBS) -o $@ -MMD
 	@echo -e "$(YELLOW)$(BOLD)$(NAME) created!$(RESET)"
 
 $(addprefix $(OBJ_DIR), %.o): %.cpp
-	$(COMP) -c $(FLAGS) $(INCLUDES) $< -o $@ -MMD
+	@$(COMP) -c $(FLAGS) $(INCLUDES) $< -o $@ -MMD
 
 clean:
 	@rm -rf temp

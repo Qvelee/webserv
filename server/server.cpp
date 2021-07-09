@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/06 12:56:02 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/05/14 17:37:06 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/09 17:18:46 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -110,58 +110,78 @@ int		Server::_init_read_set(fd_set &set)
 	for (std::vector<Client*>::iterator it = _clients.begin(); \
 		it < _clients.end(); it++)
 	{
-		int		CLsocket = (*it)->getSocket();
-		FD_SET(CLsocket, &set);
-		if (CLsocket > maxFd)
-			maxFd = CLsocket;
+		int		client_socket = (*it)->getSocket();
+		FD_SET(client_socket, &set);
+		if (client_socket > maxFd)
+			maxFd = client_socket;
 	}
 	return maxFd;
 }
 
 bool	Server::_handle_income_requests(fd_set const &set)
 {
+	Client		*client;
+	int			client_socket;
+	char		*bytes_request;
+	int			bytes_recv = -1;
+	std::string request;
+	std::string	response;
+
 	if (FD_ISSET(_socket_ID, &set))
 		_accept_new_client();
-	for (std::vector<Client*>::iterator it = _clients.begin(); \
-		it < _clients.end(); it++)
+	for (auto it = _clients.begin(); it < _clients.end(); it++)
 	{
-		int		CLsocket = (*it)->getSocket();
-
-		if (FD_ISSET(CLsocket, &set))
+		client = *it;
+		client_socket = client->getSocket();
+		if (FD_ISSET(client_socket, &set))
 		{
-			char	*request;
-			char	*response;
+			bytes_recv = -1;
 
-			if (_recvData(CLsocket, &request))
+			if (_recvData(client_socket, &bytes_request, &bytes_recv))
 			{
-				close(CLsocket);
-				delete *it;
+				close(client_socket);
+				delete client;
 				_clients.erase(it--);
 				continue ;
 			}
-			_parse_request(request, &response);
-			delete request;
-			_sendData(CLsocket, response);
-			delete response;
+			request = std::string(bytes_request, bytes_recv);
+			delete bytes_request;
+			if (client->getRecvStatus() == EMPTY && \
+				http::parse_request(client->getRequest(), request))
+			{
+				client->setRecvStatus(RecvStatus(FINISHED));
+				response = http::get_response(client->getRequest(), client->getResponse());
+			} else
+			{
+				if (client->getRecvStatus() == EMPTY)
+				{
+					client->setRecvStatus(NOTFINISHED);
+					continue ;
+				}
+				else
+					if (http::add_body(client->getRequest(), request))
+					{
+						client->setRecvStatus(RecvStatus(FINISHED));
+						response = http::get_response(client->getRequest(), client->getResponse());
+					} else
+					{
+						client->setRecvStatus(NOTFINISHED);
+						continue ;
+					}
+			}
+			if (_sendData(client_socket, response.c_str()))
+			{
+				close(client_socket);
+				delete client;
+				_clients.erase(it--);
+				continue ;
+			}
 		}
 	}
-	return false;
-}	
-
-bool	Server::_parse_request(char const *reqest, char **response) const
-{
-	std::cout << "Request: ";
-	std::cout << reqest << std::endl << "ENDL" << std::endl;
-	
-	std::string	resp;
-	std::cout << "Create your response: ";
-	std::getline(std::cin, resp);
-	*response = new char[resp.size() + 1];
-	memcpy(*response, resp.c_str(), resp.size() + 1);
-	return false;
+	return SUCCESS;
 }
 
-bool	Server::_recvData(int socket_ID, char **buffer)
+bool	Server::_recvData(int socket_ID, char **buffer, int *bytes_recv)
 {
 	int		bytes;
 	// add out_of_buffer read
@@ -169,9 +189,9 @@ bool	Server::_recvData(int socket_ID, char **buffer)
 	if ((bytes = recv(socket_ID, *buffer, _read_buffer_size - 1, 0)) > 0)
 		(*buffer)[bytes] = '\0';
 	else
-		return true;
-	std::cout << "Bytes readed: " << bytes << std::endl; // remove
-	return false;
+		return FAILURE;
+	*bytes_recv = bytes;
+	return SUCCESS;
 }
 
 bool	Server::_sendData(int socket_ID, char const *buffer) const
@@ -181,7 +201,7 @@ bool	Server::_sendData(int socket_ID, char const *buffer) const
 	if ((bytes = send(socket_ID, buffer, strlen(buffer), 0)) == -1)
 	{
 		std::cout << "Cannot send data" << std::endl;
-		return true;
+		return FAILURE;
 	}
-	return false;
+	return SUCCESS;
 }
