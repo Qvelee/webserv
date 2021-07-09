@@ -12,7 +12,7 @@ TEST(TestParserTransferEncoding, TransferEncoding1) {
 	  {"chunked", tp},
   };
   http::Request req;
-  int err = 0;
+  http::StatusCode err = http::NoError;
   http::parse_headers(req.headers, message, 0, err);
   ASSERT_EQ(err, 0);
   http::header_analysis(req, req.headers, err);
@@ -30,7 +30,7 @@ TEST(TestParserTransferEncoding, TransferEncoding3) {
 	  {"chunked",tp},
   };
   http::Request req;
-  int err = 0;
+  http::StatusCode err = http::NoError;
   http::parse_headers(req.headers, message, 0, err);
   ASSERT_EQ(err, 0);
   http::header_analysis(req, req.headers, err);
@@ -48,7 +48,7 @@ TEST(TestParserTransferEncoding, TransferEncoding4) {
 	  {"chunked", tp},
   };
   http::Request req;
-  int err = 0;
+  http::StatusCode err = http::NoError;
   http::parse_headers(req.headers, message, 0, err);
   ASSERT_EQ(err, 0);
   http::header_analysis(req, req.headers, err);
@@ -65,7 +65,7 @@ TEST(TestParserTransferEncoding, TransferEncoding5) {
 	  {"chunked", tp},
   };
   http::Request req;
-  int err = 0;
+  http::StatusCode err = http::NoError;
   http::parse_headers(req.headers, message, 0, err);
   ASSERT_EQ(err, 0);
   http::header_analysis(req, req.headers, err);
@@ -87,7 +87,7 @@ TEST(TestParserTransferEncoding, TransferEncoding6) {
 	  {"chunked", tp2},
   };
   http::Request req;
-  int err = 0;
+  http::StatusCode err = http::NoError;
   http::parse_headers(req.headers, message, 0, err);
   ASSERT_EQ(err, 0);
   http::header_analysis(req, req.headers, err);
@@ -109,7 +109,7 @@ TEST(TestParserTransferEncoding, TransferEncoding7) {
 	  {"chunked", tp2},
   };
   http::Request req;
-  int err = 0;
+  http::StatusCode err = http::NoError;
   http::parse_headers(req.headers, message, 0, err);
   ASSERT_EQ(err, 0);
   http::header_analysis(req, req.headers, err);
@@ -132,7 +132,7 @@ TEST(TestParserTransferEncoding, TransferEncoding8) {
 	  {"chunked", tp2},
   };
   http::Request req;
-  int err = 0;
+  http::StatusCode err = http::NoError;
   http::parse_headers(req.headers, message, 0, err);
   ASSERT_EQ(err, 0);
   http::header_analysis(req, req.headers, err);
@@ -144,7 +144,7 @@ TEST(TestParserTransferEncoding, TransferEncodingFail1) {
   std::string message = "Transfer-Encoding:gzip ;size=\"45, chunked;   size  =  23\r\n"
 						"\r\n";
   http::Request req;
-  int err = 0;
+  http::StatusCode err = http::NoError;
   http::parse_headers(req.headers, message, 0, err);
   ASSERT_EQ(err, 0);
   http::header_analysis(req, req.headers, err);
@@ -156,7 +156,7 @@ TEST(TestParserTransferEncoding, TransferEncodingFail2) {
 						"\r\n";
 
   http::Request req;
-  int err = 0;
+  http::StatusCode err = http::NoError;
   http::parse_headers(req.headers, message, 0, err);
   ASSERT_EQ(err, 0);
   http::header_analysis(req, req.headers, err);
@@ -180,7 +180,7 @@ TEST(TestParserTransferEncoding, TransferEncoding9) {
 	  {"chunked", tp2},
   };
   http::Request req;
-  int err = 0;
+  http::StatusCode err = http::NoError;
   http::parse_headers(req.headers, message, 0, err);
   ASSERT_EQ(err, 0);
   http::header_analysis(req, req.headers, err);

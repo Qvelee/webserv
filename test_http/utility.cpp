@@ -45,20 +45,20 @@ std::ostream &operator<<(std::ostream &os, const Request &r) {
   os << "Method: ";
   if (r.method == GET)
 	os << "GET";
-  if (r.method == CONNECT)
-	os << "CONNECT";
-  if (r.method == HEAD)
-	os << "HEAD";
+//  if (r.method == CONNECT)
+//	os << "CONNECT";
+//  if (r.method == HEAD)
+//	os << "HEAD";
   if (r.method == POST)
 	os << "POST";
-  if (r.method == PUT)
-	os << "PUT";
+//  if (r.method == PUT)
+//	os << "PUT";
   if (r.method == DELETE)
 	os << "DELETE";
-  if (r.method == OPTIONS)
-	os << "OPTIONS";
-  if (r.method == TRACE)
-	os << "TRACE";
+//  if (r.method == OPTIONS)
+//	os << "OPTIONS";
+//  if (r.method == TRACE)
+//	os << "TRACE";
   os << "\n";
   os << "URL: " << r.url << "\n";
   os << "Proto: " << r.proto << "\n";

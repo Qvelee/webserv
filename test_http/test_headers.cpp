@@ -7,7 +7,7 @@ TEST(TestParserHeaders, SpaceAfterStartLine) {
 				   "field1:value1\r\n";
 
   std::map<std::string, std::string> current;
-  int err;
+  http::StatusCode err;
   http::parse_headers(current, message, 0, err);
   ASSERT_EQ(err, 400);
 }
@@ -23,7 +23,7 @@ TEST(TestParserHeaders, SimpleMessage) {
   expected["field2"] = "value2";
   expected["field3"] = "value3";
 
-  int err;
+  http::StatusCode err;
   std::map<std::string, std::string> current;
   std::size_t size = http::parse_headers(current, message, 0, err);
   ASSERT_EQ(size, message.length());
@@ -38,7 +38,7 @@ TEST(TestParserHeaders, NoSemicolons) {
 				   "\r\n";
 
   std::map<std::string, std::string> current;
-  int err;
+  http::StatusCode err;
   http::parse_headers(current, message, 0, err);
   ASSERT_EQ(err, 400);
 }
@@ -55,7 +55,7 @@ TEST(TestParserHeaders, SpaceAroundFieldValue) {
   expected["field3"] = "value3";
 
   std::map<std::string, std::string> current;
-  int err;
+  http::StatusCode err;
   std::size_t size = http::parse_headers(current, message, 0, err);
   ASSERT_EQ(size, message.length());
   ASSERT_EQ(current, expected);
@@ -74,7 +74,7 @@ TEST(TestParserHeaders, SpaceIntoFieldValue) {
   expected["field3"] = "va lu  e3";
 
   std::map<std::string, std::string> current;
-  int err;
+  http::StatusCode err;
   std::size_t size = http::parse_headers(current, message, 0, err);
   ASSERT_EQ(size, message.length());
   ASSERT_EQ(current, expected);
@@ -92,7 +92,7 @@ TEST(TestParserHeaders, ObsFold) {
   expected["field2"] = "v alu e2";
   expected["field3"] = "value3";
 
-  int err;
+  http::StatusCode err;
   std::map<std::string, std::string> current;
   std::size_t size = http::parse_headers(current, message, 0, err);
   ASSERT_EQ(size, message.length());
@@ -107,7 +107,7 @@ TEST(TestParserHeaders, ForbiddenSymbol) {
 				   "\r\n";
 
   std::map<std::string, std::string> current;
-  int err;
+  http::StatusCode err;
   http::parse_headers(current, message, 0, err);
   ASSERT_EQ(err, 400);
 }
@@ -126,7 +126,7 @@ TEST(TestParserHeaders, TwoSameNames) {
   expected["field3"] = "value3";
 
   std::map<std::string, std::string> current;
-  int err;
+  http::StatusCode err;
   std::size_t size = http::parse_headers(current, message, 0, err);
   ASSERT_EQ(size, message.length());
   ASSERT_EQ(current, expected);
@@ -142,7 +142,7 @@ TEST(TestParserHeaders, SpaceAfterFieldName) {
 					 "\r\n";
 
   std::map<std::string, std::string> current;
-  int err;
+  http::StatusCode err;
   http::parse_headers(current, message, 0, err);
   ASSERT_EQ(err, 400);
 }
@@ -154,7 +154,7 @@ TEST(TestParserHeaders, NoCRLF) {
 					 "field1:value4\r\n";
 
   std::map<std::string, std::string> current;
-  int err;
+  http::StatusCode err;
   http::parse_headers(current, message, 0, err);
   ASSERT_EQ(err, 400);
 }
@@ -172,7 +172,7 @@ TEST(TestParserHeaders, CaseSensitive) {
   expected["field3"] = "value3";
 
   std::map<std::string, std::string> current;
-  int err;
+  http::StatusCode err;
   std::size_t size = http::parse_headers(current, message, 0, err);
   ASSERT_EQ(size, message.length());
   ASSERT_EQ(current, expected);
@@ -184,7 +184,7 @@ TEST(Host, one) {
 				   "Host:www.ee.ru\r\n"
 					  "\r\n";
   std::map<std::string, std::string> current;
-  int err;
+  http::StatusCode err;
   http::parse_headers(current, message, 0, err);
   ASSERT_EQ(err, 400);
 }

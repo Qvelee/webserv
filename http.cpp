@@ -11,130 +11,130 @@ const char	DQUOTE = '\"';
 bool	parse_request(Request& req, std::string const &data) {
   size_t pos = 0;
 
-  req.err = 0;
+  req.err = NoError;
   pos += parse_request_line(req, data, pos, req.err);
-  if (req.err != 0)
+  if (req.err != NoError)
 	return true;
   pos += parse_headers(req.headers, data, pos, req.err);
-  if (req.err != 0)
+  if (req.err != NoError)
 	return true;
   header_analysis(req, req.headers, req.err);
-  if (req.err != 0)
+  if (req.err != NoError)
 	return true;
   calculate_length_message(req, req.err);
-  if (req.err != 0)
+  if (req.err != NoError)
 	return true;
   if (req.content_length != 0) {
 	bool answer = read_body(req, data, pos, req.err);
-	if (req.err != 0)
+	if (req.err != NoError)
 	  return true;
 	return answer;
   }
   return true;
 }
 
-void	parse_request_target(url::URL &url, Method &method, const std::string &str,
-						  int &err) {
+void	parse_request_target(url::URL &url, Method &, const std::string &str,
+						  StatusCode &err) {
   if (str.length() > 8000) {
-	err = 414;
+	err = StatusRequestURITooLong;
 	return;
   }
-  if (method == OPTIONS) {
-    if (!parse_asterisk_form(url, str)) {
-      err = 400;
-    }
-  } else if (method == CONNECT) {
-    if (!parse_authority_form(url, str)) {
-      err = 400;
-    }
-  } else {
+//  if (method == OPTIONS) {
+//    if (!parse_asterisk_form(url, str)) {
+//      err = StatusBadRequest;
+//    }
+//  } else if (method == CONNECT) {
+//    if (!parse_authority_form(url, str)) {
+//      err = StatusBadRequest;
+//    }
+//  } else {
     if (!parse_origin_form(url, str)) {
-      err = 400;
+      err = StatusBadRequest;
     }
-  }
+//  }
 }
 
-void	parse_and_validate_method(Method &m, const std::string &str, int &err) {
+void	parse_and_validate_method(Method &m, const std::string &str, StatusCode &err) {
   static std::map<const std::string, Method> methods = {
 	  {"GET", GET},
-	  {"HEAD", HEAD},
+//	  {"HEAD", HEAD},
 	  {"POST", POST},
-	  {"PUT", PUT},
+//	  {"PUT", PUT},
 	  {"DELETE", DELETE},
-	  {"CONNECT", CONNECT},
-	  {"OPTIONS", OPTIONS},
-	  {"TRACE", TRACE},
+//	  {"CONNECT", CONNECT},
+//	  {"OPTIONS", OPTIONS},
+//	  {"TRACE", TRACE},
   };
   if (methods.count(str)) {
     m = methods[str];
   } else {
-    err = 501;
+    err = StatusNotImplemented;
   }
 }
 
 
 // request-line = method SP request-target SP HTTP-version CRLF
-size_t parse_request_line(Request &r, std::string const &data, size_t begin, int &err) {
+size_t parse_request_line(Request &r, std::string const &data, size_t begin, StatusCode &err) {
   size_t pos = begin;
 
   //skip first CRLF (3.5)
   if (data.compare(pos, 2, "\r\n") == 0)
   {
     pos += skip_crlf(data, pos, err);
-    if (err != 0)
+    if (err != NoError)
 	  return 0;
   }
   std::string method;
   pos += get_token(method, data, pos, err);
-  if (err != 0)
+  if (err != NoError)
 	return 0;
   parse_and_validate_method(r.method, method, err);
-  if (err != 0)
+  if (err != NoError)
 	return err;
   pos += skip_space(data, pos, SP, err);
   std::string request_target;
   pos += get_request_target(request_target, data, pos, err);
-  if (err != 0)
+  if (err != NoError)
 	return 0;
   parse_request_target(r.url, r.method, request_target, err);
-  if (err != 0)
+  if (err != NoError)
 	return 0;
   pos += skip_space(data, pos, SP, err);
-  if (err != 0)
+  if (err != NoError)
 	return 0;
   pos += get_http_version(r.proto, data, pos, err);
-  if (err != 0)
+  if (err != NoError)
 	return 0;
   if (r.proto != "HTTP/1.1") {
-	return err = 505;
+	return err = StatusHTTPVersionNotSupported;
   }
   pos += skip_crlf(data, pos, err);
-  if (err != 0)
+  if (err != NoError)
 	return 0;
   return pos - begin;
 }
 
 // header-field = field-name ":" OWS field-value OWS
-size_t parse_headers(Headers &dst, std::string const &data, size_t begin, int &err) {
+size_t parse_headers(Headers &dst, std::string const &data, size_t begin, StatusCode &err) {
   size_t pos = begin;
   std::string field_name;
   std::string field_value;
 
   if (data[pos] == SP) {
-	return err = 400;
+	return err = StatusBadRequest;
   }
   while (data.compare(pos, 2, "\r\n") != 0) {
     // field-name = token
 	pos += get_token(field_name, data, pos, err);
-	if (err != 0)
+	if (err != NoError)
 	  return 0;
 	tolower(field_name);
 	if (data[pos] != ':') {
-	  return err = 400;
+	  return err = StatusBadRequest;
 	}
 	++pos;
 	pos += skip_space(data, pos, OWS, err);
-	if (err != 0)
+	if (err != NoError)
 	  return 0;
 	// field-value = *( field-content / obs-fold )
 	// field-content = field-vchar [ 1*( SP / HTAB ) field-vchar ]
@@ -148,7 +148,7 @@ size_t parse_headers(Headers &dst, std::string const &data, size_t begin, int &e
 	   || isblank(data[pos + local_size]))
 		++local_size;
 	  if (data.compare(pos+local_size, 2, "\r\n") != 0) {
-		return err = 400;
+		return err = StatusBadRequest;
 	  }
 	  field_value.append(data, pos, local_size);
 	  field_value.append(1, ' ');
@@ -167,7 +167,7 @@ size_t parse_headers(Headers &dst, std::string const &data, size_t begin, int &e
 
 	if (dst.count(field_name) == 1) {
 	  if (field_name == "host") {
-		return err = 400;
+		return err = StatusBadRequest;
 	  }
 	  dst[field_name].append(",");
 	}
@@ -179,14 +179,14 @@ size_t parse_headers(Headers &dst, std::string const &data, size_t begin, int &e
   return pos - begin;
 }
 
-void calculate_length_message(Request& req, int &err) {
+void calculate_length_message(Request& req, StatusCode &err) {
   if (req.headers.count("transfer-encoding") && req.headers.count("content-length")) {
-    err = 400;
+    err = StatusBadRequest;
 	return;
   }
   if (req.headers.count("transfer-encoding")) {
     if (req.transfer_encoding.back().token != "chunked") {
-	  err = 400;
+	  err = StatusBadRequest;
       return;
     }
   } else if (req.headers.count("content-length") == 0) {
@@ -194,11 +194,18 @@ void calculate_length_message(Request& req, int &err) {
   }
 }
 
-bool read_body(Request& req, std::string const &data, size_t begin, int &err) {
+bool	add_body(Request &req, std::string const &data) {
+  bool answer = read_body(req, data, 0, req.err);
+  if (req.err != NoError)
+	return true;
+  return answer;
+}
+
+bool read_body(Request& req, std::string const &data, size_t begin, StatusCode &err) {
   bool answer = true;
   if (req.content_length == -1) {
 	answer = decoding_chunked(req, data, begin, err);
-	if (err != 0)
+	if (err != NoError)
 	  return err;
   }
   else {
@@ -227,30 +234,30 @@ bool read_body(Request& req, std::string const &data, size_t begin, int &err) {
  *
  * trailer-part = *( header-field CRLF )
  */
-bool decoding_chunked(Request& req, std::string const &data, size_t begin, int &err) {
+bool decoding_chunked(Request& req, std::string const &data, size_t begin, StatusCode &err) {
   size_t chunk_size;
   size_t pos = begin;
   // read chunk-size, chunk-ext(if any), and CRLF
   pos += read_chunk_size(chunk_size, data, pos, err);
-  if (err != 0)
+  if (err != NoError)
 	return err;
 
   //read chunk-data
   while (chunk_size > 0) {
     //read chunk-data and CRLF
     if (data.length() - pos < chunk_size) {
-	  return err = 400;
+	  return err = StatusBadRequest;
     }
     req.body.append(data, pos, chunk_size);
     pos += chunk_size;
     if (data.compare(pos, 2, "\r\n") != 0) {
-	  return err = 400;
+	  return err = StatusBadRequest;
     }
     pos += 2;
     if (data.length() - pos == 0)
 	  return false;
     pos += read_chunk_size(chunk_size, data, pos, err);
-    if (err != 0)
+    if (err != NoError)
 	  return err;
   }
   //read trailer field
@@ -267,7 +274,7 @@ bool decoding_chunked(Request& req, std::string const &data, size_t begin, int &
  * chunk-ext-val = token / quoted-string
  */
 size_t read_chunk_size(size_t& chunk_size, std::string const &data, size_t begin,
-					   int &err) {
+					   StatusCode &err) {
   size_t pos = begin;
   std::string ext_name;
   std::string ext_val;
@@ -276,29 +283,29 @@ size_t read_chunk_size(size_t& chunk_size, std::string const &data, size_t begin
   while (isxdigit(data[pos]))
 	++pos;
   if (pos - begin == 0) {
-	return err = 400;
+	return err = StatusBadRequest;
   }
   std::stringstream ss(std::string(data, begin, pos - begin));
   ss >> std::hex >> chunk_size;
   if (ss.fail()) {
-	return err = 400;
+	return err = StatusBadRequest;
   }
   // chunk-ext(if any)
   while (data[pos] == ';') {
 	++pos;
 	pos += get_token(ext_name, data, pos, err);
-	if (err != 0)
+	if (err != NoError)
 	  return err;
 	if (data[pos] == '=') {
 	  ++pos;
 	  if (data[pos] == DQUOTE) {
 		++pos;
 		pos += get_quoted_string(ext_val, data, pos, err);
-		if (err != 0)
+		if (err != NoError)
 		  return err;
 	  } else {
 		pos += get_token(ext_name, data, pos, err);
-		if (err != 0)
+		if (err != NoError)
 		  return err;
 	  }
 	}
@@ -306,9 +313,19 @@ size_t read_chunk_size(size_t& chunk_size, std::string const &data, size_t begin
 	ext_val.clear();
   }
   pos += skip_crlf(data, pos, err);
-  if (err != 0)
+  if (err != NoError)
 	return err;
   return pos - begin;
+}
+
+std::string get_response(const Request&, Response&) {
+  std::string answer;
+  answer.append("HTTP/1.1 200 OK\r\n"
+				"Content-Length: 12\r\n"
+				"Content-Type: text/plain\r\n"
+				"\r\n"
+				"Hello world!");
+  return answer;
 }
 
 }

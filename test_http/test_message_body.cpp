@@ -11,7 +11,7 @@ TEST(TestParserTransferEncoding, Simple) {
 	  {"chunked", tp},
   };
   http::Request req;
-  int err = 0;
+  http::StatusCode err = http::NoError;
   http::parse_headers(req.headers, message, 0, err);
   ASSERT_EQ(err, 0);
   http::header_analysis(req, req.headers, err);
@@ -24,7 +24,7 @@ TEST(TestParserContentLength, ContentLength) {
   std::string message = "Content-Length:42\r\n"
 						"\r\n";
   http::Request req;
-  int err = 0;
+  http::StatusCode err = http::NoError;
   http::parse_headers(req.headers, message, 0, err);
   ASSERT_EQ(err, 0);
   http::header_analysis(req, req.headers, err);
@@ -37,7 +37,7 @@ TEST(TestParserContentLength, TwoHeadersWithContentLength) {
 						"Content-Length:42\r\n"
 						"\r\n";
   http::Request req;
-  int err = 0;
+  http::StatusCode err = http::NoError;
   http::parse_headers(req.headers, message, 0, err);
   http::header_analysis(req, req.headers, err);
   ASSERT_EQ(err, 400);
@@ -47,7 +47,7 @@ TEST(TestParserContentLength, TwoValueInContentLength) {
   std::string message = "Content-Length:42,42\r\n"
 						"\r\n";
   http::Request req;
-  int err = 0;
+  http::StatusCode err = http::NoError;
   http::parse_headers(req.headers, message, 0, err);
   http::header_analysis(req, req.headers, err);
   ASSERT_EQ(err, 400);
@@ -57,7 +57,7 @@ TEST(TestParserContentLength, MoreValueInContentLength) {
   std::string message = "Content-Length:42, 42,,  ,   42  \r\n"
 						"\r\n";
   http::Request req;
-  int err = 0;
+  http::StatusCode err = http::NoError;
   http::parse_headers(req.headers, message, 0, err);
   http::header_analysis(req, req.headers, err);
   ASSERT_EQ(err, 400);
@@ -68,7 +68,7 @@ TEST(TestParserContentLength, DifferentValueInContentLength) {
 						"Content-Length:43\r\n"
 						"\r\n";
   http::Request req;
-  int err = 0;
+  http::StatusCode err = http::NoError;
   http::parse_headers(req.headers, message, 0, err);
   http::header_analysis(req, req.headers, err);
   ASSERT_EQ(err, 400);
@@ -78,7 +78,7 @@ TEST(TestParserContentLength, DifferentValueInOneHeader) {
   std::string message = "Content-Length:42, 43\r\n"
 						"\r\n";
   http::Request req;
-  int err = 0;
+  http::StatusCode err = http::NoError;
   http::parse_headers(req.headers, message, 0, err);
   http::header_analysis(req, req.headers, err);
   ASSERT_EQ(err, 400);
@@ -88,7 +88,7 @@ TEST(TestParserContentLength, EmptyContentLength) {
   std::string message = "Content-Length:  , , \r\n"
 						"\r\n";
   http::Request req;
-  int err = 0;
+  http::StatusCode err = http::NoError;
   http::parse_headers(req.headers, message, 0, err);
   http::header_analysis(req, req.headers, err);
   ASSERT_EQ(err, 400);
@@ -98,7 +98,7 @@ TEST(TestParserContentLength, BigNumber) {
   std::string message = "Content-Length:99999999999999999999999\r\n"
 						"\r\n";
   http::Request req;
-  int err = 0;
+  http::StatusCode err = http::NoError;
   http::parse_headers(req.headers, message, 0, err);
   http::header_analysis(req, req.headers, err);
   ASSERT_EQ(err, 400);
@@ -110,7 +110,7 @@ TEST(TestMessageBody, CalculateLength1) {
   http::Request req = {
   	.content_length = -1,
   };
-  int err = 0;
+  http::StatusCode err = http::NoError;
   http::parse_headers(req.headers, message, 0, err);
   ASSERT_EQ(err, 0);
   http::header_analysis(req, req.headers, err);
@@ -124,7 +124,7 @@ TEST(TestMessageBody, CalculateLength2) {
   std::string message = "Transfer-Encoding:gzip\r\n"
 						"\r\n";
   http::Request req;
-  int err = 0;
+  http::StatusCode err = http::NoError;
   http::parse_headers(req.headers, message, 0, err);
   http::header_analysis(req, req.headers, err);
   ASSERT_EQ(err, 501);
@@ -135,7 +135,7 @@ TEST(TestMessageBody, CalculateLength3) {
 						"Content-Length:42\r\n"
 						"\r\n";
   http::Request req;
-  int err = 0;
+  http::StatusCode err = http::NoError;
   http::parse_headers(req.headers, message, 0, err);
   ASSERT_EQ(err, 0);
   http::header_analysis(req, req.headers, err);
@@ -148,7 +148,7 @@ TEST(TestMessageBody, CalculateLength4) {
   std::string message = "Content-Length:42\r\n"
 						"\r\n";
   http::Request req;
-  int err = 0;
+  http::StatusCode err = http::NoError;
   http::parse_headers(req.headers, message, 0, err);
   ASSERT_EQ(err, 0);
   http::header_analysis(req, req.headers, err);
@@ -161,7 +161,7 @@ TEST(TestMessageBody, CalculateLength4) {
 TEST(TestMessageBody, CalculateLength5) {
   std::string message = "\r\n";
   http::Request req;
-  int err = 0;
+  http::StatusCode err = http::NoError;
   http::parse_headers(req.headers, message, 0, err);
   ASSERT_EQ(err, 0);
   http::header_analysis(req, req.headers, err);
@@ -176,7 +176,7 @@ TEST(TestReadBody, ContentLength) {
 						"\r\n";
   std::string body = "Hello, world!\n";
   http::Request req;
-  int err = 0;
+  http::StatusCode err = http::NoError;
   http::parse_headers(req.headers, message, 0, err);
   ASSERT_EQ(err, 0);
   http::header_analysis(req, req.headers, err);
@@ -194,7 +194,7 @@ TEST(TestReadBody, ContentLength2) {
   std::string body = "Hello, world!\n";
   char tmp[] = "Hello, world!";
   http::Request req;
-  int err = 0;
+  http::StatusCode err = http::NoError;
   http::parse_headers(req.headers, message, 0, err);
   ASSERT_EQ(err, 0);
   http::header_analysis(req, req.headers, err);
@@ -211,7 +211,7 @@ TEST(TestReadBody, ContentLength3) {
 						"\r\n";
   std::string body = "Hello, world!\n";
   http::Request req;
-  int err = 0;
+  http::StatusCode err = http::NoError;
   http::parse_headers(req.headers, message, 0, err);
   ASSERT_EQ(err, 0);
   http::header_analysis(req, req.headers, err);
@@ -229,7 +229,7 @@ TEST(TestReadBody, ContentLength4) {
   std::string halfBody = "Hello,";
   std::string body = "Hello, world!\n";
   http::Request req;
-  int err = 0;
+  http::StatusCode err = http::NoError;
   http::parse_headers(req.headers, message, 0, err);
   ASSERT_EQ(err, 0);
   http::header_analysis(req, req.headers, err);
@@ -259,7 +259,7 @@ TEST(ReadBody, Chunked) {
   http::Request req = {
   	.content_length = -1,
   };
-  int err = 0;
+  http::StatusCode err = http::NoError;
   http::parse_headers(req.headers, header, 0, err);
   ASSERT_EQ(err, 0);
   http::header_analysis(req, req.headers, err);
@@ -288,7 +288,7 @@ TEST(ReadBody, Chunked2) {
   http::Request req = {
   	.content_length = -1,
   };
-  int err = 0;
+  http::StatusCode err = http::NoError;
   http::parse_headers(req.headers, header, 0, err);
   ASSERT_EQ(err, 0);
   http::header_analysis(req, req.headers, err);
@@ -318,7 +318,7 @@ TEST(ReadBody, Chunked3) {
   http::Request req = {
   	.content_length = -1,
   };
-  int err = 0;
+  http::StatusCode err = http::NoError;
   http::parse_headers(req.headers, header, 0, err);
   ASSERT_EQ(err, 0);
   http::header_analysis(req, req.headers, err);

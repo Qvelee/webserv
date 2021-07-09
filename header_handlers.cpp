@@ -32,7 +32,7 @@ MediaTypeRegister& get_media_type_register() {
   };
   return type_register;
 }
-void header_analysis(Request &req, Headers &h, int &err) {
+void header_analysis(Request &req, Headers &h, StatusCode &err) {
   Headers::const_iterator first;
   Headers::const_iterator last;
   first = h.begin();
@@ -40,7 +40,7 @@ void header_analysis(Request &req, Headers &h, int &err) {
 
   HeaderHandlers &handlers = get_header_field_handlers();
   if (handlers.count("host") == 0) {
-    err = 400;
+    err = StatusBadRequest;
 	return;
   }
   for (; first != last; ++first) {
@@ -52,31 +52,31 @@ void header_analysis(Request &req, Headers &h, int &err) {
 }
 
 // Content-Length = 1*DIGIT
-void content_length(Request& req, std::string const &value, int &err) {
+void content_length(Request& req, std::string const &value, StatusCode &err) {
   if (value.find_first_not_of("0123456789") != std::string::npos) {
-	err = 400;
+	err = StatusBadRequest;
 	return;
   }
   std::stringstream ss(value);
   ss >> req.content_length;
   if (ss.fail()) {
-    err = 400;
+    err = StatusBadRequest;
 	return;
   }
   if (req.content_length < 0) {
-    err = 400;
+    err = StatusBadRequest;
 	return;
   }
 }
 
-void validate_transfer_coding(const std::string& name, int &err) {
+void validate_transfer_coding(const std::string& name, StatusCode &err) {
   TransferCodingRegister& r = get_transfer_coding_register();
   if (r.count(name) == 0)
-	err = 501;
+	err = StatusNotImplemented;
 }
 
 // transfer-extension = token *( OWS ";" OWS transfer-parameter )
-void transfer_encoding(Request& req, std::string const &extension, int &err) {
+void transfer_encoding(Request& req, std::string const &extension, StatusCode &err) {
   size_t begin_word = 0;
   size_t end_word = 0;
   transfer_extension tmp_ext;
@@ -107,7 +107,7 @@ void transfer_encoding(Request& req, std::string const &extension, int &err) {
 	  if (err != 0)
 		return;
 	  if (extension[end_word] != '=') {
-	    err = 400;
+	    err = StatusBadRequest;
 		return;
 	  }
 	  ++end_word;
@@ -144,7 +144,7 @@ void transfer_encoding(Request& req, std::string const &extension, int &err) {
 }
 
 // Host = uri-host [":" port]
-void host(Request& req, std::string const &value, int &err) {
+void host(Request& req, std::string const &value, StatusCode &err) {
   size_t host = 0;
   host += url::get_host(req.url.host, value, host);
   size_t port = host + 1;
@@ -153,19 +153,19 @@ void host(Request& req, std::string const &value, int &err) {
 	  req.url.host += ":";
 	  port += url::get_port(req.url.host, value, port);
 	  if (port != value.length()) {
-	    err = 400;
+	    err = StatusBadRequest;
 		return;
 	  }
 	} else {
-	  err = 400;
+	  err = StatusBadRequest;
 	}
   }
 }
 
-void validate_media_type(const media_type& type, int &err) {
+void validate_media_type(const media_type& type, StatusCode &err) {
   MediaTypeRegister& type_register = get_media_type_register();
   if (type_register.count(type.type + "/" + type.subtype) == 0) {
-	err = 501;
+	err = StatusNotImplemented;
 	return;
   }
 //  for (size_t i = 0; i < type.parameters.size(); ++i) {
@@ -182,7 +182,7 @@ void validate_media_type(const media_type& type, int &err) {
 //		continue;
 //      }
 //    }
-//	error1(400);
+//	error1(StatusBadRequest);
 //  }
 }
 
@@ -191,7 +191,7 @@ void validate_media_type(const media_type& type, int &err) {
  * type = token
  * subtype = token
  */
-void content_type(Request &req, std::string const &value, int &err) {
+void content_type(Request &req, std::string const &value, StatusCode &err) {
   size_t begin_word = 0;
   parameter tmp_par;
 
@@ -200,7 +200,7 @@ void content_type(Request &req, std::string const &value, int &err) {
 	return;
   tolower(req.metadata.media_type.type);
   if (value[begin_word] != '/') {
-    err = 400;
+    err = StatusBadRequest;
 	return;
   }
   ++begin_word;
@@ -224,7 +224,7 @@ void content_type(Request &req, std::string const &value, int &err) {
 	if (err != 0)
 	  return;
 	if (value[begin_word] != '=') {
-	  err = 400;
+	  err = StatusBadRequest;
 	  return;
 	}
     ++begin_word;
@@ -249,7 +249,7 @@ void content_type(Request &req, std::string const &value, int &err) {
 }
 
 // Content-Language = 1#language-tag
-void content_language(Request &req, std::string const &value, int &err) {
+void content_language(Request &req, std::string const &value, StatusCode &err) {
   size_t begin_world = 0;
   size_t end_world;
   while (value[begin_world] == ',') {
@@ -263,7 +263,7 @@ void content_language(Request &req, std::string const &value, int &err) {
     ++end_world;
   }
   if (end_world - begin_world == 0) {
-    err = 400;
+    err = StatusBadRequest;
 	return;
   }
   req.metadata.content_language.push_back(value.substr(begin_world, end_world -
@@ -274,7 +274,7 @@ void content_language(Request &req, std::string const &value, int &err) {
 	if (err != 0)
 	  return;
 	if (value[begin_world] != ',') {
-	  err = 400;
+	  err = StatusBadRequest;
 	  return;
 	}
     ++begin_world;
@@ -294,7 +294,7 @@ void content_language(Request &req, std::string const &value, int &err) {
 }
 
 // Content-Location = absolute-URI / partial-URI
-void content_location(Request &req, std::string const &value, int &) {
+void content_location(Request &req, std::string const &value, StatusCode &) {
   if (value.length() != 0 && value[0] == '/') {
     parse_partial_uri(req.url, value);
   } else {
