@@ -1,6 +1,7 @@
 #include "http.hpp"
 #include "utility_http.hpp"
 #include "sstream"
+#include "url.hpp"
 
 namespace http {
 
@@ -11,6 +12,7 @@ HeaderHandlers &get_header_field_handlers() {
 	  {"content-length", &content_length},
 	  {"transfer-encoding", &transfer_encoding},
 	  {"host", &host},
+	  {"connection", &connection},
 	  {"content-type", &content_type},
 	  {"content-language", &content_language},
 	  {"content-location", &content_location},
@@ -32,6 +34,7 @@ MediaTypeRegister& get_media_type_register() {
   };
   return type_register;
 }
+
 void header_analysis(Request &req, Headers &h, StatusCode &err) {
   Headers::const_iterator first;
   Headers::const_iterator last;
@@ -46,7 +49,7 @@ void header_analysis(Request &req, Headers &h, StatusCode &err) {
   for (; first != last; ++first) {
 	if (handlers.count(first->first))
 	  handlers.at(first->first)(req, first->second, err);
-	if (err != 0)
+	if (err != NoError)
 	  return;
   }
 }
@@ -84,27 +87,27 @@ void transfer_encoding(Request& req, std::string const &extension, StatusCode &e
 
   while (begin_word != extension.size()) {
 	end_word += get_token(tmp_ext.token, extension, begin_word, err);
-	if (err != 0)
+	if (err != NoError)
 	  return;
 	tolower(tmp_ext.token);
 	validate_transfer_coding(tmp_ext.token, err);
-	if (err != 0)
+	if (err != NoError)
 	  return;
 	end_word += skip_space(extension, end_word, OWS, err);
-	if (err != 0)
+	if (err != NoError)
 	  return;
 	while (extension[end_word] == ';') {
 	  ++end_word;
 	  end_word += skip_space(extension, end_word, OWS, err);
-	  if (err != 0)
+	  if (err != NoError)
 		return;
 	  // transfer-parameter = token BWS "=" BWS ( token / quoted-string )
 	  begin_word = end_word;
 	  end_word += get_token(tmp_par.name, extension, begin_word, err);
-	  if (err != 0)
+	  if (err != NoError)
 		return;
 	  end_word += skip_space(extension, end_word, BWS, err);
-	  if (err != 0)
+	  if (err != NoError)
 		return;
 	  if (extension[end_word] != '=') {
 	    err = StatusBadRequest;
@@ -112,7 +115,7 @@ void transfer_encoding(Request& req, std::string const &extension, StatusCode &e
 	  }
 	  ++end_word;
 	  end_word += skip_space(extension, end_word, BWS, err);
-	  if (err != 0)
+	  if (err != NoError)
 		return;
 	  begin_word = end_word;
 	  //quoted-string / token
@@ -120,18 +123,18 @@ void transfer_encoding(Request& req, std::string const &extension, StatusCode &e
 		++end_word;
 		++begin_word;
 		end_word += get_quoted_string(tmp_par.value, extension, begin_word, err);
-		if (err != 0)
+		if (err != NoError)
 		  return;
 	  } else {
 		end_word += get_token(tmp_par.value, extension, begin_word, err);
-		if (err != 0)
+		if (err != NoError)
 		  return;
 	  }
 	  tmp_ext.transfer_parameter.push_back(tmp_par);
 	  tmp_par.name.clear();
 	  tmp_par.value.clear();
 	  end_word += skip_space(extension, end_word, OWS, err);
-	  if (err != 0)
+	  if (err != NoError)
 		return;
 	}
 	req.transfer_encoding.push_back(tmp_ext);
@@ -146,12 +149,13 @@ void transfer_encoding(Request& req, std::string const &extension, StatusCode &e
 // Host = uri-host [":" port]
 void host(Request& req, std::string const &value, StatusCode &err) {
   size_t host = 0;
-  host += url::get_host(req.url.host, value, host);
+  url::URL tmp;
+  host += url::get_host(tmp.host, value, host);
   size_t port = host + 1;
   if (host != value.length()) {
 	if (value[host] == ':') {
-	  req.url.host += ":";
-	  port += url::get_port(req.url.host, value, port);
+	  tmp.host += ":";
+	  port += url::get_port(tmp.host, value, port);
 	  if (port != value.length()) {
 	    err = StatusBadRequest;
 		return;
@@ -160,8 +164,53 @@ void host(Request& req, std::string const &value, StatusCode &err) {
 	  err = StatusBadRequest;
 	}
   }
+  if (err == NoError && req.url.host.length() == 0) {
+    req.url.host = tmp.host;
+  }
 }
 
+//Connection = 1#connection-option
+//connection-option = token
+//1#element => *( "," OWS ) element *( OWS "," [ OWS element ] )
+void connection(Request& req, std::string const &value, StatusCode &err) {
+  size_t begin_world = 0;
+  while (value[begin_world] == ',') {
+	++begin_world;
+	begin_world += skip_space(value, begin_world, OWS, err);
+	if (err != NoError)
+	  return;
+  }
+  std::string token;
+  begin_world += get_token(token, value, begin_world, err);
+  if (err != NoError)
+	return;
+  if (token == "close") {
+    req.close = true;
+  }
+  begin_world += skip_space(value, begin_world, OWS, err);
+  if (err != NoError)
+	return;
+  while (value[begin_world] == ',') {
+    begin_world++;
+	begin_world += skip_space(value, begin_world, OWS, err);
+	if (err != NoError)
+	  return;
+	token.clear();
+	begin_world += get_token(token, value, begin_world, err);
+	if (err != NoError)
+	  return;
+	if (token == "close") {
+	  req.close = true;
+	}
+	begin_world += skip_space(value, begin_world, OWS, err);
+	if (err != NoError)
+	  return;
+  }
+  if (begin_world != value.length()) {
+    err = StatusBadRequest;
+  }
+  return;
+}
 void validate_media_type(const media_type& type, StatusCode &err) {
   MediaTypeRegister& type_register = get_media_type_register();
   if (type_register.count(type.type + "/" + type.subtype) == 0) {
@@ -196,7 +245,7 @@ void content_type(Request &req, std::string const &value, StatusCode &err) {
   parameter tmp_par;
 
   begin_word += get_token(req.metadata.media_type.type, value, begin_word, err);
-  if (err != 0)
+  if (err != NoError)
 	return;
   tolower(req.metadata.media_type.type);
   if (value[begin_word] != '/') {
@@ -205,23 +254,23 @@ void content_type(Request &req, std::string const &value, StatusCode &err) {
   }
   ++begin_word;
   begin_word += get_token(req.metadata.media_type.subtype, value, begin_word, err);
-  if (err != 0)
+  if (err != NoError)
 	return;
   tolower(req.metadata.media_type.subtype);
 //  validate_media_type(req.metadata.media_type);
 
   begin_word += skip_space(value, begin_word, OWS, err);
-  if (err != 0)
+  if (err != NoError)
 	return;
 
   while (value[begin_word] == ';') {
     ++begin_word;
     begin_word += skip_space(value, begin_word, OWS, err);
-	if (err != 0)
+	if (err != NoError)
 	  return;
 	// parameter = token "=" ( token / quoted-string )
     begin_word += get_token(tmp_par.name, value, begin_word, err);
-	if (err != 0)
+	if (err != NoError)
 	  return;
 	if (value[begin_word] != '=') {
 	  err = StatusBadRequest;
@@ -232,18 +281,18 @@ void content_type(Request &req, std::string const &value, StatusCode &err) {
     if (value[begin_word] == DQUOTE) {
       ++begin_word;
       begin_word += get_quoted_string(tmp_par.value, value, begin_word, err);
-	  if (err != 0)
+	  if (err != NoError)
 		return;
 	} else {
       begin_word += get_token(tmp_par.value, value, begin_word, err);
-	  if (err != 0)
+	  if (err != NoError)
 		return;
 	}
 	  req.metadata.media_type.parameters.push_back(tmp_par);
 	  tmp_par.name.clear();
 	  tmp_par.value.clear();
 	  begin_word += skip_space(value, begin_word, OWS, err);
-	if (err != 0)
+	if (err != NoError)
 	  return;
   }
 }
@@ -255,7 +304,7 @@ void content_language(Request &req, std::string const &value, StatusCode &err) {
   while (value[begin_world] == ',') {
     ++begin_world;
     begin_world += skip_space(value, begin_world, OWS, err);
-	if (err != 0)
+	if (err != NoError)
 	  return;
   }
   end_world = begin_world;
@@ -271,7 +320,7 @@ void content_language(Request &req, std::string const &value, StatusCode &err) {
   begin_world = end_world;
   while (begin_world < value.length()) {
     begin_world += skip_space(value, begin_world, OWS, err);
-	if (err != 0)
+	if (err != NoError)
 	  return;
 	if (value[begin_world] != ',') {
 	  err = StatusBadRequest;
@@ -279,7 +328,7 @@ void content_language(Request &req, std::string const &value, StatusCode &err) {
 	}
     ++begin_world;
 	begin_world += skip_space(value, begin_world, OWS, err);
-	if (err != 0)
+	if (err != NoError)
 	  return;
 	end_world = begin_world;
 	while (end_world < value.length() && isalnum(value[end_world])) {

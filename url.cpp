@@ -505,7 +505,7 @@ bool parse_absolute_uri(URL &url, const std::string &str) {
 
   size = get_scheme(url.scheme, str, pos);
   if (size == -1)
-	return -1;
+	return false;
   pos += size;
   if (pos < str.length() && str[pos] == ':') {
 	size = get_hier_part(url, str, pos);

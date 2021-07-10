@@ -325,12 +325,42 @@ TEST(ReadBody, Chunked3) {
   ASSERT_EQ(err, 0);
   http::calculate_length_message(req, err);
   ASSERT_EQ(err, 0);
-  http::read_body(req, message1, 0, err);
+  ASSERT_EQ(http::read_body(req, message1, 0, err), false);
   ASSERT_EQ(err, 0);
   ASSERT_EQ("Hello, World\n", req.body);
-  http::read_body(req, message2, 0, err);
+  ASSERT_EQ(http::read_body(req, message2, 0, err), false);
   ASSERT_EQ(err, 0);
   ASSERT_EQ("Hello, World\nI'm chunked coding!", req.body);
-  http::read_body(req, message3, 0, err);
+  ASSERT_EQ(http::read_body(req, message3, 0, err), true);
+  ASSERT_EQ(err, 0);
+}
+
+TEST(ReadBody, Chunked4) {
+  std::string header = "Transfer-Encoding: chunked\r\n"
+					   "\r\n";
+  std::string message1 = "D;name1=val1\r\n"
+						 "Hello, World\n\r\n";
+  std::string message2 = "13;name2=val2;name3;name4=\"sdfsdf\\\\fs\"\r\n"
+						 "I'm chunked coding!\r\n";
+  std::string message3 = "0\r\n"
+						 "Field1:value1\r\n"
+						 "\r\n";
+  http::Request req = {
+	  .content_length = -1,
+  };
+  http::StatusCode err = http::NoError;
+  http::parse_headers(req.headers, header, 0, err);
+  ASSERT_EQ(err, 0);
+  http::header_analysis(req, req.headers, err);
+  ASSERT_EQ(err, 0);
+  http::calculate_length_message(req, err);
+  ASSERT_EQ(err, 0);
+  ASSERT_EQ(http::read_body(req, message1, 0, err), false);
+  ASSERT_EQ(err, 0);
+  ASSERT_EQ("Hello, World\n", req.body);
+  ASSERT_EQ(http::add_body(req, message2), false);
+  ASSERT_EQ(err, 0);
+  ASSERT_EQ("Hello, World\nI'm chunked coding!", req.body);
+  ASSERT_EQ(http::add_body(req, message3), true);
   ASSERT_EQ(err, 0);
 }

@@ -10,8 +10,10 @@ const char	DQUOTE = '\"';
 // HTTP-message = start-line *( header-field CRLF ) CRLF [ message-body ]
 bool	parse_request(Request& req, std::string const &data) {
   size_t pos = 0;
-
+  req.content_length = -1;
+  req.close = false;
   req.err = NoError;
+
   pos += parse_request_line(req, data, pos, req.err);
   if (req.err != NoError)
 	return true;
@@ -39,31 +41,16 @@ void	parse_request_target(url::URL &url, Method &, const std::string &str,
 	err = StatusRequestURITooLong;
 	return;
   }
-//  if (method == OPTIONS) {
-//    if (!parse_asterisk_form(url, str)) {
-//      err = StatusBadRequest;
-//    }
-//  } else if (method == CONNECT) {
-//    if (!parse_authority_form(url, str)) {
-//      err = StatusBadRequest;
-//    }
-//  } else {
-    if (!parse_origin_form(url, str)) {
-      err = StatusBadRequest;
-    }
-//  }
+  if (!parse_origin_form(url, str) && !parse_absolute_uri(url, str)) {
+	err = StatusBadRequest;
+  }
 }
 
 void	parse_and_validate_method(Method &m, const std::string &str, StatusCode &err) {
   static std::map<const std::string, Method> methods = {
 	  {"GET", GET},
-//	  {"HEAD", HEAD},
 	  {"POST", POST},
-//	  {"PUT", PUT},
 	  {"DELETE", DELETE},
-//	  {"CONNECT", CONNECT},
-//	  {"OPTIONS", OPTIONS},
-//	  {"TRACE", TRACE},
   };
   if (methods.count(str)) {
     m = methods[str];
@@ -72,13 +59,12 @@ void	parse_and_validate_method(Method &m, const std::string &str, StatusCode &er
   }
 }
 
-
 // request-line = method SP request-target SP HTTP-version CRLF
 size_t parse_request_line(Request &r, std::string const &data, size_t begin, StatusCode &err) {
   size_t pos = begin;
 
   //skip first CRLF (3.5)
-  if (data.compare(pos, 2, "\r\n") == 0)
+  if (data.length() > 1 && data.compare(pos, 2, "\r\n") == 0)
   {
     pos += skip_crlf(data, pos, err);
     if (err != NoError)
@@ -123,7 +109,7 @@ size_t parse_headers(Headers &dst, std::string const &data, size_t begin, Status
   if (data[pos] == SP) {
 	return err = StatusBadRequest;
   }
-  while (data.compare(pos, 2, "\r\n") != 0) {
+  while (pos + 1 < data.length() && data.compare(pos, 2, "\r\n") != 0) {
     // field-name = token
 	pos += get_token(field_name, data, pos, err);
 	if (err != NoError)
@@ -144,10 +130,11 @@ size_t parse_headers(Headers &dst, std::string const &data, size_t begin, Status
 	bool obs_fold;
 	do {
 	  size_t local_size = 0;
-	  while (data[pos + local_size] < 0 || isgraph(data[pos + local_size])
-	   || isblank(data[pos + local_size]))
+	  while (data[pos + local_size] < 0 || isgraph(data[pos + local_size]) ||
+	  isblank(data[pos + local_size]))
 		++local_size;
-	  if (data.compare(pos+local_size, 2, "\r\n") != 0) {
+	  if (pos + local_size + 2 >= data.length() ||
+	  data.compare(pos+local_size, 2, "\r\n") != 0) {
 		return err = StatusBadRequest;
 	  }
 	  field_value.append(data, pos, local_size);
@@ -175,7 +162,9 @@ size_t parse_headers(Headers &dst, std::string const &data, size_t begin, Status
 	field_value.clear();
 	field_name.clear();
   }
-  pos += 2;
+  pos += skip_crlf(data, pos, err);
+  if (err != NoError)
+	return 0;
   return pos - begin;
 }
 
@@ -318,13 +307,17 @@ size_t read_chunk_size(size_t& chunk_size, std::string const &data, size_t begin
   return pos - begin;
 }
 
-std::string get_response(const Request&, Response&) {
+std::string get_response(const Request& req, Response&) {
   std::string answer;
-  answer.append("HTTP/1.1 200 OK\r\n"
-				"Content-Length: 12\r\n"
-				"Content-Type: text/plain\r\n"
-				"\r\n"
-				"Hello world!");
+  if (req.err != NoError) {
+    answer.append("HTTP/1.1 400 BadRequest\r\n\r\n");
+  } else {
+	answer.append("HTTP/1.1 200 OK\r\n"
+				  "Content-Length: 12\r\n"
+				  "Content-Type: text/plain\r\n"
+				  "\r\n"
+				  "Hello world!");
+  }
   return answer;
 }
 

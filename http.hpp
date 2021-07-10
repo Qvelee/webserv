@@ -87,6 +87,7 @@ struct Request {
   Headers					headers;
   int64_t					content_length;
   TransferEncoding			transfer_encoding;
+  bool 						close;
   Headers					trailer;
   std::string				body;
   representation_metadata	metadata;
@@ -118,6 +119,7 @@ void	transfer_encoding(Request& req, std::string const &value, StatusCode &err);
 void	validate_transfer_coding(const std::string& name, StatusCode &err);
 void	content_length(Request& req, std::string const &value, StatusCode &err);
 void	host(Request& req, std::string const &value, StatusCode &err);
+void	connection(Request& req, std::string const &value, StatusCode &err);
 void 	content_type(Request &req, std::string const &value, StatusCode &err);
 void	validate_media_type(const media_type& type, StatusCode &err);
 void	content_language(Request &req, std::string const &value, StatusCode &err);
