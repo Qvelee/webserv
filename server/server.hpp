@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/06 12:56:25 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/09 15:18:37 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/10 12:47:06 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,10 +38,10 @@
 # define SUCCESS false
 # define FAILURE true
 
-typedef	struct sockaddr_in	t_sockaddr_in;
-typedef	struct sockaddr		t_sockaddr;
-typedef struct addrinfo 	t_addrinfo;
-typedef unsigned char		uchar;
+typedef	struct sockaddr_in		t_sockaddr_in;
+typedef	struct sockaddr			t_sockaddr;
+typedef struct addrinfo 		t_addrinfo;
+typedef unsigned char			uchar;
 
 class Server
 {
@@ -49,20 +49,20 @@ class Server
 		Server(void);
 		virtual ~Server();
 
-		bool	setup(int port);
-		bool	connection(void);
+		bool	Setup(int port);
+		bool	Connection(void);
 	private:
 		Server(Server const &);
 
 		Server &operator=(Server const &);
 
-		bool	_error(std::string const error) const;
-		bool	_create_socket(void);
-		void	_accept_new_client(void);
-		int		_init_read_set(fd_set &set);
-		bool	_handle_income_requests(fd_set const &set);
-		bool	_recvData(int socket_ID, char **buffer, int *bytes_recv);
-		bool	_sendData(int socket_ID, char const *buffer) const;
+		bool	Error(std::string const error) const;
+		bool	CreateSocket(void);
+		void	AcceptNewClient(void);
+		int		InitReadSet(fd_set &set);
+		bool	HandleClients(fd_set const &set);
+		bool	RecvData(int socket_ID, char **buffer, int *bytes_recv);
+		bool	SendData(int socket_ID, char const *buffer) const;
 
 		ushort					_serverPort;
 		int						_max_connections;
@@ -70,7 +70,7 @@ class Server
 		t_sockaddr_in			_socket_address; // struct with address info for socket
 		std::vector<Client*>	_clients;
 
-		int	const			_read_buffer_size;
+		const int				_READ_BUFFER_SIZE;
 };
 
 #endif

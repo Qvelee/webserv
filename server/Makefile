@@ -6,9 +6,11 @@
 #    By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2021/05/14 14:50:43 by nelisabe          #+#    #+#              #
-#    Updated: 2021/07/09 13:46:21 by nelisabe         ###   ########.fr        #
+#    Updated: 2021/07/10 12:40:01 by nelisabe         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
+
+MAKEFLAGS =			--no-print-directory
 
 ### colors ###
 RESET =				\033[0m
@@ -57,7 +59,6 @@ $(SERV_OBJ_DIR):
 
 $(NAME): $(SERV_OBJ)
 	@ar rcs $(NAME) $^
-	
 	@echo -e "$(GREEN)$(BOLD)$(NAME) created!$(RESET)"
 
 $(addprefix $(SERV_OBJ_DIR), %.o): %.cpp

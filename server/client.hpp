@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/13 13:58:58 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/09 16:16:52 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/10 12:45:01 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,31 +15,33 @@
 
 # include "http.hpp"
 
-enum RecvStatus
-{
-	EMPTY = 0,
-	NOTFINISHED,
-	FINISHED	
-};
+# define SUCCESS false
+# define FAILURE true
 
 class Client
 {
 	public:
 		Client(void);
-		~Client();
+		virtual ~Client();
 		
 		int				getSocket(void) const;
 		void			setSocket(int socket_ID);
-		http::Request	&getRequest();
-		http::Response	&getResponse();
-		RecvStatus		getRecvStatus() const;
-		void			setRecvStatus(RecvStatus status);
+		const char		*CreateResponse(const char *request, int request_size);
 	private:
 		Client(Client const &);
 
 		Client	&operator=(Client const &);
 
+		enum RecvStatus
+		{
+			EMPTY = 0,
+			NOTFINISHED,
+			FINISHED	
+		};
+
 		int				_socket_ID;
+		std::string		_request_string;
+		std::string		_response_string;
 		http::Request	_request;
 		http::Response	_response;
 
