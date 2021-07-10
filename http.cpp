@@ -176,6 +176,7 @@ void calculate_length_message(Request& req, StatusCode &err) {
   if (req.headers.count("transfer-encoding")) {
     if (req.transfer_encoding.back().token != "chunked") {
 	  err = StatusBadRequest;
+	  req.close = true;
       return;
     }
   } else if (req.headers.count("content-length") == 0) {

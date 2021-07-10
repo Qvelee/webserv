@@ -64,10 +64,12 @@ void content_length(Request& req, std::string const &value, StatusCode &err) {
   ss >> req.content_length;
   if (ss.fail()) {
     err = StatusBadRequest;
+    req.close = true;
 	return;
   }
   if (req.content_length < 0) {
     err = StatusBadRequest;
+    req.close = true;
 	return;
   }
 }
@@ -171,7 +173,6 @@ void host(Request& req, std::string const &value, StatusCode &err) {
 
 //Connection = 1#connection-option
 //connection-option = token
-//1#element => *( "," OWS ) element *( OWS "," [ OWS element ] )
 void connection(Request& req, std::string const &value, StatusCode &err) {
   size_t begin_world = 0;
   while (value[begin_world] == ',') {
