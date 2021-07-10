@@ -40,18 +40,23 @@ class Location{
 		string				alias;
 		//map<string, string> cgiMap;
 		bool	autoindex;//0
-		
-		string file_request_if_dir;//default
-		int redirection_status_code;//
-		string redirection_url;//
 		map<string, int>	accepted_methods;//map->set
 		string route_for_uploaded_files;
+		int redirection_status_code;//
+		string redirection_url;
+
+		string file_request_if_dir;//default
+
+		
+		
 
 		void	fillAll(list<string>::iterator &itList, std::list<std::string> tokenList);
 		void	setAutoindex(list<string>::iterator &itList, std::list<std::string> tokenList);
 		void	setRoot(list<string>::iterator &itList, std::list<std::string> tokenList);
 		void	setAlias(list<string>::iterator &itList, std::list<std::string> tokenList);
 		void	setMethod(list<string>::iterator &itList, std::list<std::string> tokenList);
+		void	setRootUploadedFiles(list<string>::iterator &itList, std::list<std::string> tokenList);
+		void	setRedirection(list<string>::iterator &itList, std::list<std::string> tokenList);
 };
 }
 #endif

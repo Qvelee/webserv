@@ -363,34 +363,40 @@ void	WebserverConf::setError_page(std::list<std::string>::iterator &itList, tSer
 void	WebserverConf::setClient_max_body_size(std::list<std::string>::iterator &itList, tServer &server)
 {
 	size_t		i;
+	string		client_max_body_size;
+	std::stringstream buf;
 
 	i = 0;
 	itList++;
 	if (itList != tokenList.end() && *itList != ";" && *itList != "{" && *itList != "}")
 	{
-		server.client_max_body_size = *itList;
+		client_max_body_size = *itList;
 		std::cout << "client_max_body_size ==== " << *itList << std::endl;
-		while (server.client_max_body_size[i])
+		while (client_max_body_size[i])
 		{
-			if (server.client_max_body_size[i] < '0' || server.client_max_body_size[i] > '9')
+			if (client_max_body_size[i] < '0' || client_max_body_size[i] > '9')
 				throw "there is not number in the Client_max_body_size line before .";
 			i++;
 		}
 		itList++;
+		buf << client_max_body_size;
+		buf >> server.client_max_body_size;
 	}
 	else
 		throw "there is no argument in the Client_max_body_size line";
 	if (itList == tokenList.end() || *itList != ";")
 		throw "there is no ; in the Server_name line";	
 	itList++;
+
 }
 
 void	WebserverConf::setLocation(std::list<std::string>::iterator &itList, tServer &server)
 {
 	Location loc;// = new Location ;
-
+	
 	loc.fillAll(itList, tokenList);
 	server.locationMap.push_back(loc);
+	
 }
 
 void	WebserverConf::fillOneServer(std::list<std::string>::iterator itList)
@@ -434,6 +440,8 @@ void	WebserverConf::fillOneServer(std::list<std::string>::iterator itList)
 	//std::cout << "port = " << server.port <<std::endl;
 	fillMapServer(server);
 	//tServer	*	nserver = new tServer(server);
+	//std::cout << "!!!!!396 alias "<< server.locationMap[0].alias << std::endl;
+	//std::cout << "!!!!!396 root "<< server.locationMap[0].root << std::endl;
 }
 
 void	WebserverConf::fillMapServer(tServer &tserver)
@@ -556,19 +564,19 @@ tServerInformation	WebserverConf::chooseServer(URL url)
 	tServerInformation serverInformation;
 
 	serverInformation.error_pages.insert(make_pair(0, "default_error_page"));//0 default
-	serverInformation.limit_size = INT_MAX;//-1?64
+	serverInformation.limit_size = 100000;//-1?64
 	serverInformation.autoindex = 0;//0
-	serverInformation.file_request_if_dir;//default
+	serverInformation.file_request_if_dir = "file_request_if_dir";//default
 	serverInformation.redirection_status_code = 404;//
-	serverInformation.redirection_url = "default_redirection_page";//
+	serverInformation.redirection_url = "";//
 	serverInformation.name_file = "name_file";//url_after_alias!
 	serverInformation.accepted_methods.insert(std::make_pair("GET", 1));//map->set
 	serverInformation.accepted_methods.insert(std::make_pair("DELETE", 1));
 	serverInformation.accepted_methods.insert(std::make_pair("POST", 1));
 	serverInformation.route_for_uploaded_files = "route_for_uploaded_files";
 
-	return serverInformation;
-	/*int port = 80;
+	
+	int port = 80;
 	string server_name = "default";
 	string ip = "default";
 	std::stringstream buf;
@@ -583,10 +591,10 @@ tServerInformation	WebserverConf::chooseServer(URL url)
 		ip = url.host;
 	else
 		server_name = url.host;
-	map<int, map<string, map<string, tServer *> > >::iterator itMap = serverMap.find(port);*/
+	map<int, map<string, map<string, tServer *> > >::iterator itMap = serverMap.find(port);
 	//if (itMap == serverMap.end() && ip == "default")
 
-	/*if (itMap != serverMap.end())
+	if (itMap != serverMap.end())
 	{
 		map<string, map<string, tServer *> > ipServer = itMap->second;
 		std::cout << "ip now is = " << ip<<std::endl;
@@ -597,10 +605,10 @@ tServerInformation	WebserverConf::chooseServer(URL url)
 			map<string, tServer *> nameServer = itIpSrv->second;
 			map<string, tServer *>::iterator itNameSrv = nameServer.find(server_name);
 			if (itNameSrv == nameServer.end())
-				itNameSrv = nameServer.find("default");*/
+				itNameSrv = nameServer.find("default");
 			//if (itNameSrv != nameServer.end())
 			//{
-				/*tServer server = *(itNameSrv->second);
+				tServer server = *(itNameSrv->second);
 
 				std::cout << "port = " << server.port <<std::endl;
 				std::cout << "ip = " << server.ip <<std::endl;
@@ -621,26 +629,60 @@ tServerInformation	WebserverConf::chooseServer(URL url)
 					itEr++;
 				}
 				vector<Location>::iterator itLoc = server.locationMap.begin();
+				std::cout << "all: itLoc[0].alias " << itLoc[0].alias << std::endl;
 				string locationMask;
 				string path_for_alias = url.path;
 				while (itLoc != server.locationMap.end() && path_for_alias != "")//search location by find
 				{
+					
 					while (itLoc != server.locationMap.end() && path_for_alias != "")
 					{
-						if (locationMask != "" && itLoc->locationMask == path_for_alias)
+						std::cout << "all: itLoc->root " << itLoc->root << std::endl;
+						//locationMask = itLoc->locationMask;
+						std::cout << "???itLoc->locationMask " << itLoc->locationMask << std::endl;
+						if (itLoc->locationMask == path_for_alias)
 						{
 							serverInformation.name_file = url.path;
+							serverInformation.name_file.erase(0, path_for_alias.length());//need to insert
+							std::cout << "itLoc->alias " << itLoc->alias << std::endl;
+							serverInformation.name_file = itLoc->alias + serverInformation.name_file;//need to clear
+							std::cout << "name_file " << serverInformation.name_file << std::endl;
+
+							serverInformation.accepted_methods = itLoc->accepted_methods;
+							std::cout << "serverInformation.accepted_methods get " << serverInformation.accepted_methods["GET"] << std::endl;
+							std::cout << "serverInformation.accepted_methods post " << serverInformation.accepted_methods["POST"] << std::endl;
+							std::cout << "serverInformation.accepted_methods delete " << serverInformation.accepted_methods["DELETE"] << std::endl;					
+
+							serverInformation.redirection_status_code = itLoc->redirection_status_code;
+							std::cout << "redirection_status_code = " << itLoc->redirection_status_code << std::endl;
+							serverInformation.redirection_url = itLoc->redirection_url;
+							std::cout << "redirection_url = " << itLoc->redirection_url << std::endl;
+
+							
+
 							itLoc = server.locationMap.end();
+							path_for_alias = "";
+
+			
+							break;
 						}
+						
+						
 						itLoc++;
-						if (itLoc == server.locationMap.end() && path_for_alias != "")
+					}
+					if (itLoc == server.locationMap.end() && path_for_alias != "")
+					{
+						if (path_for_alias.find("/") != -1)
 						{
 							path_for_alias = path_for_alias.erase(path_for_alias.find_last_of("/"));
-							itLoc = server.locationMap.begin();
-							std::cout << "path_for_alias" << path_for_alias << std::endl;
 						}
+						else
+							path_for_alias = path_for_alias.erase();
+						
+						std::cout << "path_for_alias " << path_for_alias << std::endl;
+					
 					}
-					itLoc = server.locationMap.begin();*/
+					itLoc = server.locationMap.begin();
 					//serverInformation.autoindex = ;
 					//serverInformation.alias = "";//можно заменить на сам location
 					//serverInformation.method.insert(make_pair("GET", 1));//?
@@ -654,10 +696,11 @@ tServerInformation	WebserverConf::chooseServer(URL url)
 					//itLoc++;
 
 					//itLoc = server.locationMap.begin();
-				//}
+				}
 			//}
-		//}
-	//}
+		}
+	}
+	return serverInformation;
 }
 
 /*

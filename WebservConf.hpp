@@ -92,7 +92,7 @@ typedef struct	sServer{
 	string				ip;
 	list<string>		server_name;
 	map<int, string>	error_page;
-	string				client_max_body_size;
+	size_t				client_max_body_size;
 	vector<Location>	locationMap;
 }				tServer;
 

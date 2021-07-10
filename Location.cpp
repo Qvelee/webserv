@@ -11,6 +11,7 @@
 /* ************************************************************************** */
 
 #include "Location.hpp"
+#include <sstream>
 
 namespace config{
 
@@ -36,10 +37,67 @@ Location &Location::operator=(Location const &eq)
 	locationMask = eq.locationMask;
 	accepted_methods = eq.accepted_methods;
 	root = eq.root;
+	alias = eq.alias;
 	autoindex = eq.autoindex;
+	route_for_uploaded_files = eq.route_for_uploaded_files;
+	redirection_status_code = eq.redirection_status_code;//
+	redirection_url = eq.redirection_url;
+	file_request_if_dir = eq.file_request_if_dir;
+
+	file_request_if_dir = eq.file_request_if_dir;
 	return (*this);
 }
 		
+
+void	Location::setRootUploadedFiles(list<string>::iterator &itList, std::list<std::string> tokenList)
+{
+	itList++;
+
+	if ((*itList).empty() || (*itList).compare(0, 2, ";") == 0 || (*itList).compare(0, 2, "}") == 0 \
+	|| (*itList).compare(0, 2, "{") == 0)
+		throw "something wrong after alias";
+	route_for_uploaded_files = *itList;
+	std::cout << "route_for_uploaded_files = " << route_for_uploaded_files << std::endl;
+	itList++;
+	if ((*itList).compare(0, 2, ";") != 0)
+		throw "there is not ; after alias";
+}
+
+void	Location::setRedirection(list<string>::iterator &itList, std::list<std::string> tokenList)
+{
+	size_t		i;
+	string		return_status_code;
+	std::stringstream buf;
+
+	i = 0;
+	itList++;
+	if (itList != tokenList.end() && *itList != ";")
+	{
+		return_status_code = *itList;
+		std::cout << "return ==== " << *itList << std::endl;
+		while (return_status_code[i])
+		{
+			if (return_status_code[i] < '0' || return_status_code[i] > '9')
+				throw "there is not number in the return line before .";
+			i++;
+		}
+		itList++;
+		buf << return_status_code;
+		buf >> redirection_status_code;
+	}
+	else
+		throw "there is no argument in the return line";
+	
+	if (itList == tokenList.end())
+		throw "there is no url in the return line";
+
+	redirection_url = *itList;
+
+	if (itList == tokenList.end() || *itList != ";")
+		throw "there is no ; in the return line";
+	itList++;
+
+}
 
 void	Location::fillAll(list<string>::iterator &itList, list<std::string> tokenList)
 {
@@ -50,6 +108,8 @@ void	Location::fillAll(list<string>::iterator &itList, list<std::string> tokenLi
 	funMap.insert(std::make_pair("root", &Location::setRoot));
 	funMap.insert(std::make_pair("alias", &Location::setAlias));
 	funMap.insert(std::make_pair("method", &Location::setMethod));
+	funMap.insert(std::make_pair("upload_store", &Location::setRootUploadedFiles));
+	funMap.insert(std::make_pair("return", &Location::setRedirection));
 
 	itList++;
 
@@ -59,7 +119,7 @@ void	Location::fillAll(list<string>::iterator &itList, list<std::string> tokenLi
 		|| locationMask == "}" || locationMask == ";")
 		throw "location there is not mask location";
 	itList++;
-	//std::cout << "*itList = " << *itList << std::endl;
+	std::cout << "locationMask = " << locationMask << std::endl;
 	if ((*itList).empty() || *itList != "{")
 		throw "location there is not {";
 	itList++;
@@ -118,6 +178,7 @@ void	Location::setAlias(list<string>::iterator &itList, list<std::string> tokenL
 	|| (*itList).compare(0, 2, "{") == 0)
 		throw "something wrong after alias";
 	alias = *itList;
+	std::cout << "alias = " << alias << std::endl;
 	itList++;
 	if ((*itList).compare(0, 2, ";") != 0)
 		throw "there is not ; after alias";
