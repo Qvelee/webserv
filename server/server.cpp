@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/06 12:56:02 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/10 12:56:18 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/10 14:53:40 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,7 +17,7 @@ Server::Server(void) : _socket_ID(-1), _READ_BUFFER_SIZE(BUFFER)
 	memset(&_socket_address, 0, sizeof(_socket_address));
 }
 
-Server::Server(Server const &) : _READ_BUFFER_SIZE(0) {}
+Server::Server(const Server &) : _READ_BUFFER_SIZE(0) {}
 
 Server::~Server()
 {
@@ -25,7 +25,7 @@ Server::~Server()
 		close(_socket_ID);
 }
 
-Server	&Server::operator=(Server const &) { return *this; }
+Server	&Server::operator=(const Server &) { return *this; }
 
 bool	Server::Setup(int port)
 {
@@ -87,10 +87,11 @@ int		Server::InitReadSet(fd_set &set)
 	FD_ZERO(&set);
 	FD_SET(_socket_ID, &set);
 	maxFd = _socket_ID;
-	for (std::vector<Client*>::iterator it = _clients.begin(); \
+	for (std::vector<Client*>::iterator it = _clients.begin();\
 		it < _clients.end(); it++)
 	{
 		int		client_socket = (*it)->getSocket();
+
 		FD_SET(client_socket, &set);
 		if (client_socket > maxFd)
 			maxFd = client_socket;
@@ -98,17 +99,17 @@ int		Server::InitReadSet(fd_set &set)
 	return maxFd;
 }
 
-bool	Server::HandleClients(fd_set const &set)
+bool	Server::HandleClients(const fd_set &set)
 {
 	Client		*client;
 	int			client_socket;
 	char		*request;
-	const char	*response;
 	int			request_size;
 
 	if (FD_ISSET(_socket_ID, &set))
 		AcceptNewClient();
-	for (auto it = _clients.begin(); it < _clients.end(); it++)
+	for (std::vector<Client*>::iterator it = _clients.begin();\
+		it < _clients.end(); it++)
 	{
 		client = *it;
 		client_socket = client->getSocket();
@@ -119,9 +120,10 @@ bool	Server::HandleClients(fd_set const &set)
 				close(client_socket);
 				delete client;
 				_clients.erase(it--);
-			} else if (!(response = client->CreateResponse(request, request_size)))
+			} else if (client->CreateResponse(request, request_size))
 				delete request;
-			else if (SendData(client_socket, response))
+			else if (SendData(client_socket,\
+				client->getResponse().c_str(), client->getResponse().size()))
 			{
 				close(client_socket);
 				delete client;
@@ -145,22 +147,21 @@ void	Server::AcceptNewClient(void)
 	_clients.push_back(newClient);
 }
 
-bool	Server::RecvData(int socket_ID, char **buffer, int *request_size)
+bool	Server::RecvData(int socket_ID, char **buffer, int *buffer_size)
 {
-	// add out_of_buffer read
 	*buffer = new char[_READ_BUFFER_SIZE];
-	if ((*request_size = recv(socket_ID, *buffer, _READ_BUFFER_SIZE - 1, 0)) > 0)
-		(*buffer)[*request_size] = '\0';
+	if ((*buffer_size = recv(socket_ID, *buffer, _READ_BUFFER_SIZE - 1, 0)) > 0)
+		(*buffer)[*buffer_size] = '\0';
 	else
 		return FAILURE;
 	return SUCCESS;
 }
 
-bool	Server::SendData(int socket_ID, char const *buffer) const
+bool	Server::SendData(int socket_ID, const char *buffer, int buffer_size) const
 {
 	int		bytes;
 
-	if ((bytes = send(socket_ID, buffer, strlen(buffer), 0)) == -1)
+	if ((bytes = send(socket_ID, buffer, buffer_size, 0)) == -1)
 	{
 		std::cout << "Cannot send data" << std::endl;
 		return FAILURE;
@@ -168,7 +169,7 @@ bool	Server::SendData(int socket_ID, char const *buffer) const
 	return SUCCESS;
 }
 
-bool	Server::Error(std::string const error) const
+bool	Server::Error(const std::string error) const
 {
 	std::cerr << "Error: " + error + ": " << strerror(errno) << std::endl;
 	return true;

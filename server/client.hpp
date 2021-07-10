@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/13 13:58:58 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/10 12:45:01 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/10 14:50:50 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,9 +24,11 @@ class Client
 		Client(void);
 		virtual ~Client();
 		
-		int				getSocket(void) const;
-		void			setSocket(int socket_ID);
-		const char		*CreateResponse(const char *request, int request_size);
+		int					getSocket(void) const;
+		void				setSocket(int socket_ID);
+		const std::string	&getResponse() const;
+
+		bool		CreateResponse(const char *request, int request_size);
 	private:
 		Client(Client const &);
 

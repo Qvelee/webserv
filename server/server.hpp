@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/06 12:56:25 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/10 12:47:06 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/10 14:47:29 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -52,17 +52,17 @@ class Server
 		bool	Setup(int port);
 		bool	Connection(void);
 	private:
-		Server(Server const &);
+		Server(const Server &);
 
-		Server &operator=(Server const &);
+		Server &operator=(const Server &);
 
-		bool	Error(std::string const error) const;
+		bool	Error(const std::string error) const;
 		bool	CreateSocket(void);
 		void	AcceptNewClient(void);
 		int		InitReadSet(fd_set &set);
-		bool	HandleClients(fd_set const &set);
+		bool	HandleClients(const fd_set &set);
 		bool	RecvData(int socket_ID, char **buffer, int *bytes_recv);
-		bool	SendData(int socket_ID, char const *buffer) const;
+		bool	SendData(int socket_ID, const char *buffer, int response_size) const;
 
 		ushort					_serverPort;
 		int						_max_connections;
