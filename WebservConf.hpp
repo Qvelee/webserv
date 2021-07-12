@@ -21,7 +21,7 @@
 #include <iostream>
 #include "Location.hpp"
 #include <set>
-#include "url.hpp"
+//#include "url.hpp"
 
 
 namespace config{
@@ -40,14 +40,14 @@ using std::make_pair;
 ///i/rt/
 
 //need to delete
-/*struct URL {
+struct URL {
   std::string scheme;
   std::string userinfo;
   std::string host;
   std::string path;//!
   std::string raw_path;
   std::string raw_query;
-};*/
+};
 
 typedef struct sServerInformation{
 	//int port;
@@ -116,6 +116,7 @@ class WebserverConf{
 		void	setClient_max_body_size(std::list<std::string>::iterator &itList, tServer	&server);
 		//std::vector<tServer> serverVector;//
 		map<int, map<string, map<string, tServer *> > > serverMap;
+		//map<int, map<string, tServer *> > serverMap;
 		set<tServer *> pointerToServerSet;
 		std::list<std::string> fileLineToList;
 		std::list<std::string> tokenList;//separate ' ' or ';' or '{' or '}'

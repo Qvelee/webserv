@@ -31,8 +31,8 @@ Cgi::Cgi()
 	param.insert(std::make_pair("SCRIPT_NAME", ""));
 	param.insert(std::make_pair("SERVER_NAME", ""));
 	param.insert(std::make_pair("SERVER_PORT", ""));
-	param.insert(std::make_pair("SERVER_PROTOCOL", ""));
-	param.insert(std::make_pair("SERVER_SOFTWARE", ""));
+	//param.insert(std::make_pair("SERVER_PROTOCOL", ""));
+	//param.insert(std::make_pair("SERVER_SOFTWARE", ""));
 }
 Cgi::~Cgi(){}
 Cgi::Cgi(Cgi const &copy){*this = copy;}

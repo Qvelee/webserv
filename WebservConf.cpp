@@ -281,7 +281,8 @@ void	WebserverConf::setListen(std::list<std::string>::iterator &itList, tServer	
 			ip = server.listen.substr(0, iDoubleDot);
 	}
 	else
-		ip = "default";
+		//ip = "default";
+		throw "there are not ip adress in the listen line";
 	while (server.listen[i])
 	{
 		if (server.listen[i] < '0' || server.listen[i] > '9')
@@ -520,7 +521,7 @@ void	WebserverConf::readConfFile(const char *confFileName)
 
 	//printServerMap();
 }
-/*
+
 bool is_octet(const std::string &str) {
   if (str.length() == 1) {
 	if (std::isdigit(str[0]))
@@ -558,15 +559,15 @@ bool isIPv4(const std::string &str) {
   }
   return true;
 }
-*/
+
 tServerInformation	WebserverConf::chooseServer(URL url)
 {
 	tServerInformation serverInformation;
 
-	serverInformation.error_pages.insert(make_pair(0, "default_error_page"));//0 default
+	//serverInformation.error_pages.insert(make_pair(0, "default_error_page"));//0 default
 	serverInformation.limit_size = 100000;//-1?64
 	serverInformation.autoindex = 0;//0
-	serverInformation.file_request_if_dir = "file_request_if_dir";//default
+	//serverInformation.file_request_if_dir = "file_request_if_dir";//default
 	serverInformation.redirection_status_code = 404;//
 	serverInformation.redirection_url = "";//
 	serverInformation.name_file = "name_file";//url_after_alias!
@@ -658,7 +659,8 @@ tServerInformation	WebserverConf::chooseServer(URL url)
 							serverInformation.redirection_url = itLoc->redirection_url;
 							std::cout << "redirection_url = " << itLoc->redirection_url << std::endl;
 
-							
+							serverInformation.file_request_if_dir = itLoc->file_request_if_dir;
+							std::cout << "file_request_if_dir = " << itLoc->file_request_if_dir << std::endl;
 
 							itLoc = server.locationMap.end();
 							path_for_alias = "";
@@ -674,7 +676,10 @@ tServerInformation	WebserverConf::chooseServer(URL url)
 					{
 						if (path_for_alias.find("/") != -1)
 						{
-							path_for_alias = path_for_alias.erase(path_for_alias.find_last_of("/"));
+							if (path_for_alias.find_last_of("/") == path_for_alias.length() - 1)
+								path_for_alias = path_for_alias.erase(path_for_alias.find_last_of("/"));
+							else
+								path_for_alias = path_for_alias.erase(path_for_alias.find_last_of("/") + 1);
 						}
 						else
 							path_for_alias = path_for_alias.erase();

@@ -44,7 +44,6 @@ Location &Location::operator=(Location const &eq)
 	redirection_url = eq.redirection_url;
 	file_request_if_dir = eq.file_request_if_dir;
 
-	file_request_if_dir = eq.file_request_if_dir;
 	return (*this);
 }
 		
@@ -61,6 +60,23 @@ void	Location::setRootUploadedFiles(list<string>::iterator &itList, std::list<st
 	itList++;
 	if ((*itList).compare(0, 2, ";") != 0)
 		throw "there is not ; after alias";
+}
+
+void	Location::setIndex(list<string>::iterator &itList, std::list<std::string> tokenList)
+{
+	itList++;
+
+	if ((*itList).empty() || (*itList).compare(0, 2, ";") == 0)
+		throw "something wrong after index";
+	//while (itList != tokenList.end() && (*itList).compare(0, 2, ";") != 0)
+	//{
+		//file_request_if_dir.push_back(*itList);
+		file_request_if_dir = *itList;
+	//	std::cout << "file_request_if_dir = " << *itList << std::endl;
+		itList++;
+	//}
+	if ((*itList).compare(0, 2, ";") != 0)
+		throw "there is not ; after index";
 }
 
 void	Location::setRedirection(list<string>::iterator &itList, std::list<std::string> tokenList)
@@ -93,9 +109,10 @@ void	Location::setRedirection(list<string>::iterator &itList, std::list<std::str
 
 	redirection_url = *itList;
 
+	itList++;
 	if (itList == tokenList.end() || *itList != ";")
 		throw "there is no ; in the return line";
-	itList++;
+	
 
 }
 
@@ -110,6 +127,7 @@ void	Location::fillAll(list<string>::iterator &itList, list<std::string> tokenLi
 	funMap.insert(std::make_pair("method", &Location::setMethod));
 	funMap.insert(std::make_pair("upload_store", &Location::setRootUploadedFiles));
 	funMap.insert(std::make_pair("return", &Location::setRedirection));
+	funMap.insert(std::make_pair("index", &Location::setIndex));
 
 	itList++;
 
