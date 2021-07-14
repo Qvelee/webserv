@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/05 17:40:26 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/14 16:10:34 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/14 16:39:51 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -59,7 +59,7 @@ int		main(void)
 
 	memset(&server, 0, sizeof(server));
 	server.sin_family = AF_INET;
-	if ((server.sin_addr.s_addr = inet_addr("192.168.151.101")) == -1)
+	if ((server.sin_addr.s_addr = inet_addr("192.168.151.100")) == -1)
 	{
 		std::cout << "Error inet_addr\n";
 		close(socket_ID);
@@ -87,8 +87,7 @@ int		main(void)
 		char	buffer[buffer_size];
 		
 		int bytes;
-		while (bytes != 0)
-		{
+
 			if ((bytes = recv(socket_ID, buffer, buffer_size - 1, 0)) == -1)
 			{
 				std::cout << "Error recv\n";
@@ -99,7 +98,6 @@ int		main(void)
 			// 	break ;
 			// std::cout << "Bytes recieved: " << bytes << std::endl;
 			std::cout << buffer << std::endl;
-		}
 		// std::string	stop;
 		// std::getline(std::cin, stop);
 		// if (stop == "stop")

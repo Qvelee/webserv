@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/06 12:56:02 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/14 16:00:49 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/14 16:37:31 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -107,6 +107,10 @@ int		Server::InitFdSets(fd_set &read_fds, fd_set &write_fds)
 			case Client::State::SENDING:
 				FD_SET(client_socket, &write_fds);
 				break;
+			case Client::State::FINISHEDRECV:
+				FD_SET(client_socket, &write_fds);
+				client->setState(Client::State::SENDING);
+				break;
 			default:
 				break;
 		}
@@ -137,14 +141,9 @@ void	Server::HandleClients(const fd_set &read_fds, const fd_set &write_fds)
 			case Client::State::RECVING:
 				status = TryRecvRequest(*client, read_fds);
 				break;
-			case Client::State::FINISHEDRECV:
-				status = TrySendResponse(*client, write_fds);
-				break;
 			case Client::State::SENDING:
 				status = TrySendResponse(*client, write_fds);
 				break;
-			case Client::State::FINISHEDSEND:
-				client->setState(Client::State::SLEEP);
 		}
 		if (status == FAILURE)
 			_clients.erase(it--);
@@ -193,7 +192,6 @@ bool	Server::TrySendResponse(Client &client, const fd_set &write_fds)
 	int			client_socket;
 
 	client_socket = client.getSocket();
-	client.setState(Client::State::SENDING);
 	if (FD_ISSET(client_socket, &write_fds))
 	{
 		if (SendData(client_socket, client.getResponse().c_str(),\
@@ -203,7 +201,7 @@ bool	Server::TrySendResponse(Client &client, const fd_set &write_fds)
 			delete &client;
 			return FAILURE;
 		}
-		client.setState(Client::State::FINISHEDSEND);
+		client.setState(Client::State::SLEEP);
 	}
 	return SUCCESS;
 }

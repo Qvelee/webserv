@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   client_t.cpp                                       :+:      :+:    :+:   */
+/*   client_t_chunk.cpp                                 :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/05 17:40:26 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/09 17:37:17 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/14 16:32:30 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -59,7 +59,7 @@ int		main(void)
 
 	memset(&server, 0, sizeof(server));
 	server.sin_family = AF_INET;
-	if ((server.sin_addr.s_addr = inet_addr("192.168.151.101")) == -1)
+	if ((server.sin_addr.s_addr = inet_addr("192.168.151.100")) == -1)
 	{
 		std::cout << "Error inet_addr\n";
 		close(socket_ID);
