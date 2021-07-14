@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/05 17:40:26 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/11 14:19:55 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/14 16:10:34 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -72,19 +72,15 @@ int		main(void)
 		close(socket_ID);
 		return 1;
 	}
-
-		int		response_size = 2740380;
+	std::cout << "connected\n";
+		int		response_size = 10;
 		char	response[response_size];
 		
 		// parse_request(NULL, &response);
 		
 		std::cout << "Sending data\n";
 		memset(response, 'a', response_size);
-		fcntl(socket_ID, F_SETFL, O_NONBLOCK);
-		bool flag = fcntl(socket_ID, F_GETFL, 0) & O_NONBLOCK;
-		std::cout << flag << std::endl;
-		std::cout << send(socket_ID, response, response_size, 0) << std::endl;
-		std::cout << "Errno: " << errno << std::endl;
+		send(socket_ID, response, response_size, 0);
 		std::cout << "Data send\n";
 
 		int		buffer_size = 4096;

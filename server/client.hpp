@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/13 13:58:58 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/10 14:50:50 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/14 14:41:08 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,9 +24,22 @@ class Client
 		Client(void);
 		virtual ~Client();
 		
+		enum State
+		{
+			SLEEP = 0,
+			RECVING,
+			SENDING,
+			FINISHEDRECV,
+			FINISHEDSEND,
+			ERROR,
+			CLOSED
+		};
+		
 		int					getSocket(void) const;
 		void				setSocket(int socket_ID);
 		const std::string	&getResponse() const;
+		const State			getState() const;
+		void				setState(State state);
 
 		bool		CreateResponse(const char *request, int request_size);
 	private:
@@ -48,6 +61,7 @@ class Client
 		http::Response	_response;
 
 		RecvStatus		_recv_status;
+		State			_connection_state;
 };
 
 #endif
