@@ -33,12 +33,12 @@ bool istchar(int c) {
 }
 
 // token = 1*tchar
-size_t get_token(std::string& dst, std::string const &data, size_t begin, StatusCode &err) {
+size_t get_token(std::string& dst, std::string const &data, size_t begin, StatusCode &code) {
   size_t pos = begin;
   while (istchar(data[pos]))
     ++pos;
   if (pos - begin == 0) {
-    err = StatusBadRequest;
+    code = StatusBadRequest;
 	return 0;
   }
   dst.append(data, begin, pos - begin);
@@ -46,12 +46,12 @@ size_t get_token(std::string& dst, std::string const &data, size_t begin, Status
 }
 
 size_t get_request_target(std::string& dst, std::string const &data, size_t begin,
-						  StatusCode &err) {
+						  StatusCode &code) {
   size_t pos = begin;
   while (data[pos] != ' ' && data[pos] != '\0')
     ++pos;
   if (data[pos] != ' ') {
-	err = StatusBadRequest;
+	code = StatusBadRequest;
 	return 0;
   }
   dst.append(data, begin, pos - begin);
@@ -63,25 +63,25 @@ size_t get_request_target(std::string& dst, std::string const &data, size_t begi
  * HTTP-name = %x48.54.54.50 ; "HTTP", case-sensitive
  */
 size_t get_http_version(std::string& dst, std::string const &data, size_t begin,
-						 StatusCode &err) {
+						 StatusCode &code) {
   size_t pos = begin;
   if (data.compare(begin, 5, "HTTP/") != 0)  {
-	err = StatusHTTPVersionNotSupported;
+	code = StatusHTTPVersionNotSupported;
 	return 0;
   }
   pos += 5;
   if (!isdigit(data[pos])) {
-	err = StatusBadRequest;
+	code = StatusBadRequest;
 	return 0;
   }
   ++pos;
   if (data[pos] != '.') {
-	err = StatusBadRequest;
+	code = StatusBadRequest;
 	return 0;
   }
   ++pos;
   if (!isdigit(data[pos])) {
-	err = StatusBadRequest;
+	code = StatusBadRequest;
 	return 0;
   }
   ++pos;
@@ -98,13 +98,13 @@ size_t get_http_version(std::string& dst, std::string const &data, size_t begin,
  * WSP = SP / HTAB ; isblank()
  */
 
-size_t skip_space(std::string const &data, size_t begin, SPACE space, StatusCode &err) {
+size_t skip_space(std::string const &data, size_t begin, SPACE space, StatusCode &code) {
   size_t pos = begin;
 
   switch (space) {
 	case SP:
 	  if (data[pos] != ' ') {
-		err = StatusBadRequest;
+		code = StatusBadRequest;
 	    return 0;
 	  }
 	  ++pos;
@@ -116,7 +116,7 @@ size_t skip_space(std::string const &data, size_t begin, SPACE space, StatusCode
 	  break;
 	case RWS:
 	  if (!isblank(data[pos])) {
-	    err = StatusBadRequest;
+	    code = StatusBadRequest;
 		return 0;
 	  }
 	  while (isblank(data[pos]))
@@ -131,9 +131,9 @@ size_t skip_space(std::string const &data, size_t begin, SPACE space, StatusCode
  * CRLF = "\r\n";
  * LF = "\n"; // %x0A
 */
-size_t skip_crlf(std::string const &str, size_t begin, StatusCode &err) {
+size_t skip_crlf(std::string const &str, size_t begin, StatusCode &code) {
   if (str.compare(begin, 2, "\r\n") != 0) {
-    err = StatusBadRequest;
+    code = StatusBadRequest;
 	return 0;
   }
   return 2;
@@ -157,7 +157,7 @@ bool isquoted_pair(int c) {
 }
 
 size_t get_quoted_string(std::string& dst, std::string const &data, size_t begin,
-						 StatusCode &err) {
+						 StatusCode &code) {
   size_t pos = begin;
   size_t begin_word = pos;
 
@@ -166,7 +166,7 @@ size_t get_quoted_string(std::string& dst, std::string const &data, size_t begin
 	  dst.append(data, begin_word, pos - begin_word);
 	  ++pos;
 	  if (data[pos] == '\0' || !isquoted_pair(data[pos])) {
-		err = StatusBadRequest;
+		code = StatusBadRequest;
 	    return 0;
 	  }
 	  dst.append(1, data[pos]);
@@ -177,7 +177,7 @@ size_t get_quoted_string(std::string& dst, std::string const &data, size_t begin
 	}
   }
   if (data[pos] != '"') {
-    err = StatusBadRequest;
+    code = StatusBadRequest;
 	return 0;
   }
   dst.append(data, begin_word, pos - begin_word);
