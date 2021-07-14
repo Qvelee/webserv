@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/06 12:56:02 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/10 14:53:40 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/14 12:08:21 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -72,7 +72,7 @@ bool	Server::Connection(void)
 	int		readyFds;
 	int		maxFd = 0;
 	
-	if ((maxFd = InitReadSet(read_fds)) == -1)
+	if ((maxFd = InitFdSet(read_fds)) == -1)
 		return false;
 	if ((readyFds = select(maxFd + 1, &read_fds, NULL, NULL, NULL)) == -1)
 		return Error("select");
@@ -80,7 +80,7 @@ bool	Server::Connection(void)
 	return false;
 }
 
-int		Server::InitReadSet(fd_set &set)
+int		Server::InitFdSet(fd_set &set)
 {
 	int		maxFd;
 
@@ -129,6 +129,7 @@ bool	Server::HandleClients(const fd_set &set)
 				delete client;
 				_clients.erase(it--);
 			}
+			std::cout << request_size << std::endl;
 		}
 	}
 	return SUCCESS;

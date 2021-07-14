@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   client.hpp                                         :+:      :+:    :+:   */
+/*   client_t.hpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/06 12:56:25 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/05/07 15:05:23 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/11 13:15:58 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,6 +24,7 @@
 # include <netdb.h>
 # include <unistd.h>
 # include <errno.h>
+# include <fcntl.h>
 
 typedef	struct sockaddr_in	t_sockaddr_in;
 typedef	struct sockaddr		t_sockaddr;
