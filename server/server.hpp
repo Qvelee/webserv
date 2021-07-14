@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/06 12:56:25 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/14 13:30:46 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/14 17:25:39 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -57,19 +57,22 @@ class Server
 
 		bool	Error(const std::string error) const;
 		bool	CreateSocket(void);
+		int		InitFdSets(fd_set &read_fds, fd_set &write_fds);
+		void	HandleClients(const fd_set &read_fds, const fd_set &write_fds);
 		void	AcceptNewClient(void);
-		int		InitFdSet(fd_set &set);
-		bool	HandleClients(const fd_set &set);
+		bool	TryRecvRequest(Client &client, const fd_set &read_fds);
+		bool	TrySendResponse(Client &client, const fd_set &write_fds);
 		bool	RecvData(int socket_ID, char **buffer, int *bytes_recv);
-		bool	SendData(int socket_ID, const char *buffer, int response_size) const;
+		int		SendData(int socket_ID, const char *buffer,\
+			int buffer_size, int start_pos) const;
 
-		ushort					_serverPort;
+		ushort					_server_port;
 		int						_max_connections;
-		int						_socket_ID;
+		int						_server_socket;
 		t_sockaddr_in			_socket_address; // struct with address info for socket
 		std::vector<Client*>	_clients;
 
-		const int				_READ_BUFFER_SIZE;
+		const int				_IO_BUFFER_SIZE;
 };
 
 #endif
