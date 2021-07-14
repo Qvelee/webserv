@@ -6,13 +6,13 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/06 12:56:02 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/14 12:08:21 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/14 14:07:08 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 # include "server.hpp"
 
-Server::Server(void) : _socket_ID(-1), _READ_BUFFER_SIZE(BUFFER)
+Server::Server(void) : _socket_ID(-1), _READ_BUFFER_SIZE(65536)
 {
 	memset(&_socket_address, 0, sizeof(_socket_address));
 }
@@ -164,7 +164,7 @@ bool	Server::SendData(int socket_ID, const char *buffer, int buffer_size) const
 
 	if ((bytes = send(socket_ID, buffer, buffer_size, 0)) == -1)
 	{
-		std::cout << "Cannot send data" << std::endl;
+		std::cout << "cannot send data" << std::endl;
 		return FAILURE;
 	}
 	return SUCCESS;

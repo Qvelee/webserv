@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/06 12:56:25 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/14 12:16:34 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/14 13:30:46 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,7 +32,6 @@
 // -- server settings --
 # define SERVER_PORT 8080
 # define MAX_CONNECTIONS 5
-# define BUFFER 65536
 // ---------------------
 
 # define SUCCESS false
