@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/05 17:40:26 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/14 16:39:51 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/14 18:19:35 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -83,21 +83,26 @@ int		main(void)
 		send(socket_ID, response, response_size, 0);
 		std::cout << "Data send\n";
 
-		int		buffer_size = 4096;
+		int		buffer_size = 250000;
 		char	buffer[buffer_size];
 		
 		int bytes;
-
+		int total = 0;
+		while (bytes != 0)
+		{
 			if ((bytes = recv(socket_ID, buffer, buffer_size - 1, 0)) == -1)
 			{
 				std::cout << "Error recv\n";
 				return 1;
 			}
 			std::cout << "Data recv " << bytes << "\n";
+			total += bytes;
 			// if (!bytes)
 			// 	break ;
 			// std::cout << "Bytes recieved: " << bytes << std::endl;
 			std::cout << buffer << std::endl;
+		}
+		std::cout << total << std::endl;
 		// std::string	stop;
 		// std::getline(std::cin, stop);
 		// if (stop == "stop")

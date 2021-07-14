@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/06 12:56:02 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/14 16:37:31 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/14 18:17:55 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -111,6 +111,10 @@ int		Server::InitFdSets(fd_set &read_fds, fd_set &write_fds)
 				FD_SET(client_socket, &write_fds);
 				client->setState(Client::State::SENDING);
 				break;
+			case Client::State::FINISHEDSEND:
+				FD_SET(client_socket, &read_fds);
+				client->setState(Client::State::SLEEP);
+				break;
 			default:
 				break;
 		}
@@ -189,19 +193,23 @@ bool	Server::TryRecvRequest(Client &client, const fd_set &read_fds)
 
 bool	Server::TrySendResponse(Client &client, const fd_set &write_fds)
 {
-	int			client_socket;
-
+	int		client_socket;
+	int		bytes;
+	
 	client_socket = client.getSocket();
 	if (FD_ISSET(client_socket, &write_fds))
 	{
-		if (SendData(client_socket, client.getResponse().c_str(),\
-			client.getResponse().size()) == FAILURE)
+		if ((bytes = SendData(client_socket, client.getResponse().c_str(),\
+			client.getResponse().size(), client.getAlreadySendBytes())) == -1)
 		{
 			close(client_socket);
 			delete &client;
 			return FAILURE;
 		}
-		client.setState(Client::State::SLEEP);
+		bytes += client.getAlreadySendBytes();
+		if (bytes == client.getResponse().size())
+			client.setState(Client::State::FINISHEDSEND);
+		client.setAlreadySendBytes(bytes);
 	}
 	return SUCCESS;
 }
@@ -216,16 +224,18 @@ bool	Server::RecvData(int socket, char **buffer, int *buffer_size)
 	return SUCCESS;
 }
 
-bool	Server::SendData(int socket, const char *buffer, int buffer_size) const
+int		Server::SendData(int socket, const char *buffer,\
+	int buffer_size, int start_pos) const
 {
 	int		bytes;
 
-	if ((bytes = send(socket, buffer, buffer_size, 0)) == -1)
+	if ((bytes = send(socket, &buffer[start_pos],\
+		buffer_size - start_pos, MSG_DONTWAIT)) == -1)
 	{
 		std::cout << "cannot send data" << std::endl;
-		return FAILURE;
+		return -1;
 	}
-	return SUCCESS;
+	return bytes;
 }
 
 bool	Server::Error(const std::string error) const

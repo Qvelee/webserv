@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/06 12:56:25 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/14 15:34:40 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/14 17:25:39 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -63,7 +63,8 @@ class Server
 		bool	TryRecvRequest(Client &client, const fd_set &read_fds);
 		bool	TrySendResponse(Client &client, const fd_set &write_fds);
 		bool	RecvData(int socket_ID, char **buffer, int *bytes_recv);
-		bool	SendData(int socket_ID, const char *buffer, int response_size) const;
+		int		SendData(int socket_ID, const char *buffer,\
+			int buffer_size, int start_pos) const;
 
 		ushort					_server_port;
 		int						_max_connections;
