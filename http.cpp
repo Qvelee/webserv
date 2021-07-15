@@ -6,6 +6,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include "errors.hpp"
 
 namespace http {
 
@@ -429,7 +430,9 @@ bool	check_config(Request& req) {
   return true;
 }
 
-std::string get_response(const Request& req) {
+Response::Response() : code(NoError) {}
+
+void get_response(const Request& req, Response &response) {
 //  std::string answer;
 //  if (req.code != NoError) {
 //    answer.append("HTTP/1.1 400 BadRequest\r\n\r\n");
@@ -441,7 +444,47 @@ std::string get_response(const Request& req) {
 //				  "Hello world!");
 //  }
 //  return answer;
+	if (response.code == NoError) {
+	  response.code = req.code;
+	}
+	switch (response.code) {
+	  case NoError:
+	  case StatusOK: error200(req, response);
+	  case StatusCreated: error201(req, response);
+	  case StatusMovedPermanently: error301(req, response);
+	  case StatusFound: error302(req, response);
+	  case StatusSeeOther: error303(req, response);
+	  case StatusTemporaryRedirect: error307(req, response);
+	  case StatusBadRequest: error400(req, response);
+	  case StatusForbidden: error403(req, response);
+	  case StatusNotFound: error404(req, response);
+	  case StatusMethodNotAllowed: error405(req, response);
+	  case StatusRequestTimeout: error408(req, response);
+	  case StatusRequestEntityTooLarge: error413(req, response);
+	  case StatusRequestURITooLong: error414(req, response);
+	  case StatusInternalServerError: error500(req, response);
+	  case StatusNotImplemented: error501(req, response);
+	  case StatusServiceUnavailable: error503(req, response);
+	  case StatusHTTPVersionNotSupported: error505(req, response);
+	}
+}
 
+void ResponseToString(const Response &resp, std::string &str) {
+  str.append("HTTP/1.1 ");
+  std::stringstream ss;
+  ss << resp.code;
+  std::string code;
+  ss >> code;
+  str.append(code);
+  str.append(" " + resp.status + "\r\n");
+  Headers::const_iterator begin = resp.header.begin();
+  Headers::const_iterator end = resp.header.end();
+  while (begin != end) {
+    str.append((*begin).first + ": " + (*begin).second + "\r\n");
+    ++begin;
+  }
+  str.append("\r\n");
+  str.append(resp.body);
 }
 
 }

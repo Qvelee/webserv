@@ -143,7 +143,20 @@ void	validate_media_type(const media_type& type, StatusCode &code);
 void	content_language(Request &req, std::string const &value, StatusCode &code);
 void	content_location(Request &req, std::string const &value, StatusCode &code);
 
-std::string get_response(const Request& req);
+
+struct Response {
+  std::string	status;
+  StatusCode	code;
+  Headers		header;
+  std::string	body;
+  std::string	error_file;
+
+  Response();
+};
+
+void get_response(const Request& req, Response &response);
+void ResponseToString(const Response &resp, std::string &str);
+
 }
 
 #endif
