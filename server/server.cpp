@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/06 12:56:02 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/15 13:58:17 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/15 17:14:35 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,11 +27,12 @@ Server::~Server()
 
 Server	&Server::operator=(const Server &) { return *this; }
 
-bool	Server::Setup(int port, config::WebserverConf &config)
+bool	Server::Setup(const std::vector<int> &ports,\
+	const config::WebserverConf &config)
 {
 	_config = &config;
 	_max_connections = MAX_CONNECTIONS;
-	if ((_server_port = port) < 1024)
+	if ((_server_port = ports[0]) < 1024)
 		return Error("Set port is forbidden");
 	if (CreateSocket() == FAILURE)
 		return FAILURE;

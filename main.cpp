@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/06 13:07:13 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/15 16:57:16 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/15 17:15:38 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,7 +30,7 @@
 
 void	GetPorts(std::vector<int> &ports)
 {
-	
+	ports.push_back(SERVER_PORT);
 }
 
 int		main(int argc, char **argv)
@@ -49,7 +49,8 @@ int		main(int argc, char **argv)
 		std::cerr << "Error: " << error << std::endl;
 		return 1;
 	}
-	if (server.Setup(SERVER_PORT, *config))
+	GetPorts(ports);
+	if (server.Setup(ports, *config))
 	{
 		delete config;
 		return 2;
