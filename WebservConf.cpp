@@ -451,9 +451,10 @@ void	WebserverConf::fillMapServer(tServer &tserver)
 
 	pointerToServerSet.insert(server);
 
-	map<int, map<string, map<string, tServer *> > >::iterator it;
+	//map<int, map<string, map<string, tServer *> > >::iterator it;
+	map<int, map<string, tServer *> >::iterator it;
 	map<string, tServer *>  tmp;
-	map<string, map<string, tServer *> > tmpMap;
+	//map<string, map<string, tServer *> > tmpMap;
 	
 	std::list<std::string>::iterator itLst;
 	//itLst = server.server_name.begin();
@@ -461,6 +462,9 @@ void	WebserverConf::fillMapServer(tServer &tserver)
 	it = serverMap.find(server->port);
 	if (it != serverMap.end())
 	{
+		//check ip
+		if (serverMap[server->port].begin()->second->ip != server->ip)
+			throw "different ip with the same port";
 		itLst = server->server_name.begin();
 		//std::cout <<"server_names =  " << *itLst << std::endl;
 		while (itLst != server->server_name.end())
@@ -468,7 +472,7 @@ void	WebserverConf::fillMapServer(tServer &tserver)
 			//std::cout <<"here" << std::endl;
 			tmp.insert(std::make_pair(*itLst, server));
 			//(it->second).insert(std::make_pair("server.ip", std::make_pair("hello", 5)));
-			(it->second).insert(std::make_pair(server->ip, tmp));
+			//(it->second).insert(std::make_pair(server->ip, tmp));
 			itLst++;
 		}
 	}
@@ -487,10 +491,10 @@ void	WebserverConf::fillMapServer(tServer &tserver)
 		tmp.insert(std::make_pair("default", server));
 		//(it->second).insert(std::make_pair("server.ip", std::make_pair("hello", 5)));
 
-		if (tmpMap.find(server->ip) == tmpMap.end())
-			tmpMap.insert(std::make_pair("default", tmp));
-		tmpMap.insert(std::make_pair(server->ip, tmp));
-		serverMap.insert(std::make_pair(server->port, tmpMap));
+//		if (tmpMap.find(server->ip) == tmpMap.end())
+//			tmpMap.insert(std::make_pair("default", tmp));
+//		tmpMap.insert(std::make_pair(server->ip, tmp));
+		serverMap.insert(std::make_pair(server->port, tmp));
 		itLst++;
 	}
 }
@@ -521,7 +525,7 @@ void	WebserverConf::readConfFile(const char *confFileName)
 
 	//printServerMap();
 }
-/*
+
 bool is_octet(const std::string &str) {
   if (str.length() == 1) {
 	if (std::isdigit(str[0]))
@@ -558,7 +562,7 @@ bool isIPv4(const std::string &str) {
 	pos = ++end;
   }
   return true;
-}*/
+}
 
 tServerInformation	WebserverConf::chooseServer(URL url)
 {
@@ -568,7 +572,7 @@ tServerInformation	WebserverConf::chooseServer(URL url)
 	serverInformation.limit_size = 100000;//-1?64
 	serverInformation.autoindex = 0;//0
 	//serverInformation.file_request_if_dir = "file_request_if_dir";//default
-	serverInformation.redirection_status_code = 404;//
+	//serverInformation.redirection_status_code = 404;//
 	serverInformation.redirection_url = "";//
 	serverInformation.name_file = "name_file";//url_after_alias!
 	serverInformation.accepted_methods.insert(std::make_pair("GET", 1));//map->set
@@ -592,18 +596,18 @@ tServerInformation	WebserverConf::chooseServer(URL url)
 		ip = url.host;
 	else
 		server_name = url.host;
-	map<int, map<string, map<string, tServer *> > >::iterator itMap = serverMap.find(port);
+	map<int, map<string, tServer *> >::iterator itMap = serverMap.find(port);
 	//if (itMap == serverMap.end() && ip == "default")
 
 	if (itMap != serverMap.end())
 	{
-		map<string, map<string, tServer *> > ipServer = itMap->second;
+		map<string, tServer *>  ipServer = itMap->second;
 		std::cout << "ip now is = " << ip<<std::endl;
-		map<string, map<string, tServer *> >::iterator itIpSrv = ipServer.find(ip);
+		map<string, tServer *> ::iterator itIpSrv = ipServer.find(ip);
 		std::cout << "ip  size = " << ipServer.size() <<std::endl;
 		if (itIpSrv != ipServer.end())
 		{
-			map<string, tServer *> nameServer = itIpSrv->second;
+			map<string, tServer *> nameServer = ipServer;
 			map<string, tServer *>::iterator itNameSrv = nameServer.find(server_name);
 			if (itNameSrv == nameServer.end())
 				itNameSrv = nameServer.find("default");
@@ -674,7 +678,7 @@ tServerInformation	WebserverConf::chooseServer(URL url)
 					}
 					if (itLoc == server.locationMap.end() && path_for_alias != "")
 					{
-						if (path_for_alias.find("/") != -1)
+						if (path_for_alias.find("/") != std::string::npos)
 						{
 							if (path_for_alias.find_last_of("/") == path_for_alias.length() - 1)
 								path_for_alias = path_for_alias.erase(path_for_alias.find_last_of("/"));

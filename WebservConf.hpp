@@ -21,7 +21,7 @@
 #include <iostream>
 #include "Location.hpp"
 #include <set>
-#include "url.hpp"
+//#include "url.hpp"
 
 
 namespace config{
@@ -34,25 +34,8 @@ using std::set;
 using std::make_pair;
 
 
-///www.f.ru/i/rt/s - с конца отрезаем
-
-///i/
-///i/rt/
-
-//need to delete
-/*struct URL {
-  std::string scheme;
-  std::string userinfo;
-  std::string host;
-  std::string path;//!
-  std::string raw_path;
-  std::string raw_query;
-};*/
-
 typedef struct sServerInformation{
-	//int port;
-	//string ip;
-	//string serverName;
+
 	map<int, string> error_pages;//0 default
 	size_t limit_size;//-1?64
 	bool	autoindex;//0
@@ -68,13 +51,6 @@ typedef struct sServerInformation{
 }tServerInformation;
 
 typedef struct sLocation{
-	//string locationMask;
-	//char	method;//mask
-	//method 	//limit_except
-	//string	root;///root
-	//string	autoindex;//on or off
-	//file if request is directory
-	//map<string, string> cgiMap;
 	map<int, string> error_pages;//0 default
 	size_t limit_size;//-1?64
 	bool	autoindex;//0
@@ -114,9 +90,8 @@ class WebserverConf{
 		void	setError_page(std::list<std::string>::iterator &itList, tServer	&server);
 		void	setLocation(std::list<std::string>::iterator &itList, tServer	&server);
 		void	setClient_max_body_size(std::list<std::string>::iterator &itList, tServer	&server);
-		//std::vector<tServer> serverVector;//
-		map<int, map<string, map<string, tServer *> > > serverMap;
-		//map<int, map<string, tServer *> > serverMap;
+
+		map<int, map<string, tServer *> > serverMap;
 		set<tServer *> pointerToServerSet;
 		std::list<std::string> fileLineToList;
 		std::list<std::string> tokenList;//separate ' ' or ';' or '{' or '}'
