@@ -452,9 +452,10 @@ void	WebserverConf::fillMapServer(tServer &tserver)
 
 	pointerToServerSet.insert(server);
 
-	map<int, map<string, map<string, tServer *> > >::iterator it;
+	//map<int, map<string, map<string, tServer *> > >::iterator it;
+	map<int, map<string, tServer *> >::iterator it;
 	map<string, tServer *>  tmp;
-	map<string, map<string, tServer *> > tmpMap;
+	//map<string, map<string, tServer *> > tmpMap;
 	
 	std::list<std::string>::iterator itLst;
 	//itLst = server.server_name.begin();
@@ -462,6 +463,9 @@ void	WebserverConf::fillMapServer(tServer &tserver)
 	it = serverMap.find(server->port);
 	if (it != serverMap.end())
 	{
+		//check ip
+		if (serverMap[server->port].begin()->second->ip != server->ip)
+			throw "different ip with the same port";
 		itLst = server->server_name.begin();
 		//std::cout <<"server_names =  " << *itLst << std::endl;
 		while (itLst != server->server_name.end())
@@ -469,7 +473,7 @@ void	WebserverConf::fillMapServer(tServer &tserver)
 			//std::cout <<"here" << std::endl;
 			tmp.insert(std::make_pair(*itLst, server));
 			//(it->second).insert(std::make_pair("server.ip", std::make_pair("hello", 5)));
-			(it->second).insert(std::make_pair(server->ip, tmp));
+			//(it->second).insert(std::make_pair(server->ip, tmp));
 			itLst++;
 		}
 	}
@@ -488,10 +492,10 @@ void	WebserverConf::fillMapServer(tServer &tserver)
 		tmp.insert(std::make_pair("default", server));
 		//(it->second).insert(std::make_pair("server.ip", std::make_pair("hello", 5)));
 
-		if (tmpMap.find(server->ip) == tmpMap.end())
-			tmpMap.insert(std::make_pair("default", tmp));
-		tmpMap.insert(std::make_pair(server->ip, tmp));
-		serverMap.insert(std::make_pair(server->port, tmpMap));
+//		if (tmpMap.find(server->ip) == tmpMap.end())
+//			tmpMap.insert(std::make_pair("default", tmp));
+//		tmpMap.insert(std::make_pair(server->ip, tmp));
+		serverMap.insert(std::make_pair(server->port, tmp));
 		itLst++;
 	}
 }
@@ -555,18 +559,18 @@ tServerInformation	WebserverConf::chooseServer(http::url::URL url) const
 		ip = url.host;
 	else
 		server_name = url.host;
-	map<int, map<string, map<string, tServer *> > >::const_iterator itMap = serverMap.find(port);
+	map<int, map<string, tServer *> > ::const_iterator itMap = serverMap.find(port);
 	//if (itMap == serverMap.end() && ip == "default")
 
 	if (itMap != serverMap.end())
 	{
-		map<string, map<string, tServer *> > ipServer = itMap->second;
+		map<string, tServer *> ipServer = itMap->second;
 		std::cout << "ip now is = " << ip<<std::endl;
-		map<string, map<string, tServer *> >::iterator itIpSrv = ipServer.find(ip);
+		map<string, tServer *> ::iterator itIpSrv = ipServer.find(ip);
 		std::cout << "ip  size = " << ipServer.size() <<std::endl;
 		if (itIpSrv != ipServer.end())
 		{
-			map<string, tServer *> nameServer = itIpSrv->second;
+			map<string, tServer *> nameServer = ipServer;
 			map<string, tServer *>::iterator itNameSrv = nameServer.find(server_name);
 			if (itNameSrv == nameServer.end())
 				itNameSrv = nameServer.find("default");

@@ -101,8 +101,8 @@ class WebserverConf{
 		void	setLocation(std::list<std::string>::iterator &itList, tServer	&server);
 		void	setClient_max_body_size(std::list<std::string>::iterator &itList, tServer	&server);
 		//std::vector<tServer> serverVector;//
-		map<int, map<string, map<string, tServer *> > > serverMap;
-		//map<int, map<string, tServer *> > serverMap;
+		//map<int, map<string, map<string, tServer *> > > serverMap;
+		map<int, map<string, tServer *> > serverMap;//getter нужен
 		set<tServer *> pointerToServerSet;
 		std::list<std::string> fileLineToList;
 		std::list<std::string> tokenList;//separate ' ' or ';' or '{' or '}'
@@ -111,9 +111,10 @@ class WebserverConf{
 
 
 	public:
+		map<int, map<string, tServer *> >  const &getServerMap();
 		WebserverConf(char const *name = "webserver.conf");
 		virtual ~WebserverConf();
-		tServerInformation chooseServer(http::url::URL url) const;
+		tServerInformation chooseServer(http::url::URL url) const;//вынести из класса
 
 };
 
