@@ -6,7 +6,7 @@
 #    By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2021/05/14 14:50:43 by nelisabe          #+#    #+#              #
-#    Updated: 2021/07/15 12:59:32 by nelisabe         ###   ########.fr        #
+#    Updated: 2021/07/15 12:54:11 by nelisabe         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -20,54 +20,51 @@ GREEN =				\033[32m
 GRAY =				\033[2m
 ##############
 
-NAME =				libhttp.a
+NAME =				libconf.a
 
 COMP ?=				clang++
 
 FLAGS ?=			-g #-Wall -Wextra -Werror -std=c++98
 
-INCLUDES ?=			-I. -I./../config_parser/
+INCLUDES ?=			-I. -I../http/
 
 #SRC DIRS
 
-HTTP_SRC_DIR =		./
+CONF_SRC_DIR =		./
 
 #SRC
 
-HTTP_SRC =			header_handlers.cpp \
-					http.cpp \
-					url.cpp \
-					utility_http.cpp \
-					errors.cpp
+CONF_SRC =			Location.cpp \
+					WebservConf.cpp
 
 #OBJ DIRS
 
-HTTP_OBJ_DIR =		./temp/
+CONF_OBJ_DIR =		./temp/
 
 #OBJ
 
-HTTP_OBJ =			$(addprefix $(HTTP_OBJ_DIR), $(HTTP_SRC:.cpp=.o))
+CONF_OBJ =			$(addprefix $(CONF_OBJ_DIR), $(CONF_SRC:.cpp=.o))
 
-D_FILES = 			$(patsubst %.o, %.d, $(HTTP_OBJ))
+D_FILES = 			$(patsubst %.o, %.d, $(CONF_OBJ))
 
 ###
 
-all: $(HTTP_OBJ_DIR) $(NAME)
+all: $(CONF_OBJ_DIR) $(NAME)
 
-$(HTTP_OBJ_DIR):
-	@mkdir -p $(HTTP_OBJ_DIR)
+$(CONF_OBJ_DIR):
+	@mkdir -p $(CONF_OBJ_DIR)
 
-$(NAME): $(HTTP_OBJ)
+$(NAME): $(CONF_OBJ)
 	@ar rcs $(NAME) $^
 	@echo -e "$(GREEN)$(BOLD)$(NAME) created!$(RESET)"
 
-$(addprefix $(HTTP_OBJ_DIR), %.o): %.cpp
+$(addprefix $(CONF_OBJ_DIR), %.o): %.cpp
 	@$(COMP) -c $(FLAGS) $(INCLUDES) $< -o $@ -MMD
 
 clean:
 	@echo -e "$(GRAY)Deleting...$(RESET)"
 	@rm -rf temp
-	@echo -e "$(RED)$(BOLD)Http object files deleted!$(RESET)$(RED)$(RESET)"
+	@echo -e "$(RED)$(BOLD)Config parser object files deleted!$(RESET)$(RED)$(RESET)"
 
 fclean: clean
 	@rm -rf $(NAME)

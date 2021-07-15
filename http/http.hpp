@@ -102,7 +102,7 @@ typedef const std::map<std::string, field_handlers>	HeaderHandlers;
 typedef const std::map<std::string, int>			TransferCodingRegister;
 typedef const std::map<std::string, int>			MediaTypeRegister;
 
-bool	parse_request(Request& req, std::string const &data);
+bool	parse_request(Request& req, std::string const &data, const config::WebserverConf&conf);
 size_t	parse_request_line(Request &r, std::string const &data, size_t begin, StatusCode &code);
 void	parse_and_validate_method(Method &m, std::string const &src, StatusCode &code);
 void	parse_request_target(url::URL &url, Method &m, std::string const &src, StatusCode &code);

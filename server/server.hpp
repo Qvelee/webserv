@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/06 12:56:25 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/14 17:25:39 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/15 13:57:10 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,7 +48,7 @@ class Server
 		Server(void);
 		virtual ~Server();
 
-		bool	Setup(int port);
+		bool	Setup(int port, config::WebserverConf &config);
 		bool	Connection(void);
 	private:
 		Server(const Server &);
@@ -66,6 +66,7 @@ class Server
 		int		SendData(int socket_ID, const char *buffer,\
 			int buffer_size, int start_pos) const;
 
+		config::WebserverConf	*_config;
 		ushort					_server_port;
 		int						_max_connections;
 		int						_server_socket;

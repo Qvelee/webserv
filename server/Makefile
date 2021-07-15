@@ -6,7 +6,7 @@
 #    By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2021/05/14 14:50:43 by nelisabe          #+#    #+#              #
-#    Updated: 2021/07/10 12:40:01 by nelisabe         ###   ########.fr        #
+#    Updated: 2021/07/15 13:05:06 by nelisabe         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -26,7 +26,7 @@ COMP ?=				clang++
 
 FLAGS ?=			-g #-Wall -Wextra -Werror -std=c++98
 
-INCLUDES ?=			-I. -I./../http/
+INCLUDES ?=			-I. -I./../http/ -I./../config_parser/
 
 #SRC DIRS
 
@@ -49,10 +49,7 @@ D_FILES = 			$(patsubst %.o, %.d, $(SERV_OBJ))
 
 ###
 
-all: libs $(SERV_OBJ_DIR) $(NAME)
-
-libs:
-	@$(MAKE) -C ./../http/
+all: $(SERV_OBJ_DIR) $(NAME)
 
 $(SERV_OBJ_DIR):
 	@mkdir -p $(SERV_OBJ_DIR)
@@ -66,12 +63,10 @@ $(addprefix $(SERV_OBJ_DIR), %.o): %.cpp
 
 clean:
 	@echo -e "$(GRAY)Deleting...$(RESET)"
-	@$(MAKE) clean -C ./../http/
 	@rm -rf temp
 	@echo -e "$(RED)$(BOLD)Server object files deleted!$(RESET)$(RED)$(RESET)"
 
 fclean: clean
-	@$(MAKE) fclean -C ./../http/
 	@rm -rf $(NAME)
 	@echo -e "$(RED)$(BOLD)$(NAME) deleted!$(RESET)"
 

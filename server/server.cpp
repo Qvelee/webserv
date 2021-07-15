@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/06 12:56:02 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/15 12:49:59 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/15 13:58:17 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,8 +27,9 @@ Server::~Server()
 
 Server	&Server::operator=(const Server &) { return *this; }
 
-bool	Server::Setup(int port)
+bool	Server::Setup(int port, config::WebserverConf &config)
 {
+	_config = &config;
 	_max_connections = MAX_CONNECTIONS;
 	if ((_server_port = port) < 1024)
 		return Error("Set port is forbidden");
@@ -182,7 +183,7 @@ bool	Server::TryRecvRequest(Client &client, const fd_set &read_fds)
 			delete &client;
 			return FAILURE;
 		}
-		if (client.CreateResponse(request, request_size) == SUCCESS)
+		if (client.CreateResponse(request, request_size, *_config) == SUCCESS)
 			client.setState(Client::State::FINISHEDRECV);
 		else
 			client.setState(Client::State::RECVING);

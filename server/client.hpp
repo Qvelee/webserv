@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/13 13:58:58 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/14 18:18:46 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/15 13:19:07 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,7 +43,8 @@ class Client
 		int					getAlreadySendBytes() const;
 		void				setAlreadySendBytes(int bytes);
 
-		bool		CreateResponse(const char *request, int request_size);
+		bool		CreateResponse(const char *request, int request_size,\
+			const config::WebserverConf &config);
 	private:
 		Client(Client const &);
 

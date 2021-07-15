@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   WebservConf.hpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: bbenny <bbenny@student.21-school.ru>       +#+  +:+       +#+        */
+/*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/04/18 23:24:54 by bbenny            #+#    #+#             */
-/*   Updated: 2021/04/18 23:24:57 by bbenny           ###   ########.fr       */
+/*   Updated: 2021/07/15 13:25:50 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -87,7 +87,7 @@ class WebserverConf{
 	//using std::string;
 	private:
 		WebserverConf(WebserverConf const &copy);
-		WebserverConf &operator=(WebserverConf const &eq);
+		// WebserverConf &operator=(WebserverConf const &eq);
 		void	readConfFile(const char *confFileName);
 		void	fileToListLine(const char *confFileName);
 		void	allLinesToToken();
@@ -113,9 +113,10 @@ class WebserverConf{
 	public:
 		WebserverConf(char const *name = "webserver.conf");
 		virtual ~WebserverConf();
-		tServerInformation chooseServer(http::url::URL url);
+		tServerInformation chooseServer(http::url::URL url) const;
 
 };
 
-#endif
 }
+
+#endif

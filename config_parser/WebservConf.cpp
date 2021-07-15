@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   WebservConf.cpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: bbenny <bbenny@student.21-school.ru>       +#+  +:+       +#+        */
+/*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/04/18 23:24:41 by bbenny            #+#    #+#             */
-/*   Updated: 2021/04/18 23:24:46 by bbenny           ###   ########.fr       */
+/*   Updated: 2021/07/15 14:03:20 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -523,7 +523,7 @@ void	WebserverConf::readConfFile(const char *confFileName)
 	//printServerMap();
 }
 
-tServerInformation	WebserverConf::chooseServer(http::url::URL url)
+tServerInformation	WebserverConf::chooseServer(http::url::URL url) const
 {
 	tServerInformation serverInformation;
 
@@ -531,7 +531,7 @@ tServerInformation	WebserverConf::chooseServer(http::url::URL url)
 	serverInformation.limit_size = 100000;//-1?64
 	serverInformation.autoindex = 0;//0
 	//serverInformation.file_request_if_dir = "file_request_if_dir";//default
-	serverInformation.redirection_status_code = 404;//
+	serverInformation.redirection_status_code = 0;//
 	serverInformation.redirection_url = "";//
 	serverInformation.name_file = "name_file";//url_after_alias!
 	serverInformation.accepted_methods.insert(std::make_pair("GET", 1));//map->set
@@ -555,7 +555,7 @@ tServerInformation	WebserverConf::chooseServer(http::url::URL url)
 		ip = url.host;
 	else
 		server_name = url.host;
-	map<int, map<string, map<string, tServer *> > >::iterator itMap = serverMap.find(port);
+	map<int, map<string, map<string, tServer *> > >::const_iterator itMap = serverMap.find(port);
 	//if (itMap == serverMap.end() && ip == "default")
 
 	if (itMap != serverMap.end())

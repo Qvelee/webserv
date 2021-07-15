@@ -6,7 +6,7 @@
 #    By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2021/05/14 16:22:01 by nelisabe          #+#    #+#              #
-#    Updated: 2021/07/09 13:48:56 by nelisabe         ###   ########.fr        #
+#    Updated: 2021/07/15 14:12:39 by nelisabe         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -26,10 +26,12 @@ COMP ?=			clang++
 
 FLAGS ?=		-g #-Wall -Wextra -Werror -std=c++98
 
-INCLUDES ?=		-I./server/ -I./http/ # delete
+INCLUDES ?=		-I./server/ -I./http/ -I./config_parser/
 
-LIBS =			-L./server/ -lserv -L./http/ -lhttp
+LIBS =			-L./server/ -lserv -L./http/ -lhttp -L./config_parser/ -lconf
 #SRC DIRS
+
+LIBSDEP =		./server/libserv.a ./http/libhttp.a ./config_parser/libconf.a
 
 SRC_DIR =		./
 
@@ -56,11 +58,13 @@ client:
 
 libs:
 	@$(MAKE) -C ./server/
+	@$(MAKE) -C ./http/
+	@$(MAKE) -C ./config_parser/
 
 $(OBJ_DIR):
 	@mkdir -p $(OBJ_DIR)
 
-$(NAME): $(OBJ)
+$(NAME): $(OBJ) $(LIBSDEP)
 	@$(COMP) $(FLAGS) $< $(INCLUDES) $(LIBS) -o $@ -MMD
 	@echo -e "$(YELLOW)$(BOLD)$(NAME) created!$(RESET)"
 
@@ -70,10 +74,14 @@ $(addprefix $(OBJ_DIR), %.o): %.cpp
 clean:
 	@rm -rf temp
 	@$(MAKE) clean -C ./server/
+	@$(MAKE) clean -C ./http/
+	@$(MAKE) clean -C ./config_parser/
 
 fclean: clean
 	@rm -rf $(NAME)
 	@$(MAKE) fclean -C ./server/
+	@$(MAKE) fclean -C ./http/
+	@$(MAKE) fclean -C ./config_parser/
 	@echo -e "$(RED)$(BOLD)$(NAME) deleted!$(RESET)"
 
 re: fclean all
