@@ -21,7 +21,7 @@
 #include <iostream>
 #include "Location.hpp"
 #include <set>
-//#include "url.hpp"
+#include "url.hpp"
 
 
 namespace config{
@@ -40,14 +40,14 @@ using std::make_pair;
 ///i/rt/
 
 //need to delete
-struct URL {
+/*struct URL {
   std::string scheme;
   std::string userinfo;
   std::string host;
   std::string path;//!
   std::string raw_path;
   std::string raw_query;
-};
+};*/
 
 typedef struct sServerInformation{
 	//int port;

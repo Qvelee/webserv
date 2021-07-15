@@ -521,7 +521,7 @@ void	WebserverConf::readConfFile(const char *confFileName)
 
 	//printServerMap();
 }
-
+/*
 bool is_octet(const std::string &str) {
   if (str.length() == 1) {
 	if (std::isdigit(str[0]))
@@ -558,7 +558,7 @@ bool isIPv4(const std::string &str) {
 	pos = ++end;
   }
   return true;
-}
+}*/
 
 tServerInformation	WebserverConf::chooseServer(URL url)
 {
