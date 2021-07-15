@@ -6,14 +6,14 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/13 14:03:29 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/15 13:35:48 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/15 16:45:09 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 # include "client.hpp"
 
 Client::Client(void) : \
-	_socket_ID(-1), _recv_status(EMPTY), _connection_state(SLEEP),\
+	_client_socket(-1), _recv_status(EMPTY), _connection_state(SLEEP),\
 	_bytes_already_send(0) { }
 
 Client::Client(Client const &) {}
@@ -22,9 +22,9 @@ Client::~Client(void) {}
 
 Client	&Client::operator=(Client const &) {return *this; }
 
-int		Client::getSocket(void) const { return _socket_ID; }
+int		Client::getSocket(void) const { return _client_socket; }
 
-void	Client::setSocket(int socket_ID) { _socket_ID = socket_ID; }
+void	Client::setSocket(int socket_ID) { _client_socket = socket_ID; }
 
 const std::string	&Client::getResponse() const { return _response_string; }
 

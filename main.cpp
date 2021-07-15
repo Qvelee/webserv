@@ -6,24 +6,59 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/06 13:07:13 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/15 13:58:51 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/15 16:57:16 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 # include "server.hpp"
 # include "WebservConf.hpp"
 
-int		main(void)
-{
-	Server server;
-	config::WebserverConf config("111.conf");
+// void	getPorts(config::WebserverConf config)
+// {
+// 	std::vector<int>	ports;
 
-	if (server.Setup(SERVER_PORT, config))
+// 	std::map<int, std::map<std::string, std::map<std::string, \
+// 		config::tServer *> > >::const_iterator begin = config.serverMap.begin();
+// 	std::map<int, std::map<std::string, std::map<std::string, \
+// 		config::tServer *> > >::const_iterator end = config.serverMap.end();
+// 	while (begin != end)
+// 	{
+// 		ports.push_back((*begin).first);
+// 		++begin;
+// 	}
+// }
+
+void	GetPorts(std::vector<int> &ports)
+{
+	
+}
+
+int		main(int argc, char **argv)
+{
+	Server 					server;
+	std::vector<int>		ports;
+	config::WebserverConf	*config;
+	
+	try
+	{
+		argc != 2 ? config = new config::WebserverConf() :\
+			config = new config::WebserverConf(argv[1]);
+	}
+	catch (const char *error)
+	{
+		std::cerr << "Error: " << error << std::endl;
 		return 1;
+	}
+	if (server.Setup(SERVER_PORT, *config))
+	{
+		delete config;
+		return 2;
+	}
 	while (true)
 	{
 		if (server.Connection())
-			return 2;
+			return 3;
 	}
+	delete config;
 	return 0;
 }

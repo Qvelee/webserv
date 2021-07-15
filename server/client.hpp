@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/13 13:58:58 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/15 13:19:07 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/15 16:45:42 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -57,7 +57,8 @@ class Client
 			FINISHED	
 		};
 
-		int				_socket_ID;
+		int				_client_socket;
+		int				_client_port;
 		std::string		_request_string;
 		std::string		_response_string;
 		http::Request	_request;
