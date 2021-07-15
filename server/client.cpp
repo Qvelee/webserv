@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/13 14:03:29 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/14 17:03:41 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/15 12:10:20 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,7 +51,8 @@ bool	Client::CreateResponse(const char *request, int requset_size)
 				_recv_status = NOTFINISHED;
 	if (_recv_status == FINISHED)
 	{
-		_response_string = http::get_response(_request, _response);
+		http::get_response(_request, _response);
+		http::ResponseToString(_response, _response_string);
 		return SUCCESS;
 	}
 	else
