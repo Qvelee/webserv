@@ -188,9 +188,6 @@ void calculate_length_message(Request& req, StatusCode &err) {
     if (req.transfer_encoding.back().token != "chunked") {
 	  err = StatusBadRequest;
       return;
-    } else
-    {
-      req.content_length = -1;
     }
   } else if (req.headers.count("content-length") == 0) {
     req.content_length = 0;
@@ -324,10 +321,10 @@ size_t read_chunk_size(size_t& chunk_size, std::string const &data, size_t begin
 std::string get_response(const Request&, Response&) {
   std::string answer;
   answer.append("HTTP/1.1 200 OK\r\n"
-				"Content-Length: 13\r\n"
+				"Content-Length: 12\r\n"
 				"Content-Type: text/plain\r\n"
 				"\r\n"
-				"Hello world!\n");
+				"Hello world!");
   return answer;
 }
 
