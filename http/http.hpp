@@ -7,23 +7,9 @@
 #include <map>
 #include <iostream>
 #include "url.hpp"
+#include "WebservConf.hpp"
 
 namespace http {
-
-typedef struct sServerInformation{
-  std::map<int, std::string>	error_pages;
-  size_t						limit_size;
-  std::map<std::string, int>	accepted_methods;
-  int							redirection_status_code;
-  std::string					redirection_url;
-  bool							autoindex;
-  std::string					file_request_if_dir;
-  std::string					name_file;
-  std::string					route_for_uploaded_files;
-  //cgi struct
-}tServerInformation;
-
-tServerInformation chooseServer(url::URL const &url);
 
 enum Method {
   GET,
@@ -96,19 +82,19 @@ typedef std::map<std::string, std::string>		Headers;
 typedef std::vector<transfer_extension>			TransferEncoding;
 
 struct Request {
-  Method					method;
-  url::URL					url;
-  std::string				proto;
-  Headers					headers;
-  int64_t					content_length;
-  TransferEncoding			transfer_encoding;
-  bool 						close;
-  Headers					trailer;
-  std::string				body;
-  representation_metadata	metadata;
-  StatusCode				code;
-  tServerInformation		serv_config;
-  std::string				representation;
+  Method						method;
+  url::URL						url;
+  std::string					proto;
+  Headers						headers;
+  int64_t						content_length;
+  TransferEncoding				transfer_encoding;
+  bool 							close;
+  Headers						trailer;
+  std::string					body;
+  representation_metadata		metadata;
+  StatusCode					code;
+  config::tServerInformation	serv_config;
+  std::string					representation;
 };
 
 typedef void (*field_handlers)(Request& req, std::string const &field, StatusCode &code);

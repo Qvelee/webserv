@@ -16,6 +16,7 @@
 #include <stack>
 #include <sstream>
 #include <cctype>
+#include "url.hpp"
 
 namespace config{
 WebserverConf::WebserverConf(char const *name)
@@ -278,7 +279,7 @@ void	WebserverConf::setListen(std::list<std::string>::iterator &itList, tServer	
 		//check ip if correct
 		if (countDot != 3)
 			throw "there are not 4 number in ip adress in the listen line";
-			ip = server.listen.substr(0, iDoubleDot);
+		ip = server.listen.substr(0, iDoubleDot);
 	}
 	else
 		//ip = "default";
@@ -522,45 +523,7 @@ void	WebserverConf::readConfFile(const char *confFileName)
 	//printServerMap();
 }
 
-bool is_octet(const std::string &str) {
-  if (str.length() == 1) {
-	if (std::isdigit(str[0]))
-	  return true;
-  } else if (str.length() == 2) {
-	return true;
-  } else if (str.length() == 3) {
-	if (str[0] == '1') {
-	  if (std::isdigit(str[1]) && std::isdigit(str[2]))
-		return true;
-	} else if (str[0] == '2') {
-	  if (str[1] == '0' || str[1] == '1' || str[1] == '2' || str[1] == '3' || str[1] ==
-		  '4') {
-		if (std::isdigit(str[2]))
-		  return true;
-	  } else if (str[1] == '5') {
-		if (str[2] == '0' || str[2] == '1' || str[2] == '2' || str[2] == '3' || str[2]
-			== '4' || str[2] == '5')
-		  return true;
-	  }
-	}
-  }
-  return false;
-}
-
-bool isIPv4(const std::string &str) {
-  size_t pos = 0;
-  for (int i = 0; i < 4; ++i) {
-	size_t end = str.find('.', pos);
-	if (i != 3 && end == std::string::npos)
-	  return false;
-	if (!is_octet(str.substr(pos, end - pos)))
-	  return false;
-	pos = ++end;
-  }
-  return true;
-}
-
-tServerInformation	WebserverConf::chooseServer(URL url)
+tServerInformation	WebserverConf::chooseServer(http::url::URL url)
 {
 	tServerInformation serverInformation;
 
@@ -588,7 +551,7 @@ tServerInformation	WebserverConf::chooseServer(URL url)
 		buf >> port;//need erase
 		url.host.erase(url.host.begin() + found, url.host.end());
 	}
-	if (isIPv4(url.host))
+	if (http::url::isIPv4(url.host))
 		ip = url.host;
 	else
 		server_name = url.host;
@@ -609,7 +572,7 @@ tServerInformation	WebserverConf::chooseServer(URL url)
 				itNameSrv = nameServer.find("default");
 			//if (itNameSrv != nameServer.end())
 			//{
-				tServer server = *(itNameSrv->second);
+			tServer server = *(itNameSrv->second);
 
 				std::cout << "port = " << server.port <<std::endl;
 				std::cout << "ip = " << server.ip <<std::endl;
@@ -674,7 +637,7 @@ tServerInformation	WebserverConf::chooseServer(URL url)
 					}
 					if (itLoc == server.locationMap.end() && path_for_alias != "")
 					{
-						if (path_for_alias.find("/") != -1)
+						if (path_for_alias.find("/") != std::string::npos)
 						{
 							if (path_for_alias.find_last_of("/") == path_for_alias.length() - 1)
 								path_for_alias = path_for_alias.erase(path_for_alias.find_last_of("/"));

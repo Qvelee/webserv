@@ -21,7 +21,7 @@
 #include <iostream>
 #include "Location.hpp"
 #include <set>
-//#include "url.hpp"
+#include "url.hpp"
 
 
 namespace config{
@@ -33,21 +33,6 @@ using std::list;
 using std::set;
 using std::make_pair;
 
-
-///www.f.ru/i/rt/s - с конца отрезаем
-
-///i/
-///i/rt/
-
-//need to delete
-struct URL {
-  std::string scheme;
-  std::string userinfo;
-  std::string host;
-  std::string path;//!
-  std::string raw_path;
-  std::string raw_query;
-};
 
 typedef struct sServerInformation{
 	//int port;
@@ -96,6 +81,7 @@ typedef struct	sServer{
 	vector<Location>	locationMap;
 }				tServer;
 
+
 class WebserverConf{
 	//
 	//using std::string;
@@ -127,8 +113,8 @@ class WebserverConf{
 	public:
 		WebserverConf(char const *name = "webserver.conf");
 		virtual ~WebserverConf();
+		tServerInformation chooseServer(http::url::URL url);
 
-		tServerInformation chooseServer(URL url);
 };
 
 #endif
