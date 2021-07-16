@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/04/18 23:24:41 by bbenny            #+#    #+#             */
-/*   Updated: 2021/07/16 15:44:22 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/16 17:43:18 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -645,7 +645,7 @@ tServerInformation	chooseServer(http::url::URL url, map<string, tServer >  tmp)
 	//if (itMap != tmp.end())
 	//{
 		map<string, tServer > ipServer = tmp;
-		std::cout << "server_name :" << server_name << std::endl;
+		std::cout << "server_name: " << server_name << std::endl;
 		map<string, tServer > ::iterator itIpSrv = ipServer.find(server_name);
 		if (itIpSrv != ipServer.end())
 		{
