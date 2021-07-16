@@ -144,8 +144,6 @@ void	Location::fillAll(list<string>::iterator &itList, list<std::string> tokenLi
 	while (itList != tokenList.end() && *itList != "{" && *itList != "}")
 	{
 		it = funMap.find(*itList);
-		//std::cout <<"hello	" << *itList << std::endl;
-		//std::cout <<"*itList = 	" << *itList << std::endl;
 		if (it != funMap.end())
 			(this->*(it->second))(itList, tokenList);
 		else
@@ -171,7 +169,6 @@ void	Location::setAutoindex(list<string>::iterator &itList, list<std::string> to
 
 void	Location::setRoot(list<string>::iterator &itList, list<std::string> tokenList)
 {
-	//itList != tokenList.end()
 	itList++;
 
 	if ((*itList).empty() || (*itList).compare(0, 2, ";") == 0 || (*itList).compare(0, 2, "}") == 0 \

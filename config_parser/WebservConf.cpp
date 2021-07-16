@@ -16,7 +16,7 @@
 #include <stack>
 #include <sstream>
 #include <cctype>
-#include "url.hpp"
+//#include "url.hpp"
 
 namespace config{
 WebserverConf::WebserverConf(char const *name)
@@ -26,8 +26,8 @@ WebserverConf::WebserverConf(char const *name)
 WebserverConf::~WebserverConf()
 {
 	set<tServer *>::iterator it;
-	for (it = pointerToServerSet.begin(); it != pointerToServerSet.end(); it++)
-		delete *it;
+	//for (it = pointerToServerSet.begin(); it != pointerToServerSet.end(); it++)
+	//	delete *it;
 
 }
 //WebserverConf::WebserverConf(WebserverConf const &copy){}
@@ -136,7 +136,6 @@ void	WebserverConf::fileToListLine(const char *confFileName)
 		if (buf.size())
 		{
 			this->fileLineToList.push_back(buf);
-			//std::cout << buf << std::endl;
 		}
 		buf.clear();
 		std::getline(ifs, buf);
@@ -162,12 +161,10 @@ void	WebserverConf::allLinesToToken()
 				&& str[i] != '{' && str[i] != '}')
 			{
 				buf += str[i++];
-				//i++;
 			}
 			if (buf.size())
 			{
 				tokenList.push_back(buf);
-				//std::cout << buf << std::endl;
 				buf.clear();
 			}
 			if (str[i] && str[i] != ' ')
@@ -175,7 +172,6 @@ void	WebserverConf::allLinesToToken()
 				buf.clear();
 				buf += str[i];
 				tokenList.push_back(buf);
-				//std::cout << buf << std::endl;
 			}
 			buf.clear();
 			if (str[i])
@@ -223,7 +219,7 @@ void	WebserverConf::checkToken()
 	std::list<std::string> tokenIpString;
 }*/
 
-void	WebserverConf::setListen(std::list<std::string>::iterator &itList, tServer	&server)
+void	WebserverConf::setListen(std::list<std::string>::iterator &itList, tServer	&server,std::map<int, std::string> &map_ip_port)
 {
 	std::size_t	i;
 	std::size_t	iDot;
@@ -292,12 +288,15 @@ void	WebserverConf::setListen(std::list<std::string>::iterator &itList, tServer	
 		i++;
 	}
 	itList++;
-	server.port = port;
-	server.ip = ip;
-	std::cout << "ip = " << server.ip << std::endl;
+	if (map_ip_port.count(port) != 0)
+		throw "this port has already done in this server ";
+	map_ip_port[port] = ip;
+	//server.port = port;//map::<port, ip> if count != 0 error
+	//server.ip = ip;//== if no ==>
+	//std::cout << "ip = " << server.ip << std::endl;
 }
 
-void	WebserverConf::setServer_name(std::list<std::string>::iterator &itList, tServer	&server)
+void	WebserverConf::setServer_name(std::list<std::string>::iterator &itList, tServer	&server,std::map<int, std::string>&)
 {
 	itList++;
 	while (itList != tokenList.end() && *itList != ";" && *itList != "{" && *itList != "}")
@@ -312,7 +311,7 @@ void	WebserverConf::setServer_name(std::list<std::string>::iterator &itList, tSe
 	itList++;
 }
 
-void	WebserverConf::setError_page(std::list<std::string>::iterator &itList, tServer	&server)
+void	WebserverConf::setError_page(std::list<std::string>::iterator &itList, tServer	&server,std::map<int, std::string>&)
 {
 	int nError = 0;
 	std::string file;
@@ -362,7 +361,7 @@ void	WebserverConf::setError_page(std::list<std::string>::iterator &itList, tSer
 	}
 }
 
-void	WebserverConf::setClient_max_body_size(std::list<std::string>::iterator &itList, tServer &server)
+void	WebserverConf::setClient_max_body_size(std::list<std::string>::iterator &itList, tServer &server,std::map<int, std::string>&)
 {
 	size_t		i;
 	string		client_max_body_size;
@@ -392,7 +391,7 @@ void	WebserverConf::setClient_max_body_size(std::list<std::string>::iterator &it
 
 }
 
-void	WebserverConf::setLocation(std::list<std::string>::iterator &itList, tServer &server)
+void	WebserverConf::setLocation(std::list<std::string>::iterator &itList, tServer &server,std::map<int, std::string>&)
 {
 	Location loc;// = new Location ;
 	
@@ -403,11 +402,12 @@ void	WebserverConf::setLocation(std::list<std::string>::iterator &itList, tServe
 
 void	WebserverConf::fillOneServer(std::list<std::string>::iterator itList)
 {
+	std::map<int, std::string> map_port_ip;//
 	tServer	server;// = new tServer;
 	size_t		i;
 	std::array<std::string, 5> arrVar = {{"listen", "server_name", \
 	"error_page", "client_max_body_size", "location"}};
-	void	(WebserverConf::*arrF[])(std::list<std::string>::iterator &itList, tServer	&server) = \
+	void	(WebserverConf::*arrF[])(std::list<std::string>::iterator &itList, tServer	&server,std::map<int, std::string> &map_ip_port) = \
 	{&WebserverConf::setListen, &WebserverConf::setServer_name, \
 	&WebserverConf::setError_page, &WebserverConf::setClient_max_body_size, \
 	&WebserverConf::setLocation};
@@ -425,7 +425,7 @@ void	WebserverConf::fillOneServer(std::list<std::string>::iterator itList)
 		{
 			if (arrVar[i].compare(*itList) == 0)
 			{
-				(this->*arrF[i])(itList, server);
+				(this->*arrF[i])(itList, server, map_port_ip);
 				break ;
 			}
 			i++;
@@ -437,43 +437,76 @@ void	WebserverConf::fillOneServer(std::list<std::string>::iterator itList)
 	}
 	if ((*itList).compare(0, 2, "}") != 0)
 		throw "there is not }";
-	//itList++;
-
-	//std::cout << "port = " << server.port <<std::endl;
-	fillMapServer(server);
-	//tServer	*	nserver = new tServer(server);
-	//std::cout << "!!!!!396 alias "<< server.locationMap[0].alias << std::endl;
-	//std::cout << "!!!!!396 root "<< server.locationMap[0].root << std::endl;
+	fillMapServer(server, map_port_ip);//измениьь прототип +map
 }
 
-void	WebserverConf::fillMapServer(tServer &tserver)
+void	WebserverConf::fillMapServer(tServer &server, std::map<int, std::string> &map_port_ip)
 {
-	tServer	*	server = new tServer(tserver);
+	
+	//	tServer	*	server = new tServer(tserver);
+	//server.ip = map[0] map <port, ip>
+	//server.port =
 
-	pointerToServerSet.insert(server);
+//	pointerToServerSet.insert(server);
 
 	//map<int, map<string, map<string, tServer *> > >::iterator it;
-	map<int, map<string, tServer *> >::iterator it;
-	map<string, tServer *>  tmp;
+	map<int, map<string, tServer > >::iterator it;
+	map<string, tServer >  tmp;
 	//map<string, map<string, tServer *> > tmpMap;
 	
 	std::list<std::string>::iterator itLst;
 	//itLst = server.server_name.begin();
 
-	it = serverMap.find(server->port);
+std::map<int, std::string>::iterator itMpPortIP = map_port_ip.begin();
+
+while (itMpPortIP != map_port_ip.end())
+{
+	itMpPortIP++;
+	if (map_global_port_ip.count(itMpPortIP->first))//if there is the port
+		if (map_global_port_ip[itMpPortIP->first] != map_port_ip[itMpPortIP->first]) //ip !the same
+			return ;
+}
+itMpPortIP = map_port_ip.begin();
+while (itMpPortIP != map_port_ip.end())
+{
+	if (serverMap.count(itMpPortIP->first))
+	{
+		itLst = (server.server_name).begin();
+		while (itLst != server.server_name.end())
+		{
+			if (serverMap[itMpPortIP->first].count(*itLst) == 0)//server_name был- не добавляем
+			//иначе добавляем
+			{
+				serverMap[itMpPortIP->first][*itLst] = server;
+				itLst++;
+			}
+		}
+	}
+	else
+	{
+		map_global_port_ip[itMpPortIP->first] = itMpPortIP->second;
+		serverMap[itMpPortIP->first]["default"] = server;
+		itLst = server.server_name.begin();
+		while (itLst != server.server_name.end())
+		{
+			serverMap[itMpPortIP->first][*itLst] = server;
+			itLst++;
+		}
+	
+	}
+	itMpPortIP++;
+}
+
+/*	it = serverMap.find(server->port);
 	if (it != serverMap.end())
 	{
 		//check ip
-		if (serverMap[server->port].begin()->second->ip != server->ip)
-			throw "different ip with the same port";
+	//	if (serverMap[server->port].begin()->second->ip != server->ip)
+	//		throw "different ip with the same port";
 		itLst = server->server_name.begin();
-		//std::cout <<"server_names =  " << *itLst << std::endl;
 		while (itLst != server->server_name.end())
 		{
-			//std::cout <<"here" << std::endl;
 			tmp.insert(std::make_pair(*itLst, server));
-			//(it->second).insert(std::make_pair("server.ip", std::make_pair("hello", 5)));
-			//(it->second).insert(std::make_pair(server->ip, tmp));
 			itLst++;
 		}
 	}
@@ -482,22 +515,13 @@ void	WebserverConf::fillMapServer(tServer &tserver)
 		itLst = server->server_name.begin();
 		while (itLst != server->server_name.end())
 		{
-			//std::cout << "names = " << *itLst << std::endl;
 			tmp.insert(std::make_pair(*itLst, server));
-			//(it->second).insert(std::make_pair("server.ip", std::make_pair("hello", 5)));
-			//tmpMap.insert(std::make_pair(server.ip, tmp));
-			//serverMap.insert(std::make_pair(server.port, tmpMap));
 			itLst++;
 		}
 		tmp.insert(std::make_pair("default", server));
-		//(it->second).insert(std::make_pair("server.ip", std::make_pair("hello", 5)));
-
-//		if (tmpMap.find(server->ip) == tmpMap.end())
-//			tmpMap.insert(std::make_pair("default", tmp));
-//		tmpMap.insert(std::make_pair(server->ip, tmp));
 		serverMap.insert(std::make_pair(server->port, tmp));
 		itLst++;
-	}
+	}*/
 }
 
 void	WebserverConf::tokenToServerMap()
@@ -527,7 +551,47 @@ void	WebserverConf::readConfFile(const char *confFileName)
 	//printServerMap();
 }
 
-tServerInformation	WebserverConf::chooseServer(http::url::URL url) const
+map<int, map<string, tServer > >  const &WebserverConf::getServerMap(){return serverMap;}
+/*
+bool is_octet(const std::string &str) {
+  if (str.length() == 1) {
+	if (std::isdigit(str[0]))
+	  return true;
+  } else if (str.length() == 2) {
+	return true;
+  } else if (str.length() == 3) {
+	if (str[0] == '1') {
+	  if (std::isdigit(str[1]) && std::isdigit(str[2]))
+		return true;
+	} else if (str[0] == '2') {
+	  if (str[1] == '0' || str[1] == '1' || str[1] == '2' || str[1] == '3' || str[1] ==
+		  '4') {
+		if (std::isdigit(str[2]))
+		  return true;
+	  } else if (str[1] == '5') {
+		if (str[2] == '0' || str[2] == '1' || str[2] == '2' || str[2] == '3' || str[2]
+			== '4' || str[2] == '5')
+		  return true;
+	  }
+	}
+  }
+  return false;
+}
+
+bool isIPv4(const std::string &str) {
+  size_t pos = 0;
+  for (int i = 0; i < 4; ++i) {
+	size_t end = str.find('.', pos);
+	if (i != 3 && end == std::string::npos)
+	  return false;
+	if (!is_octet(str.substr(pos, end - pos)))
+	  return false;
+	pos = ++end;
+  }
+  return true;
+}*/
+
+tServerInformation	chooseServer(http::url::URL url, map<string, tServer >  tmp)
 {
 	tServerInformation serverInformation;
 
@@ -538,15 +602,15 @@ tServerInformation	WebserverConf::chooseServer(http::url::URL url) const
 	serverInformation.redirection_status_code = 0;//
 	serverInformation.redirection_url = "";//
 	serverInformation.name_file = "name_file";//url_after_alias!
-	serverInformation.accepted_methods.insert(std::make_pair("GET", 1));//map->set
-	serverInformation.accepted_methods.insert(std::make_pair("DELETE", 1));
-	serverInformation.accepted_methods.insert(std::make_pair("POST", 1));
+//	serverInformation.accepted_methods.insert(std::make_pair("GET", 1));//map->set
+//	serverInformation.accepted_methods.insert(std::make_pair("DELETE", 1));
+//	serverInformation.accepted_methods.insert(std::make_pair("POST", 1));
 	serverInformation.route_for_uploaded_files = "route_for_uploaded_files";
 
 	
-	int port = 80;
+/*	int port = 80;
 	string server_name = "default";
-	string ip = "default";
+//	string ip = "default";
 	std::stringstream buf;
 	std::size_t found = (url.host).find_last_of(":");
 	if (found != std::string::npos)
@@ -556,173 +620,98 @@ tServerInformation	WebserverConf::chooseServer(http::url::URL url) const
 		url.host.erase(url.host.begin() + found, url.host.end());
 	}
 	if (http::url::isIPv4(url.host))
-		ip = url.host;
+		ip = url.host;//server_name =default
 	else
 		server_name = url.host;
-	map<int, map<string, tServer *> > ::const_iterator itMap = serverMap.find(port);
+	map<int, map<string, tServer *> > ::const_iterator itMap = serverMap.find(port);*/
+	string server_name;
+	std::stringstream buf;
+	int port;
+	std::size_t found = (url.host).find_last_of(":");
+	if (found != std::string::npos)
+	{
+		buf << url.host.substr(found+1);
+		buf >> port;//need erase
+		url.host.erase(url.host.begin() + found, url.host.end());
+	}
+	if (http::url::isIPv4(url.host))
+		server_name = "default";
+	else
+		server_name = url.host;
 	//if (itMap == serverMap.end() && ip == "default")
 
-	if (itMap != serverMap.end())
-	{
-		map<string, tServer *> ipServer = itMap->second;
-		std::cout << "ip now is = " << ip<<std::endl;
-		map<string, tServer *> ::iterator itIpSrv = ipServer.find(ip);
-		std::cout << "ip  size = " << ipServer.size() <<std::endl;
+	//map<string, tServer > ::const_iterator itMap = tmp.begin();
+	//if (itMap != tmp.end())
+	//{
+		map<string, tServer > ipServer = tmp;
+		std::cout << "server_name :" << server_name << std::endl;
+		map<string, tServer > ::iterator itIpSrv = ipServer.find(server_name);
 		if (itIpSrv != ipServer.end())
 		{
-			map<string, tServer *> nameServer = ipServer;
-			map<string, tServer *>::iterator itNameSrv = nameServer.find(server_name);
-			if (itNameSrv == nameServer.end())
-				itNameSrv = nameServer.find("default");
-			//if (itNameSrv != nameServer.end())
-			//{
-			tServer server = *(itNameSrv->second);
+			//map<string, tServer > nameServer = ipServer;
+			map<string, tServer >::iterator itNameSrv = itIpSrv;//nameServer.find(server_name);
+			//if (itNameSrv == nameServer.end())//??
+			//	itNameSrv = nameServer.find("default");
+			tServer server = itNameSrv->second;
 
-				std::cout << "port = " << server.port <<std::endl;
-				std::cout << "ip = " << server.ip <<std::endl;
-				list<string>::iterator itList = server.server_name.begin();
-				while (itList != server.server_name.end())
-					std::cout << "server_name = " << *itList++ <<std::endl;
-				serverInformation.limit_size = server.client_max_body_size;
-				std::cout << "client_max_body_size = " << server.client_max_body_size << std::endl;
-				//sstd::cout << "server = " << itSrv->second<< std::endl;
-				map<int, string>::iterator itEr = server.error_page.begin();
-				if (itEr == server.error_page.end())
-					server.error_page.insert(make_pair(0, "error_page_default"));
-				serverInformation.error_pages = server.error_page;
-				itEr = server.error_page.begin();
-				while (itEr != server.error_page.end())
-				{
-					std::cout << "error_page = " << itEr->first << " " <<  itEr->second << std::endl;
-					itEr++;
-				}
-				vector<Location>::iterator itLoc = server.locationMap.begin();
-				std::cout << "all: itLoc[0].alias " << itLoc[0].alias << std::endl;
-				string locationMask;
-				string path_for_alias = url.path;
-				while (itLoc != server.locationMap.end() && path_for_alias != "")//search location by find
-				{
-					
-					while (itLoc != server.locationMap.end() && path_for_alias != "")
-					{
-						std::cout << "all: itLoc->root " << itLoc->root << std::endl;
-						//locationMask = itLoc->locationMask;
-						std::cout << "???itLoc->locationMask " << itLoc->locationMask << std::endl;
-						if (itLoc->locationMask == path_for_alias)
-						{
-							serverInformation.name_file = url.path;
-							serverInformation.name_file.erase(0, path_for_alias.length());//need to insert
-							std::cout << "itLoc->alias " << itLoc->alias << std::endl;
-							serverInformation.name_file = itLoc->alias + serverInformation.name_file;//need to clear
-							std::cout << "name_file " << serverInformation.name_file << std::endl;
-
-							serverInformation.accepted_methods = itLoc->accepted_methods;
-							std::cout << "serverInformation.accepted_methods get " << serverInformation.accepted_methods["GET"] << std::endl;
-							std::cout << "serverInformation.accepted_methods post " << serverInformation.accepted_methods["POST"] << std::endl;
-							std::cout << "serverInformation.accepted_methods delete " << serverInformation.accepted_methods["DELETE"] << std::endl;					
-
-							serverInformation.redirection_status_code = itLoc->redirection_status_code;
-							std::cout << "redirection_status_code = " << itLoc->redirection_status_code << std::endl;
-							serverInformation.redirection_url = itLoc->redirection_url;
-							std::cout << "redirection_url = " << itLoc->redirection_url << std::endl;
-
-							serverInformation.file_request_if_dir = itLoc->file_request_if_dir;
-							std::cout << "file_request_if_dir = " << itLoc->file_request_if_dir << std::endl;
-
-							itLoc = server.locationMap.end();
-							path_for_alias = "";
-
-			
-							break;
-						}
-						
-						
-						itLoc++;
-					}
-					if (itLoc == server.locationMap.end() && path_for_alias != "")
-					{
-						if (path_for_alias.find("/") != std::string::npos)
-						{
-							if (path_for_alias.find_last_of("/") == path_for_alias.length() - 1)
-								path_for_alias = path_for_alias.erase(path_for_alias.find_last_of("/"));
-							else
-								path_for_alias = path_for_alias.erase(path_for_alias.find_last_of("/") + 1);
-						}
-						else
-							path_for_alias = path_for_alias.erase();
-						
-						std::cout << "path_for_alias " << path_for_alias << std::endl;
-					
-					}
-					itLoc = server.locationMap.begin();
-					//serverInformation.autoindex = ;
-					//serverInformation.alias = "";//можно заменить на сам location
-					//serverInformation.method.insert(make_pair("GET", 1));//?
-				/*	std::cout << "location.autoindex  = " << (*itLoc).autoindex << std::endl;
-					std::cout << "location.locationMask  = " << (*itLoc).locationMask << std::endl;
-					std::cout << "location.alias  = " << (*itLoc).alias << std::endl;
-					std::cout << "location.root = " << (*itLoc).root << std::endl;
-					for (map<string, int>::iterator i = (*itLoc).accepted_methods.begin(); i != (*itLoc).accepted_methods.end(); i++)
-						std::cout << "location.method  = " << i->first << " " << i->second << std::endl;
-					*/
-					//itLoc++;
-
-					//itLoc = server.locationMap.begin();
-				}
-			//}
-		}
-	}
-	return serverInformation;
-}
-
-/*
-void WebserverConf::printServerMap()
-{
-	map<int, map<string, map<string, tServer *> > >::iterator it;
-	map<string, tServer *>::iterator itSrv;
-	it = serverMap.begin();
-	while (it != serverMap.end())
-	{
-		std::cout << std::endl;
-		map<string, map<string, tServer *> > tmp;
-		tmp = it->second;
-		map<string, map<string, tServer *> >::iterator itTmp = tmp.begin();
-		while (itTmp != tmp.end())
-		{
-			map<string, tServer *> tmpSrv = itTmp->second;
-			itSrv = tmpSrv.begin();
-			while (itSrv != tmpSrv.end())
+			list<string>::iterator itList = server.server_name.begin();
+			serverInformation.limit_size = server.client_max_body_size;
+			map<int, string>::iterator itEr = server.error_page.begin();
+//				if (itEr == server.error_page.end())
+//					server.error_page.insert(make_pair(0, "error_page_default"));
+			serverInformation.error_pages = server.error_page;
+			vector<Location>::iterator itLoc = server.locationMap.begin();
+			string locationMask;
+			string path_for_alias = url.path;
+			while (itLoc != server.locationMap.end() && path_for_alias != "")//search location by find
 			{
-				//std::cout <<"all names" << << std::endl;
-				std::cout << "port = " << it->first <<std::endl;
-				std::cout << "ip = " << itTmp->first <<std::endl;
-				std::cout << "server_name = " << itSrv->first <<std::endl;
-				std::cout << "client_max_body_size = " << (itSrv->second)->client_max_body_size << std::endl;
-				std::cout << "server = " << itSrv->second<< std::endl;
-				map<int, string>::iterator itEr = (itSrv->second)->error_page.begin();
-				while (itEr != (itSrv->second)->error_page.end())
+				
+				while (itLoc != server.locationMap.end() && path_for_alias != "")
 				{
-					std::cout << "error_page = " << itEr->first << " " <<  itEr->second << std::endl;
-					itEr++;
-				}
-				vector<Location>::iterator itLoc = (itSrv->second)->locationMap.begin();
-				while (itLoc != (itSrv->second)->locationMap.end())
-				{
-					std::cout << "location.autoindex  = " << (*itLoc).autoindex << std::endl;
-					std::cout << "location.locationMask  = " << (*itLoc).locationMask << std::endl;
-					std::cout << "location.alias  = " << (*itLoc).alias << std::endl;
-					std::cout << "location.root = " << (*itLoc).root << std::endl;
-					for (map<string, int>::iterator i = (*itLoc).method.begin(); i != (*itLoc).method.end(); i++)
-						std::cout << "location.method  = " << i->first << " " << i->second << std::endl;
+					if (itLoc->locationMask == path_for_alias)
+					{
+						serverInformation.name_file = url.path;
+						serverInformation.name_file.erase(0, path_for_alias.length());//need to insert
+					
+						serverInformation.name_file = itLoc->alias + serverInformation.name_file;//need to clear
+					
+
+						serverInformation.accepted_methods = itLoc->accepted_methods;
+					
+						serverInformation.redirection_status_code = itLoc->redirection_status_code;
+						serverInformation.redirection_url = itLoc->redirection_url;
+
+						serverInformation.file_request_if_dir = itLoc->file_request_if_dir;
+
+						itLoc = server.locationMap.end();
+						path_for_alias = "";
+
+		
+						break;
+					}
+					
+					
 					itLoc++;
 				}
-
-				itSrv++;
+				if (itLoc == server.locationMap.end() && path_for_alias != "")
+				{
+					if (path_for_alias.find("/") != std::string::npos)
+					{
+						if (path_for_alias.find_last_of("/") == path_for_alias.length() - 1)
+							path_for_alias = path_for_alias.erase(path_for_alias.find_last_of("/"));
+						else
+							path_for_alias = path_for_alias.erase(path_for_alias.find_last_of("/") + 1);
+					}
+					else
+						path_for_alias = path_for_alias.erase();
+					
+					//std::cout << "path_for_alias " << path_for_alias << std::endl;
+				
+				}
+				itLoc = server.locationMap.begin();
 			}
-			itTmp++;
 		}
-		it++;
-	}
+	//}
+	return serverInformation;
 }
-*/
 }
