@@ -1,16 +1,16 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   server.cpp                                         :+:      :+:    :+:   */
+/*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/06 12:56:02 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/15 17:14:35 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/16 15:20:31 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-# include "server.hpp"
+# include "Server.hpp"
 
 Server::Server(void) : _server_socket(-1), _IO_BUFFER_SIZE(65536)
 {
@@ -27,12 +27,11 @@ Server::~Server()
 
 Server	&Server::operator=(const Server &) { return *this; }
 
-bool	Server::Setup(const std::vector<int> &ports,\
-	const config::WebserverConf &config)
+bool	Server::Setup(ushort port, const config::WebserverConf &config)
 {
 	_config = &config;
 	_max_connections = MAX_CONNECTIONS;
-	if ((_server_port = ports[0]) < 1024)
+	if ((_server_port = port) < 1024)
 		return Error("Set port is forbidden");
 	if (CreateSocket() == FAILURE)
 		return FAILURE;
@@ -41,8 +40,9 @@ bool	Server::Setup(const std::vector<int> &ports,\
 		return Error("cannot bind socket to port");
 	if (listen(_server_socket, _max_connections))
 		return Error("cannot listen port");
-	std::cout << "Server setup finished successfully." << std::endl;
-	return false;
+	std::cout << "Server setup with port " << _server_port <<\
+		" finished successfully." << std::endl;
+	return SUCCESS;
 }
 
 bool	Server::CreateSocket(void)
@@ -68,31 +68,14 @@ bool	Server::CreateSocket(void)
 	return SUCCESS;
 }
 
-bool	Server::Connection(void)
-{
-	fd_set	read_fds;
-	fd_set	write_fds;
-	int		readyFds;
-	int		maxFd = 0;
-	
-	if ((maxFd = InitFdSets(read_fds, write_fds)) == -1)
-		return false;
-	if ((readyFds = select(maxFd + 1, &read_fds, &write_fds, NULL, NULL)) == -1)
-		return Error("select");
-	HandleClients(read_fds, write_fds);
-	return false;
-}
+int		Server::getSocket() const { return _server_socket; }
 
-int		Server::InitFdSets(fd_set &read_fds, fd_set &write_fds)
+int		Server::AddClientsSockets(fd_set &read_fds, fd_set &write_fds)
 {
 	Client	*client;
 	int		client_socket;
-	int		maxFd;
+	int		maxFd = 0;
 
-	FD_ZERO(&read_fds);
-	FD_ZERO(&write_fds);
-	FD_SET(_server_socket, &read_fds);
-	maxFd = _server_socket;
 	for (std::vector<Client*>::iterator it = _clients.begin();\
 		it < _clients.end(); it++)
 	{
@@ -149,6 +132,8 @@ void	Server::HandleClients(const fd_set &read_fds, const fd_set &write_fds)
 				break;
 			case Client::State::SENDING:
 				status = TrySendResponse(*client, write_fds);
+				break;
+			default:
 				break;
 		}
 		if (status == FAILURE)

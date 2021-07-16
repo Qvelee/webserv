@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   client.hpp                                         :+:      :+:    :+:   */
+/*   Client.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/13 13:58:58 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/15 16:45:42 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/16 14:44:13 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,6 +35,9 @@ class Client
 			CLOSED
 		};
 
+		bool		CreateResponse(const char *request, int request_size,\
+			const config::WebserverConf &config);
+
 		int					getSocket(void) const;
 		void				setSocket(int socket_ID);
 		const std::string	&getResponse() const;
@@ -42,9 +45,6 @@ class Client
 		void				setState(State state);
 		int					getAlreadySendBytes() const;
 		void				setAlreadySendBytes(int bytes);
-
-		bool		CreateResponse(const char *request, int request_size,\
-			const config::WebserverConf &config);
 	private:
 		Client(Client const &);
 
