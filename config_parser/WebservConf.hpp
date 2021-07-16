@@ -25,6 +25,17 @@
 
 
 namespace config{
+/*namespace http{
+	namespace url{
+struct URL {
+  std::string scheme;
+  std::string userinfo;
+  std::string host;
+  std::string path;//!
+  std::string raw_path;
+  std::string raw_query;
+};
+}}*/
 
 using std::map;
 using std::string;
@@ -53,13 +64,6 @@ typedef struct sServerInformation{
 }tServerInformation;
 
 typedef struct sLocation{
-	//string locationMask;
-	//char	method;//mask
-	//method 	//limit_except
-	//string	root;///root
-	//string	autoindex;//on or off
-	//file if request is directory
-	//map<string, string> cgiMap;
 	map<int, string> error_pages;//0 default
 	size_t limit_size;//-1?64
 	bool	autoindex;//0
@@ -86,37 +90,42 @@ class WebserverConf{
 	//
 	//using std::string;
 	private:
+	
 		WebserverConf(WebserverConf const &copy);
-		// WebserverConf &operator=(WebserverConf const &eq);
+		WebserverConf &operator=(WebserverConf const &eq);
+		
 		void	readConfFile(const char *confFileName);
 		void	fileToListLine(const char *confFileName);
 		void	allLinesToToken();
 		void	checkToken();
 		void	tokenToServerMap();
 		void	fillOneServer(std::list<std::string>::iterator	itList);
-		void	fillMapServer(tServer &server);
-		void	setListen(std::list<std::string>::iterator &itList, tServer	&server);
-		void	setServer_name(std::list<std::string>::iterator &itList, tServer &server);
-		void	setError_page(std::list<std::string>::iterator &itList, tServer	&server);
-		void	setLocation(std::list<std::string>::iterator &itList, tServer	&server);
-		void	setClient_max_body_size(std::list<std::string>::iterator &itList, tServer	&server);
+		void	fillMapServer(tServer &server, std::map<int, std::string> &map_ip_port);
+		void	setListen(std::list<std::string>::iterator &itList, tServer	&server, std::map<int, std::string> &map_ip_port);
+		void	setServer_name(std::list<std::string>::iterator &itList, tServer &server, std::map<int, std::string> &map_ip_port);
+		void	setError_page(std::list<std::string>::iterator &itList, tServer	&server, std::map<int, std::string>  &map_ip_port);
+		void	setLocation(std::list<std::string>::iterator &itList, tServer	&server, std::map<int, std::string> &map_ip_port);
+		void	setClient_max_body_size(std::list<std::string>::iterator &itList, tServer&server, std::map<int, std::string> &map_ip_port);
 		//std::vector<tServer> serverVector;//
-		map<int, map<string, map<string, tServer *> > > serverMap;
-		//map<int, map<string, tServer *> > serverMap;
-		set<tServer *> pointerToServerSet;
+		//map<int, map<string, map<string, tServer *> > > serverMap;
+		map<int, map<string, tServer > > serverMap;//getter нужен
+		//set<tServer *> pointerToServerSet;
 		std::list<std::string> fileLineToList;
 		std::list<std::string> tokenList;//separate ' ' or ';' or '{' or '}'
+		std::map<int, std::string> map_global_port_ip;
 
 		void printServerMap();
 
 
 	public:
+		
+		map<int, map<string, tServer > >  const &getServerMap();//getter
 		WebserverConf(char const *name = "webserver.conf");
 		virtual ~WebserverConf();
-		tServerInformation chooseServer(http::url::URL url) const;
+		//tServerInformation chooseServer(http::url::URL url, map<string, tServer >  tmp) const;//вынести из класса
 
 };
-
+tServerInformation chooseServer(http::url::URL url, map<string, tServer >  tmp);//вынести из класса
 }
 
 #endif

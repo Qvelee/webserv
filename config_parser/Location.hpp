@@ -38,7 +38,6 @@ class Location{
 		string				locationMask;
 		string				root;///root
 		string				alias;
-		//map<string, string> cgiMap;
 		bool	autoindex;//0
 		map<string, int>	accepted_methods;//map->set
 		string route_for_uploaded_files;
