@@ -13,8 +13,7 @@ namespace http {
 const char	DQUOTE = '\"';
 
 // HTTP-message = start-line *( header-field CRLF ) CRLF [ message-body ]
-bool	parse_request(Request& req, std::string const &data, const config::WebserverConf
-&conf) {
+bool	parse_request(Request& req, std::string const &data, std::map<std::string, config::tServer> const &conf) {
   size_t pos = 0;
   req.content_length = -1;
   req.close = false;
@@ -23,7 +22,7 @@ bool	parse_request(Request& req, std::string const &data, const config::Webserve
   pos += parse_request_line(req, data, pos, req.code);
   if (req.code != NoError)
 	return true;
-  req.serv_config = conf.chooseServer(req.url);
+  req.serv_config = config::chooseServer(req.url, conf);
   pos += parse_headers(req.headers, data, pos, req.code);
   if (req.code != NoError)
 	return true;
