@@ -22,7 +22,6 @@ bool	parse_request(Request& req, std::string const &data, std::map<std::string, 
   pos += parse_request_line(req, data, pos, req.code);
   if (req.code != NoError)
 	return true;
-  req.serv_config = config::chooseServer(req.url, conf);
   pos += parse_headers(req.headers, data, pos, req.code);
   if (req.code != NoError)
 	return true;
@@ -35,6 +34,7 @@ bool	parse_request(Request& req, std::string const &data, std::map<std::string, 
   if (req.code != NoError) {
 	return true;
   }
+  req.serv_config = config::chooseServer(req.url, conf);
   if (!check_config(req))
 	return true;
   if (req.content_length != 0) {
