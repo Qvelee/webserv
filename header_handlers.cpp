@@ -157,11 +157,13 @@ void host(Request& req, std::string const &value, StatusCode &code) {
   if (host != value.length()) {
 	if (value[host] == ':') {
 	  tmp.host += ":";
-	  port += url::get_port(tmp.host, value, port);
+	  std::string tmp_port;
+	  port += url::get_port(tmp_port, value, port);
 	  if (port != value.length()) {
 	    code = StatusBadRequest;
 		return;
 	  }
+	  tmp.host += tmp_port;
 	} else {
 	  code = StatusBadRequest;
 	}
