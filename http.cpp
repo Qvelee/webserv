@@ -22,7 +22,7 @@ bool	parse_request(Request& req, std::string const &data) {
   pos += parse_request_line(req, data, pos, req.code);
   if (req.code != NoError)
 	return true;
-  req.serv_config = chooseServer(req.url);
+//  req.serv_config = chooseServer(req.url);
   pos += parse_headers(req.headers, data, pos, req.code);
   if (req.code != NoError)
 	return true;
