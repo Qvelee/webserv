@@ -634,7 +634,7 @@ namespace config{
 			buf >> port;//need erase
 			url.host.erase(url.host.begin() + found, url.host.end());
 		}
-		if (isIPv4(url.host) || url.host == "localhost")//(http::url::isIPv4(url.host))
+		if (http::url::isIPv4(url.host) || url.host == "localhost")//(http::url::isIPv4(url.host))
 			server_name = "default";
 		else
 			server_name = url.host;
