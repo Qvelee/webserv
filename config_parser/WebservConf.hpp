@@ -64,15 +64,15 @@ typedef struct sServerInformation{
 }tServerInformation;
 
 typedef struct sLocation{
-	map<int, string> error_pages;//0 default
-	size_t limit_size;//-1?64
-	bool	autoindex;//0
-	string file_request_if_dir;//default
-	int redirection_status_code;//
-	string redirection_url;//
-	string name_file;//url_after_alias!
-	map<string, int>	accepted_methods;//map->set
-	string route_for_uploaded_files;
+	map<int, string>	error_pages;
+	size_t				limit_size;//100000
+	bool				autoindex;//0
+	string				file_request_if_dir;//default
+	int					redirection_status_code;
+	string				redirection_url;//default
+	string				name_file;//url_path_after_alias!
+	map<string, int>	accepted_methods;//map->set?
+	string				route_for_uploaded_files;
 }tLocation;
 
 typedef struct	sServer{
@@ -120,6 +120,7 @@ class WebserverConf{
 	public:
 		
 		map<int, map<string, tServer > >  const &getServerMap();//getter
+		map<int, string >   const &getPorts();//getter
 		WebserverConf(char const *name = "webserver.conf");
 		virtual ~WebserverConf();
 		//tServerInformation chooseServer(http::url::URL url, map<string, tServer >  tmp) const;//вынести из класса
