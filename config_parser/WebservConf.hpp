@@ -25,17 +25,6 @@
 
 
 namespace config{
-/*namespace http{
-	namespace url{
-struct URL {
-  std::string scheme;
-  std::string userinfo;
-  std::string host;
-  std::string path;//!
-  std::string raw_path;
-  std::string raw_query;
-};
-}}*/
 
 using std::map;
 using std::string;
@@ -44,11 +33,8 @@ using std::list;
 using std::set;
 using std::make_pair;
 
-
 typedef struct sServerInformation{
-	//int port;
-	//string ip;
-	//string serverName;
+
 	map<int, string> error_pages;//0 default
 	size_t limit_size;//-1?64
 	bool	autoindex;//0

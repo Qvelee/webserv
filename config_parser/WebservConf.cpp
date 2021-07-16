@@ -553,43 +553,6 @@ namespace config{
 	map<int, map<string, tServer > >  const &WebserverConf::getServerMap(){return serverMap;}
 	map<int, string >   const &WebserverConf::getPorts(){return map_global_port_ip;}//getter
 
-	/*bool is_octet(const std::string &str) {
-	if (str.length() == 1) {
-		if (std::isdigit(str[0]))
-		return true;
-	} else if (str.length() == 2) {
-		return true;
-	} else if (str.length() == 3) {
-		if (str[0] == '1') {
-		if (std::isdigit(str[1]) && std::isdigit(str[2]))
-			return true;
-		} else if (str[0] == '2') {
-		if (str[1] == '0' || str[1] == '1' || str[1] == '2' || str[1] == '3' || str[1] ==
-			'4') {
-			if (std::isdigit(str[2]))
-			return true;
-		} else if (str[1] == '5') {
-			if (str[2] == '0' || str[2] == '1' || str[2] == '2' || str[2] == '3' || str[2]
-				== '4' || str[2] == '5')
-			return true;
-		}
-		}
-	}
-	return false;
-	}
-
-	bool isIPv4(const std::string &str) {
-	size_t pos = 0;
-	for (int i = 0; i < 4; ++i) {
-		size_t end = str.find('.', pos);
-		if (i != 3 && end == std::string::npos)
-		return false;
-		if (!is_octet(str.substr(pos, end - pos)))
-		return false;
-		pos = ++end;
-	}
-	return true;
-	}*/
 
 	tServerInformation	chooseServer(http::url::URL url, map<string, tServer >  tmp)
 	{
