@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/07/16 14:00:27 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/16 15:21:18 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/16 15:49:36 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,17 +26,17 @@ WebServer::~WebServer()
 
 WebServer	&WebServer::operator=(const WebServer &) { return *this; }
 
-bool		WebServer::Setup(const std::vector<ushort> ports, \
-	const config::WebserverConf &config)
+bool		WebServer::Setup(const config::WebserverConf &config)
 {
 	Server	*server;
 
-	for (std::vector<ushort>::const_iterator it = ports.begin();\
-		it < ports.end(); it++)
+	for (std::map<int, std::string>::const_iterator it = config.getPorts().begin();\
+		it != config.getPorts().end(); it++)
 	{
 		server = new Server();
 		
-		if (server->Setup(*it, config) == FAILURE)
+		std::map<std::string, config::tServer> serverConf = config.getServerMap().at((*it).first);
+		if (server->Setup((*it).first, config) == FAILURE)
 			return FAILURE;
 		_servers.push_back(server);
 	}

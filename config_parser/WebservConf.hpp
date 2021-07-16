@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/04/18 23:24:54 by bbenny            #+#    #+#             */
-/*   Updated: 2021/07/15 16:41:21 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/16 15:43:59 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -119,7 +119,9 @@ class WebserverConf{
 
 	public:
 		
-		map<int, map<string, tServer > >  const &getServerMap();//getter
+		map<int, map<string, tServer > >  const &getServerMap() const;//getter
+		std::map<int, std::string> const &getPorts() const;
+		
 		WebserverConf(char const *name = "webserver.conf");
 		virtual ~WebserverConf();
 		//tServerInformation chooseServer(http::url::URL url, map<string, tServer >  tmp) const;//вынести из класса

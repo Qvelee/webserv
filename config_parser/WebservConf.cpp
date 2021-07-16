@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/04/18 23:24:41 by bbenny            #+#    #+#             */
-/*   Updated: 2021/07/15 14:03:20 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/16 15:44:22 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -551,7 +551,8 @@ void	WebserverConf::readConfFile(const char *confFileName)
 	//printServerMap();
 }
 
-map<int, map<string, tServer > >  const &WebserverConf::getServerMap(){return serverMap;}
+map<int, map<string, tServer > >  const &WebserverConf::getServerMap() const {return serverMap;}
+std::map<int, std::string> const &WebserverConf::getPorts() const { return map_global_port_ip; }
 /*
 bool is_octet(const std::string &str) {
   if (str.length() == 1) {

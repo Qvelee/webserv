@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/07/16 14:00:25 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/16 15:13:54 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/16 15:38:07 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,8 +21,7 @@ class WebServer
 		WebServer();
 		virtual ~WebServer();
 
-		bool	Setup(const std::vector<ushort> ports, \
-			const config::WebserverConf &config);
+		bool	Setup(const config::WebserverConf &config);
 		bool	Connection(void);
 	private:
 		WebServer(const WebServer &);
