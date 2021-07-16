@@ -42,3 +42,7 @@ TEST(TestConnection, one) {
   http::parse_request(current, message);
   ASSERT_EQ(current, expected);
 }
+
+TEST(Test, one) {
+
+}
