@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/06 12:56:25 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/16 15:20:43 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/16 16:13:02 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,7 +48,8 @@ class Server
 		Server(void);
 		virtual ~Server();
 
-		bool	Setup(ushort port, const config::WebserverConf &config);
+		bool	Setup(ushort port, const std::string &ip,\
+			const std::map<std::string, config::tServer> &config);
 		int		AddClientsSockets(fd_set &read_fds, fd_set &write_fds);
 		void	HandleClients(const fd_set &read_fds, const fd_set &write_fds);
 
@@ -67,12 +68,14 @@ class Server
 		int		SendData(int socket_ID, const char *buffer,\
 			int buffer_size, int start_pos) const;
 
-		const config::WebserverConf	*_config;
-		int							_max_connections;
-		ushort						_server_port;
-		int							_server_socket;
-		t_sockaddr_in				_socket_address; // struct with address info for socket
-		std::vector<Client*>		_clients;
+		std::map<std::string, config::tServer>	_config;
+
+		int						_max_connections;
+		ushort					_server_port;
+		int						_server_socket;
+		std::string				_server_ip;
+		t_sockaddr_in			_socket_address; // struct with address info for socket
+		std::vector<Client*>	_clients;
 
 		const int				_IO_BUFFER_SIZE;
 };

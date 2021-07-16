@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/07/16 14:00:25 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/16 15:38:07 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/16 16:13:21 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,7 +33,6 @@ class WebServer
 		bool	CheckIfSocketReady(const fd_set &set, int socket) const;
 
 		std::vector<Server*>	_servers;
-		config::WebserverConf	*_configs;
 };
 
 #endif

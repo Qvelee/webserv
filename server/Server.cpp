@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/06 12:56:02 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/16 15:20:31 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/16 16:13:38 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,9 +27,11 @@ Server::~Server()
 
 Server	&Server::operator=(const Server &) { return *this; }
 
-bool	Server::Setup(ushort port, const config::WebserverConf &config)
+bool	Server::Setup(ushort port, const std::string &ip,\
+	const std::map<std::string, config::tServer> &config)
 {
-	_config = &config;
+	_config = config;
+	_server_ip = ip;
 	_max_connections = MAX_CONNECTIONS;
 	if ((_server_port = port) < 1024)
 		return Error("Set port is forbidden");
@@ -62,7 +64,7 @@ bool	Server::CreateSocket(void)
 	}
 	_socket_address.sin_family = AF_INET;
 	if ((_socket_address.sin_addr.s_addr = \
-		INADDR_ANY) == INADDR_NONE)
+		inet_addr(_server_ip.c_str())) == INADDR_NONE)
 		return Error("Non valid IP address");
 	_socket_address.sin_port = htons(_server_port);
 	return SUCCESS;
@@ -169,7 +171,7 @@ bool	Server::TryRecvRequest(Client &client, const fd_set &read_fds)
 			delete &client;
 			return FAILURE;
 		}
-		if (client.CreateResponse(request, request_size, *_config) == SUCCESS)
+		if (client.CreateResponse(request, request_size, _config) == SUCCESS)
 			client.setState(Client::State::FINISHEDRECV);
 		else
 			client.setState(Client::State::RECVING);

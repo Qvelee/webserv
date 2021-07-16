@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/07/16 14:00:27 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/16 15:49:36 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/16 16:05:00 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,8 +35,9 @@ bool		WebServer::Setup(const config::WebserverConf &config)
 	{
 		server = new Server();
 		
-		std::map<std::string, config::tServer> serverConf = config.getServerMap().at((*it).first);
-		if (server->Setup((*it).first, config) == FAILURE)
+		const std::map<std::string, config::tServer> server_conf = \
+			config.getServerMap().at((*it).first);
+		if (server->Setup((*it).first, (*it).second, server_conf) == FAILURE)
 			return FAILURE;
 		_servers.push_back(server);
 	}

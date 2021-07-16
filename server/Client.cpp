@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/13 14:03:29 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/16 15:00:29 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/16 16:03:10 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,7 +37,7 @@ int		Client::getAlreadySendBytes() const { return _bytes_already_send; }
 void	Client::setAlreadySendBytes(int bytes) { _bytes_already_send = bytes; }
 
 bool	Client::CreateResponse(const char *request, int requset_size,\
-	const config::WebserverConf &config)
+	const std::map<std::string, config::tServer> &config)
 {
 	_request_string = std::string(request, requset_size);
 	if (_recv_status == EMPTY && http::parse_request(_request, _request_string,\

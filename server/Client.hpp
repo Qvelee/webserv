@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/13 13:58:58 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/16 14:44:13 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/16 16:02:34 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,7 +36,7 @@ class Client
 		};
 
 		bool		CreateResponse(const char *request, int request_size,\
-			const config::WebserverConf &config);
+			const std::map<std::string, config::tServer> &config);
 
 		int					getSocket(void) const;
 		void				setSocket(int socket_ID);
