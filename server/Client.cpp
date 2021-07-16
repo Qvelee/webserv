@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/13 14:03:29 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/16 16:03:10 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/16 18:04:24 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -53,7 +53,21 @@ bool	Client::CreateResponse(const char *request, int requset_size,\
 				_recv_status = NOTFINISHED;
 	if (_recv_status == FINISHED)
 	{
+		/*
+			1) Проверить _request.representation. если не пустая строка => нужен файл
+			2) проверить _request.method на GET (чтение), POST (запись), DELETE (чтение и удаление)
+			3) Положитить в _response.body прочитанный или записанный файл
+			
+			Если в процессе возникла ошибка, выставить _response.code выставляю ошибку
+		*/
 		http::get_response(_request, _response);
+		/*
+			1) Если поле _response.error_file не пустой, нужно открыть файл с ошибкой и записать в
+				_response.body.
+			2) Если всё ок, RespToString
+			3) Иначе если файла нету выставить ошибку в _response.code и вызвать функцию returnErrorPage
+			4) ReponseToString
+		*/
 		http::ResponseToString(_response, _response_string);
 		return SUCCESS;
 	}
