@@ -2,6 +2,7 @@
 #include <string>
 #include <sstream>
 #include "utility_http.hpp"
+#include <sys/types.h>
 
 namespace http{
 
@@ -296,10 +297,11 @@ ssize_t get_host(std::string &dst, std::string const &str, size_t begin) {
 	return static_cast<ssize_t>(dst.length()) + 2;
   } else {
     size_t end = str.find_first_of(":/?#", begin);
-    if (end != std::string::npos)
+    if (end != std::string::npos) {
 	  dst = str.substr(begin, end - begin);
-	else
+	} else {
 	  dst = str.substr(begin);
+	}
 	tolower(dst);
 	if (!isIPv4(dst) && !isRegName(dst)) {
 	  return -1;

@@ -1,7 +1,8 @@
-#ifndef WEBSERV__URL_HPP_
-#define WEBSERV__URL_HPP_
+#ifndef WEBSERV_URL_HPP
+#define WEBSERV_URL_HPP
 
 #include <string>
+#include <sys/types.h>
 
 namespace http {
 namespace url {

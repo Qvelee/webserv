@@ -3,10 +3,11 @@
 #include "utility_http.hpp"
 #include <sstream>
 #include <ctime>
+#include <cstdlib>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <unistd.h>
 #include "errors.hpp"
+#include "cerrno"
 
 namespace http {
 
@@ -40,7 +41,6 @@ bool	parse_request(Request& req, std::string const &data, std::map<std::string, 
   if (req.content_length != 0) {
 	bool answer = read_body(req, data, pos, req.code);
 	if (req.code != NoError && req.code != StatusOK && req.code != StatusCreated) {
-	  req.representation.clear();
 	  return true;
 	}
 	return answer;
@@ -59,14 +59,18 @@ void	parse_request_target(url::URL &url, Method &, const std::string &str,
   }
 }
 
+std::map<const std::string, Method> init_methods() {
+  std::map<const std::string, Method> map;
+  map["GET"] = GET;
+  map["POST"] = POST;
+  map["DELETE"] = DELETE;
+  return map;
+}
+
 void	parse_and_validate_method(Method &m, const std::string &str, StatusCode &code) {
-  static std::map<const std::string, Method> methods = {
-	  {"GET", GET},
-	  {"POST", POST},
-	  {"DELETE", DELETE},
-  };
+  static const std::map<const std::string, Method> methods = init_methods();
   if (methods.count(str)) {
-    m = methods[str];
+    m = methods.at(str);
   } else {
     code = StatusNotImplemented;
   }
@@ -200,7 +204,6 @@ void calculate_length_message(Request& req, StatusCode &code) {
 bool	add_body(Request &req, std::string const &data) {
   bool answer = read_body(req, data, 0, req.code);
   if (req.code != NoError) {
-	req.representation.clear();
 	return true;
   }
   return answer;
@@ -341,29 +344,6 @@ std::string methodToString(Method m) {
   return "";
 }
 
-std::string get_random_str() {
-  std::string answer;
-  answer.reserve(8);
-  const std::string ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-							   "abcdefghijklmnopqrstuvwxyz"
-							   "0123456789";
-  srand(std::time(NULL));
-  for (int i = 0; i < 8; ++i) {
-    answer += ALPHABET[rand() % ALPHABET.length()];
-  }
-  return answer;
-}
-
-std::string get_random_filename(const std::string &name_dir) {
-  std::string answer;
-  struct stat buf = {};
-  do {
-    std::string random_str = get_random_str();
-    answer = name_dir + random_str;
-  } while (stat(answer.c_str(), &buf) != -1);
-  return answer;
-}
-
 bool	check_config(Request& req) {
   if (req.content_length != -1) {
     if (size_t(req.content_length) > req.serv_config.limit_size) {
@@ -380,59 +360,17 @@ bool	check_config(Request& req) {
   }
   struct stat buf = {};
   if (stat(req.serv_config.name_file.c_str(), &buf) == -1) {
-	if (errno == ENOENT) {
-	  req.code = StatusNotFound;
-	} else if (errno == EACCES) {
+	if (errno == ENOENT || errno == EACCES) {
 	  req.code = StatusNotFound;
 	} else {
 	  req.code = StatusInternalServerError;
 	}
 	return false;
   }
-  switch (req.method) {
-	case GET:
-	  if (S_ISDIR(buf.st_mode)) {
-		if (req.serv_config.autoindex) {
-		  req.representation = req.serv_config.name_file;
-		} else {
-		  req.representation = req.serv_config.file_request_if_dir;
-		}
-	  } else {
-	    req.representation = req.serv_config.name_file;
-	  }
-	  req.code = StatusOK;
-	  return true;
-	case POST:
-	  if (S_ISDIR(buf.st_mode)) {
-	    if (!req.serv_config.route_for_uploaded_files.empty()) {
-		  req.representation =
-			  get_random_filename(req.serv_config.route_for_uploaded_files);
-		  req.code = StatusCreated;
-		} else {
-		  req.representation = get_random_filename(req.serv_config.name_file);
-		  req.code = StatusCreated;
-		}
-	  } else {
-	    req.representation = req.serv_config.name_file;
-	    req.code = StatusOK;
-	  }
-	  return true;
-	case DELETE:
-	  if (S_ISDIR(buf.st_mode)) {
-	    req.code = StatusForbidden;
-		return false;
-	  } else {
-	    req.representation = req.serv_config.name_file;
-	    req.code = StatusOK;
-		return true;
-	  }
-  }
   return true;
 }
 
 Response::Response() : code(NoError) {}
-
-void get_response(const Request& req, Response &response) {
 //  std::string answer;
 //  if (req.code != NoError) {
 //    answer.append("HTTP/1.1 400 BadRequest\r\n\r\n");
@@ -444,7 +382,71 @@ void get_response(const Request& req, Response &response) {
 //				  "Hello world!");
 //  }
 //  return answer;
-	if (response.code == NoError) {
+
+std::string get_random_str() {
+  std::string answer;
+  answer.reserve(8);
+  const std::string ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+							   "abcdefghijklmnopqrstuvwxyz"
+							   "0123456789";
+  srand(std::time(NULL));
+  for (int i = 0; i < 8; ++i) {
+	answer += ALPHABET[rand() % ALPHABET.length()];
+  }
+  return answer;
+}
+
+std::string get_random_filename(const std::string &name_dir) {
+  std::string answer;
+  struct stat buf = {};
+  do {
+	std::string random_str = get_random_str();
+	answer = name_dir + random_str;
+  } while (stat(answer.c_str(), &buf) != -1);
+  return answer;
+}
+
+void get_response(const Request& req, Response &response) {
+  switch (req.method) {
+	case GET:
+	  if (S_ISDIR(buf.st_mode)) {
+		if (req.serv_config.autoindex) {
+		  req.representation = req.serv_config.name_file;
+		} else {
+		  req.representation = req.serv_config.file_request_if_dir;
+		}
+	  } else {
+		req.representation = req.serv_config.name_file;
+	  }
+	  req.code = StatusOK;
+	  return true;
+	case POST:
+	  if (S_ISDIR(buf.st_mode)) {
+		if (!req.serv_config.route_for_uploaded_files.empty()) {
+		  req.representation =
+			  get_random_filename(req.serv_config.route_for_uploaded_files);
+		  req.code = StatusCreated;
+		} else {
+		  req.representation = get_random_filename(req.serv_config.name_file);
+		  req.code = StatusCreated;
+		}
+	  } else {
+		req.representation = req.serv_config.name_file;
+		req.code = StatusOK;
+	  }
+	  return true;
+	case DELETE:
+	  if (S_ISDIR(buf.st_mode)) {
+		req.code = StatusForbidden;
+		return false;
+	  } else {
+		req.representation = req.serv_config.name_file;
+		req.code = StatusOK;
+		return true;
+	  }
+  }
+
+  if (response.code == NoError) {
 	  response.code = req.code;
 	}
 	switch (response.code) {

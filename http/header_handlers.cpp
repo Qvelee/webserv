@@ -7,32 +7,29 @@ namespace http {
 
 const char	DQUOTE = '\"';
 
-HeaderHandlers &get_header_field_handlers() {
-  static HeaderHandlers header_field_handlers = {
-	  {"content-length", &content_length},
-	  {"transfer-encoding", &transfer_encoding},
-	  {"host", &host},
-	  {"connection", &connection},
-	  {"content-type", &content_type},
-	  {"content-language", &content_language},
-	  {"content-location", &content_location},
-  };
-  return header_field_handlers;
+HeaderHandlers init_header_handlers() {
+  HeaderHandlers map;
+  map["content-length"] = &content_length;
+  map["transfer-encoding"] = &transfer_encoding;
+  map["host"] = &host;
+  map["connection"] = &connection;
+  map["content-type"] = &content_type;
+  map["content-language"] = &content_language;
+  map["content-location"] = &content_location;
+  return map;
 }
 
-TransferCodingRegister& get_transfer_coding_register() {
-  static const TransferCodingRegister transfer_coding_register = {
-	  {"chunked", 1},
-  };
-  return transfer_coding_register;
+TransferCodingRegister init_transfer_coding_register() {
+  TransferCodingRegister map;
+  map["chunked"] = 1;
+  return map;
 }
 
-MediaTypeRegister& get_media_type_register() {
-  static const MediaTypeRegister type_register = {
-	  {"application/http", 1},
-	  {"message/http", 1},
-  };
-  return type_register;
+MediaTypeRegister init_type_register() {
+  MediaTypeRegister map;
+  map["application/http"] = 1;
+  map["message/http"] = 1;
+  return map;
 }
 
 void header_analysis(Request &req, Headers &h, StatusCode &code) {
@@ -41,7 +38,7 @@ void header_analysis(Request &req, Headers &h, StatusCode &code) {
   first = h.begin();
   last = h.end();
 
-  HeaderHandlers &handlers = get_header_field_handlers();
+  static const HeaderHandlers handlers = init_header_handlers();
   if (handlers.count("host") == 0) {
     code = StatusBadRequest;
 	return;
@@ -75,7 +72,7 @@ void content_length(Request& req, std::string const &value, StatusCode &code) {
 }
 
 void validate_transfer_coding(const std::string& name, StatusCode &code) {
-  TransferCodingRegister& r = get_transfer_coding_register();
+  static const TransferCodingRegister r = init_transfer_coding_register();
   if (r.count(name) == 0)
 	code = StatusNotImplemented;
 }
@@ -212,10 +209,10 @@ void connection(Request& req, std::string const &value, StatusCode &code) {
   if (begin_world != value.length()) {
     code = StatusBadRequest;
   }
-  return;
 }
+
 void validate_media_type(const media_type& type, StatusCode &code) {
-  MediaTypeRegister& type_register = get_media_type_register();
+  static const MediaTypeRegister type_register = init_type_register();
   if (type_register.count(type.type + "/" + type.subtype) == 0) {
 	code = StatusNotImplemented;
 	return;

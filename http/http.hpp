@@ -7,6 +7,7 @@
 #include <map>
 #include <iostream>
 #include "url.hpp"
+#include <inttypes.h>
 #include "WebservConf.hpp"
 
 namespace http {
@@ -86,7 +87,7 @@ struct Request {
   url::URL						url;
   std::string					proto;
   Headers						headers;
-  int64_t						content_length;
+  int64_t 						content_length;
   TransferEncoding				transfer_encoding;
   bool 							close;
   Headers						trailer;
@@ -94,13 +95,12 @@ struct Request {
   representation_metadata		metadata;
   StatusCode					code;
   config::tServerInformation	serv_config;
-  std::string					representation;
 };
 
 typedef void (*field_handlers)(Request& req, std::string const &field, StatusCode &code);
-typedef const std::map<std::string, field_handlers>	HeaderHandlers;
-typedef const std::map<std::string, int>			TransferCodingRegister;
-typedef const std::map<std::string, int>			MediaTypeRegister;
+typedef std::map<std::string, field_handlers>	HeaderHandlers;
+typedef std::map<std::string, int>				TransferCodingRegister;
+typedef std::map<std::string, int>				MediaTypeRegister;
 
 bool	parse_request(Request& req, std::string const &data, std::map<std::string, config::tServer> const &conf);
 size_t	parse_request_line(Request &r, std::string const &data, size_t begin, StatusCode &code);
@@ -116,9 +116,10 @@ size_t	read_chunk_size(size_t& size, std::string const &data, size_t begin, Stat
 bool	check_config(Request& req);
 
 //header_field_handlers
-HeaderHandlers&			get_header_field_handlers();
-TransferCodingRegister&	get_transfer_coding_register();
-MediaTypeRegister&		get_media_type_register();
+HeaderHandlers			init_header_field_handlers();
+TransferCodingRegister	init_transfer_coding_register();
+MediaTypeRegister		init_media_type_register();
+
 void	transfer_encoding(Request& req, std::string const &value, StatusCode &code);
 void	validate_transfer_coding(const std::string& name, StatusCode &code);
 void	content_length(Request& req, std::string const &value, StatusCode &code);
