@@ -43,6 +43,7 @@ Location &Location::operator=(Location const &eq)
 	redirection_status_code = eq.redirection_status_code;//
 	redirection_url = eq.redirection_url;
 	file_request_if_dir = eq.file_request_if_dir;
+	filename_cgi = eq.filename_cgi;
 
 	return (*this);
 }
@@ -56,7 +57,7 @@ void	Location::setRootUploadedFiles(list<string>::iterator &itList, std::list<st
 	|| (*itList).compare(0, 2, "{") == 0)
 		throw "something wrong after alias";
 	route_for_uploaded_files = *itList;
-	std::cout << "route_for_uploaded_files = " << route_for_uploaded_files << std::endl;
+	//std::cout << "route_for_uploaded_files = " << route_for_uploaded_files << std::endl;
 	itList++;
 	if ((*itList).compare(0, 2, ";") != 0)
 		throw "there is not ; after alias";
@@ -90,7 +91,7 @@ void	Location::setRedirection(list<string>::iterator &itList, std::list<std::str
 	if (itList != tokenList.end() && *itList != ";")
 	{
 		return_status_code = *itList;
-		std::cout << "return ==== " << *itList << std::endl;
+		//std::cout << "return ==== " << *itList << std::endl;
 		while (return_status_code[i])
 		{
 			if (return_status_code[i] < '0' || return_status_code[i] > '9')
@@ -116,6 +117,21 @@ void	Location::setRedirection(list<string>::iterator &itList, std::list<std::str
 
 }
 
+void	Location::setFileNameCGI(list<string>::iterator &itList, std::list<std::string> tokenList)
+{
+	itList++;
+
+	if ((*itList).empty() || (*itList).compare(0, 2, ";") == 0)
+		throw "something wrong after cgi_filename";
+
+	filename_cgi = *itList;
+	
+	itList++;
+
+	if ((*itList).compare(0, 2, ";") != 0)
+		throw "there is not ; after cgi_filename";
+}
+
 void	Location::fillAll(list<string>::iterator &itList, list<std::string> tokenList)
 {
 	map<string, void (Location::*)(list<string>::iterator &itList, list<std::string> tokenList)> funMap;
@@ -128,6 +144,7 @@ void	Location::fillAll(list<string>::iterator &itList, list<std::string> tokenLi
 	funMap.insert(std::make_pair("upload_store", &Location::setRootUploadedFiles));
 	funMap.insert(std::make_pair("return", &Location::setRedirection));
 	funMap.insert(std::make_pair("index", &Location::setIndex));
+	funMap.insert(std::make_pair("cgi_filename", &Location::setFileNameCGI));
 
 	itList++;
 
@@ -137,7 +154,7 @@ void	Location::fillAll(list<string>::iterator &itList, list<std::string> tokenLi
 		|| locationMask == "}" || locationMask == ";")
 		throw "location there is not mask location";
 	itList++;
-	std::cout << "locationMask = " << locationMask << std::endl;
+	//std::cout << "locationMask = " << locationMask << std::endl;
 	if ((*itList).empty() || *itList != "{")
 		throw "location there is not {";
 	itList++;
@@ -193,7 +210,7 @@ void	Location::setAlias(list<string>::iterator &itList, list<std::string> tokenL
 	|| (*itList).compare(0, 2, "{") == 0)
 		throw "something wrong after alias";
 	alias = *itList;
-	std::cout << "alias = " << alias << std::endl;
+	//std::cout << "alias = " << alias << std::endl;
 	itList++;
 	if ((*itList).compare(0, 2, ";") != 0)
 		throw "there is not ; after alias";

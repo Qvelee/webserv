@@ -56,7 +56,6 @@ namespace config{
 	void	deleteSpaces(std::string &buf)
 	{
 		size_t	found;
-		//size_t	foundEndStr;
 
 		tabToSpace(buf);
 
@@ -72,10 +71,6 @@ namespace config{
 
 		if (buf.size() != 0 && buf[buf.size() - 1] == ' ')
 			buf.erase(buf.size() - 1);
-		
-		/*found = buf.find("; ");
-		if (found != std::string::npos)
-			buf.replace(found, 2 ,";");*/
 	}
 
 	void	checkLine(std::string const &buf, size_t num_line)
@@ -293,8 +288,8 @@ namespace config{
 		map_ip_port[port] = ip;
 		//server.port = port;//map::<port, ip> if count != 0 error
 		//server.ip = ip;//== if no ==>
-		std::cout << "ip = " << ip << std::endl;
-		std::cout << "port = " << port << std::endl;
+		//std::cout << "ip = " << ip << std::endl;
+		//std::cout << "port = " << port << std::endl;
 	}
 
 	void	WebserverConf::setServer_name(std::list<std::string>::iterator &itList, tServer	&server,std::map<int, std::string>&)
@@ -392,7 +387,7 @@ namespace config{
 
 	}
 
-	void	WebserverConf::setLocation(std::list<std::string>::iterator &itList, tServer &server,std::map<int, std::string>&)
+	void	WebserverConf::setLocation(std::list<string>::iterator &itList, tServer &server,map<int, string>&)
 	{
 		Location loc;// = new Location ;
 		
@@ -408,7 +403,8 @@ namespace config{
 		size_t		i;
 		std::array<std::string, 5> arrVar = {{"listen", "server_name", \
 		"error_page", "client_max_body_size", "location"}};
-		void	(WebserverConf::*arrF[])(std::list<std::string>::iterator &itList, tServer	&server,std::map<int, std::string> &map_ip_port) = \
+		void	(WebserverConf::*arrF[])(std::list<std::string>::iterator &itList, \
+				tServer	&server,map<int, string> &map_ip_port) = \
 		{&WebserverConf::setListen, &WebserverConf::setServer_name, \
 		&WebserverConf::setError_page, &WebserverConf::setClient_max_body_size, \
 		&WebserverConf::setLocation};
@@ -441,88 +437,52 @@ namespace config{
 		fillMapServer(server, map_port_ip);//измениьь прототип +map
 	}
 
-	void	WebserverConf::fillMapServer(tServer &server, std::map<int, std::string> &map_port_ip)
+	void	WebserverConf::fillMapServer(tServer &server, map<int, string> &map_port_ip)
 	{
-		
-		//	tServer	*	server = new tServer(tserver);
-		//server.ip = map[0] map <port, ip>
-		//server.port =
-
-	//	pointerToServerSet.insert(server);
-
-		//map<int, map<string, map<string, tServer *> > >::iterator it;
 		map<int, map<string, tServer > >::iterator it;
 		map<string, tServer >  tmp;
-		//map<string, map<string, tServer *> > tmpMap;
 		
 		std::list<std::string>::iterator itLst;
-		//itLst = server.server_name.begin();
 
-	std::map<int, std::string>::iterator itMpPortIP = map_port_ip.begin();
+		std::map<int, std::string>::iterator itMpPortIP = map_port_ip.begin();
 
-	while (itMpPortIP != map_port_ip.end())
-	{
-		itMpPortIP++;
-		if (map_global_port_ip.count(itMpPortIP->first))//if there is the port
-			if (map_global_port_ip[itMpPortIP->first] != map_port_ip[itMpPortIP->first]) //ip !the same
-				return ;
-	}
-	itMpPortIP = map_port_ip.begin();
-	while (itMpPortIP != map_port_ip.end())
-	{
-		if (serverMap.count(itMpPortIP->first))
+		while (itMpPortIP != map_port_ip.end())
 		{
-			itLst = (server.server_name).begin();
-			while (itLst != server.server_name.end())
+			itMpPortIP++;
+			if (map_global_port_ip.count(itMpPortIP->first))//if there is the port
+				if (map_global_port_ip[itMpPortIP->first] != map_port_ip[itMpPortIP->first]) //ip !the same
+					return ;
+		}
+		itMpPortIP = map_port_ip.begin();
+		while (itMpPortIP != map_port_ip.end())
+		{
+			if (serverMap.count(itMpPortIP->first))
 			{
-				if (serverMap[itMpPortIP->first].count(*itLst) == 0)//server_name был- не добавляем
-				//иначе добавляем
+				itLst = (server.server_name).begin();
+				while (itLst != server.server_name.end())
+				{
+					if (serverMap[itMpPortIP->first].count(*itLst) == 0)//server_name был- не добавляем
+					//иначе добавляем
+					{
+						serverMap[itMpPortIP->first][*itLst] = server;
+						itLst++;
+					}
+				}
+			}
+			else
+			{
+				map_global_port_ip[itMpPortIP->first] = itMpPortIP->second;
+				serverMap[itMpPortIP->first]["default"] = server;
+				itLst = server.server_name.begin();
+				while (itLst != server.server_name.end())
 				{
 					serverMap[itMpPortIP->first][*itLst] = server;
 					itLst++;
 				}
+			
 			}
+			itMpPortIP++;
 		}
-		else
-		{
-			map_global_port_ip[itMpPortIP->first] = itMpPortIP->second;
-			serverMap[itMpPortIP->first]["default"] = server;
-			itLst = server.server_name.begin();
-			while (itLst != server.server_name.end())
-			{
-				serverMap[itMpPortIP->first][*itLst] = server;
-				itLst++;
-			}
-		
-		}
-		itMpPortIP++;
-	}
-
-	/*	it = serverMap.find(server->port);
-		if (it != serverMap.end())
-		{
-			//check ip
-		//	if (serverMap[server->port].begin()->second->ip != server->ip)
-		//		throw "different ip with the same port";
-			itLst = server->server_name.begin();
-			while (itLst != server->server_name.end())
-			{
-				tmp.insert(std::make_pair(*itLst, server));
-				itLst++;
-			}
-		}
-		else
-		{
-			itLst = server->server_name.begin();
-			while (itLst != server->server_name.end())
-			{
-				tmp.insert(std::make_pair(*itLst, server));
-				itLst++;
-			}
-			tmp.insert(std::make_pair("default", server));
-			serverMap.insert(std::make_pair(server->port, tmp));
-			itLst++;
-		}*/
 	}
 
 	void	WebserverConf::tokenToServerMap()
@@ -569,24 +529,8 @@ namespace config{
 	//	serverInformation.accepted_methods.insert(std::make_pair("DELETE", 1));
 	//	serverInformation.accepted_methods.insert(std::make_pair("POST", 1));
 		serverInformation.route_for_uploaded_files = "route_for_uploaded_files";
+		serverInformation.is_cgi = false;
 
-		
-	/*	int port = 80;
-		string server_name = "default";
-	//	string ip = "default";
-		std::stringstream buf;
-		std::size_t found = (url.host).find_last_of(":");
-		if (found != std::string::npos)
-		{
-			buf << url.host.substr(found+1);
-			buf >> port;//need erase
-			url.host.erase(url.host.begin() + found, url.host.end());
-		}
-		if (http::url::isIPv4(url.host))
-			ip = url.host;//server_name =default
-		else
-			server_name = url.host;
-		map<int, map<string, tServer *> > ::const_iterator itMap = serverMap.find(port);*/
 		string server_name;
 		std::stringstream buf;
 		int port;
@@ -601,27 +545,20 @@ namespace config{
 			server_name = "default";
 		else
 			server_name = url.host;
-		//if (itMap == serverMap.end() && ip == "default")
 
-		//map<string, tServer > ::const_iterator itMap = tmp.begin();
-		//if (itMap != tmp.end())
-		//{
 			map<string, tServer > ipServer = tmp;
-			std::cout << "server_name :" << server_name << std::endl;
+			//std::cout << "server_name :" << server_name << std::endl;
 			map<string, tServer > ::iterator itIpSrv = ipServer.find(server_name);
 			if (itIpSrv != ipServer.end())
 			{
-				//map<string, tServer > nameServer = ipServer;
+
 				map<string, tServer >::iterator itNameSrv = itIpSrv;//nameServer.find(server_name);
-				//if (itNameSrv == nameServer.end())//??
-				//	itNameSrv = nameServer.find("default");
+
 				tServer server = itNameSrv->second;
 
-				list<string>::iterator itList = server.server_name.begin();
+				//list<string>::iterator itList = server.server_name.begin();
 				serverInformation.limit_size = server.client_max_body_size;
-				map<int, string>::iterator itEr = server.error_page.begin();
-	//				if (itEr == server.error_page.end())
-	//					server.error_page.insert(make_pair(0, "error_page_default"));
+				//map<int, string>::iterator itEr = server.error_page.begin();
 				serverInformation.error_pages = server.error_page;
 				vector<Location>::iterator itLoc = server.locationMap.begin();
 				string locationMask;
@@ -637,7 +574,6 @@ namespace config{
 							serverInformation.name_file.erase(0, path_for_alias.length());//need to insert
 						
 							serverInformation.name_file = itLoc->alias + serverInformation.name_file;//need to clear
-						
 
 							serverInformation.accepted_methods = itLoc->accepted_methods;
 						
@@ -645,6 +581,16 @@ namespace config{
 							serverInformation.redirection_url = itLoc->redirection_url;
 
 							serverInformation.file_request_if_dir = itLoc->file_request_if_dir;
+							
+							if (itLoc->filename_cgi != "")
+							{
+								serverInformation.is_cgi = true;
+								serverInformation.cgi["SCRIPT_FILENAME"] = itLoc->filename_cgi;
+								serverInformation.cgi["QUERY_STRING"] = url.raw_query;
+								//serverInformation.cgi["REQUEST_METHOD"] = ;
+								//serverInformation.cgi["CONTENT_TYPE"] =;
+								//serverInformation.cgi["CONTENT_LENGTH"] =;
+							}
 
 							itLoc = server.locationMap.end();
 							path_for_alias = "";
@@ -674,7 +620,6 @@ namespace config{
 					itLoc = server.locationMap.begin();
 				}
 			}
-		//}
 		return serverInformation;
 	}
 }
