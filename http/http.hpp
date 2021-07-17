@@ -136,7 +136,6 @@ struct Response {
   StatusCode	code;
   Headers		header;
   std::string	body;
-  std::string	error_file;
 
   Response();
 };
