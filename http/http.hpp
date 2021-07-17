@@ -141,7 +141,10 @@ struct Response {
   Response();
 };
 
-void get_response(const Request& req, Response &response);
+void method_get(const Request& req, Response &resp);
+void method_post(const Request& req, Response &response);
+void method_delete(const Request& req, Response &response);
+void get_response(const Request& req, Response &resp);
 void ResponseToString(const Response &resp, std::string &str);
 
 }

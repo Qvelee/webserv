@@ -2,10 +2,12 @@
 #include <cstring>
 #include "utility_http.hpp"
 #include <sstream>
+#include <fstream>
 #include <ctime>
 #include <cstdlib>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <dirent.h>
 #include "errors.hpp"
 #include "cerrno"
 
@@ -40,7 +42,7 @@ bool	parse_request(Request& req, std::string const &data, std::map<std::string, 
 	return true;
   if (req.content_length != 0) {
 	bool answer = read_body(req, data, pos, req.code);
-	if (req.code != NoError && req.code != StatusOK && req.code != StatusCreated) {
+	if (req.code != NoError) {
 	  return true;
 	}
 	return answer;
@@ -406,68 +408,167 @@ std::string get_random_filename(const std::string &name_dir) {
   return answer;
 }
 
-void get_response(const Request& req, Response &response) {
-  switch (req.method) {
-	case GET:
-	  if (S_ISDIR(buf.st_mode)) {
-		if (req.serv_config.autoindex) {
-		  req.representation = req.serv_config.name_file;
-		} else {
-		  req.representation = req.serv_config.file_request_if_dir;
-		}
-	  } else {
-		req.representation = req.serv_config.name_file;
-	  }
-	  req.code = StatusOK;
-	  return true;
-	case POST:
-	  if (S_ISDIR(buf.st_mode)) {
-		if (!req.serv_config.route_for_uploaded_files.empty()) {
-		  req.representation =
-			  get_random_filename(req.serv_config.route_for_uploaded_files);
-		  req.code = StatusCreated;
-		} else {
-		  req.representation = get_random_filename(req.serv_config.name_file);
-		  req.code = StatusCreated;
-		}
-	  } else {
-		req.representation = req.serv_config.name_file;
-		req.code = StatusOK;
-	  }
-	  return true;
-	case DELETE:
-	  if (S_ISDIR(buf.st_mode)) {
-		req.code = StatusForbidden;
-		return false;
-	  } else {
-		req.representation = req.serv_config.name_file;
-		req.code = StatusOK;
-		return true;
-	  }
+bool read_all_file(const std::string &name, Response &resp) {
+  std::ifstream in(name.c_str(), std::ios::in | std::ios::binary);
+  if (in) {
+    in.seekg(0, std::ios::end);
+    resp.body.resize(in.tellg());
+    in.seekg(0, std::ios::beg);
+    in.read(&resp.body[0], static_cast<int64_t>(resp.body.size()));
+	in.close();
+    if (in.bad() || in.fail()) {
+      resp.body.clear();
+      resp.code = StatusInternalServerError;
+	  return false;
+    }
+	return true;
+  } else {
+    resp.code = StatusInternalServerError;
+	return false;
   }
+}
 
-  if (response.code == NoError) {
-	  response.code = req.code;
+void method_get(const Request& req, Response &resp) {
+  struct stat buf = {};
+  if (stat(req.serv_config.name_file.c_str(), &buf) == -1) {
+	if (errno == ENOENT || errno == EACCES) {
+	  resp.code = StatusNotFound;
+	} else {
+	  resp.code = StatusInternalServerError;
 	}
-	switch (response.code) {
+	return;
+  }
+  if (S_ISDIR(buf.st_mode)) {
+    if (req.serv_config.autoindex) {
+	  DIR *dir;
+	  struct dirent *ent;
+	  if ((dir = opendir (req.serv_config.name_file.c_str())) != NULL) {
+		while ((ent = readdir (dir)) != NULL) {
+		  resp.body.append(ent->d_name);
+		}
+		closedir (dir);
+	  } else {
+		resp.code = StatusInternalServerError;
+		return;
+	  }
+    } else {
+      if (!read_all_file(req.serv_config.file_request_if_dir, resp)) {
+		return;
+      }
+    }
+  } else {
+    if (!read_all_file(req.serv_config.name_file, resp)) {
+	  return;
+    }
+  }
+  resp.code = StatusOK;
+}
+
+bool write_in_file(const std::string &name, std::string const &str, Response &resp) {
+  std::ofstream out(name.c_str(), std::ios::out);
+  if (out) {
+    out.write(str.c_str(), static_cast<int64_t>(str.length()));
+    out.close();
+    if (out.fail() || out.bad()) {
+      resp.code = StatusInternalServerError;
+	  return false;
+    }
+    resp.body = str;
+	return true;
+  } else {
+    resp.code = StatusInternalServerError;
+	return false;
+  }
+}
+
+void method_post(const Request& req, Response &resp) {
+  struct stat buf = {};
+  if (stat(req.serv_config.name_file.c_str(), &buf) == -1) {
+	if (errno == ENOENT || errno == EACCES) {
+	  resp.code = StatusNotFound;
+	} else {
+	  resp.code = StatusInternalServerError;
+	}
+	return;
+  }
+  if (S_ISDIR(buf.st_mode)) {
+    if (!req.serv_config.route_for_uploaded_files.empty()) {
+      if (!write_in_file(get_random_filename(req.serv_config.route_for_uploaded_files),
+						 req.body, resp)) {
+		return;
+      }
+      resp.code = StatusCreated;
+    } else {
+      if (!write_in_file(get_random_filename(req.serv_config.name_file), req.body, resp)) {
+		return;
+      }
+      resp.code = StatusCreated;
+    }
+  } else {
+	if (!write_in_file(req.serv_config.name_file, req.body, resp)) {
+	  return;
+	}
+    resp.code = StatusOK;
+  }
+}
+
+void method_delete(const Request& req, Response &resp) {
+  struct stat buf = {};
+  if (stat(req.serv_config.name_file.c_str(), &buf) == -1) {
+	if (errno == ENOENT || errno == EACCES) {
+	  resp.code = StatusNotFound;
+	} else {
+	  resp.code = StatusInternalServerError;
+	}
+	return;
+  }
+  if (S_ISDIR(buf.st_mode)) {
+	resp.code = StatusForbidden;
+  } else {
+	if (remove(req.serv_config.name_file.c_str()) == 0) {
+	  resp.code = StatusOK;
+	} else {
+	  resp.code = StatusInternalServerError;
+	}
+  }
+}
+
+void get_response(const Request& req, Response &resp) {
+  if (resp.code == NoError && req.code == NoError) {
+	switch (req.method) {
+	  case GET:
+	    method_get(req, resp);
+		break;
+	  case POST:
+	    method_post(req, resp);
+		break;
+	  case DELETE:
+	    method_delete(req, resp);
+		break;
+	}
+  }
+  if (resp.code == NoError) {
+	resp.code = req.code;
+	}
+	switch (resp.code) {
 	  case NoError:
-	  case StatusOK: error200(req, response); break;
-	  case StatusCreated: error201(req, response); break;
-	  case StatusMovedPermanently: error301(req, response); break;
-	  case StatusFound: error302(req, response); break;
-	  case StatusSeeOther: error303(req, response); break;
-	  case StatusTemporaryRedirect: error307(req, response); break;
-	  case StatusBadRequest: error400(req, response); break;
-	  case StatusForbidden: error403(req, response); break;
-	  case StatusNotFound: error404(req, response); break;
-	  case StatusMethodNotAllowed: error405(req, response); break;
-	  case StatusRequestTimeout: error408(req, response); break;
-	  case StatusRequestEntityTooLarge: error413(req, response); break;
-	  case StatusRequestURITooLong: error414(req, response); break;
-	  case StatusInternalServerError: error500(req, response); break;
-	  case StatusNotImplemented: error501(req, response); break;
-	  case StatusServiceUnavailable: error503(req, response); break;
-	  case StatusHTTPVersionNotSupported: error505(req, response); break;
+	  case StatusOK: error200(req, resp); break;
+	  case StatusCreated: error201(req, resp); break;
+	  case StatusMovedPermanently: error301(req, resp); break;
+	  case StatusFound: error302(req, resp); break;
+	  case StatusSeeOther: error303(req, resp); break;
+	  case StatusTemporaryRedirect: error307(req, resp); break;
+	  case StatusBadRequest: error400(req, resp); break;
+	  case StatusForbidden: error403(req, resp); break;
+	  case StatusNotFound: error404(req, resp); break;
+	  case StatusMethodNotAllowed: error405(req, resp); break;
+	  case StatusRequestTimeout: error408(req, resp); break;
+	  case StatusRequestEntityTooLarge: error413(req, resp); break;
+	  case StatusRequestURITooLong: error414(req, resp); break;
+	  case StatusInternalServerError: error500(req, resp); break;
+	  case StatusNotImplemented: error501(req, resp); break;
+	  case StatusServiceUnavailable: error503(req, resp); break;
+	  case StatusHTTPVersionNotSupported: error505(req, resp); break;
 	}
 }
 
