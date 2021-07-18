@@ -13,10 +13,12 @@
 
 namespace http {
 
-const char	DQUOTE = '\"';
+const char DQUOTE = '\"';
 
 // HTTP-message = start-line *( header-field CRLF ) CRLF [ message-body ]
-bool	parse_request(Request& req, std::string const &data, std::map<std::string, config::tServer> const &conf) {
+bool parse_request(Request &req,
+				   std::string const &data,
+				   std::map<std::string, config::tServer> const &conf) {
   size_t pos = 0;
   req.content_length = -1;
   req.close = false;
@@ -50,7 +52,7 @@ bool	parse_request(Request& req, std::string const &data, std::map<std::string, 
   return true;
 }
 
-void	parse_request_target(url::URL &url, Method &, const std::string &str,
+void parse_request_target(url::URL &url, Method &, const std::string &str,
 						  StatusCode &code) {
   if (str.length() > 8000) {
 	code = StatusRequestURITooLong;
@@ -69,24 +71,26 @@ std::map<const std::string, Method> init_methods() {
   return map;
 }
 
-void	parse_and_validate_method(Method &m, const std::string &str, StatusCode &code) {
+void parse_and_validate_method(Method &m, const std::string &str, StatusCode &code) {
   static const std::map<const std::string, Method> methods = init_methods();
   if (methods.count(str)) {
-    m = methods.at(str);
+	m = methods.at(str);
   } else {
-    code = StatusNotImplemented;
+	code = StatusNotImplemented;
   }
 }
 
 // request-line = method SP request-target SP HTTP-version CRLF
-size_t parse_request_line(Request &r, std::string const &data, size_t begin, StatusCode &code) {
+size_t parse_request_line(Request &r,
+						  std::string const &data,
+						  size_t begin,
+						  StatusCode &code) {
   size_t pos = begin;
 
   //skip first CRLF (3.5)
-  if (data.length() > 1 && data.compare(pos, 2, "\r\n") == 0)
-  {
-    pos += skip_crlf(data, pos, code);
-    if (code != NoError)
+  if (data.length() > 1 && data.compare(pos, 2, "\r\n") == 0) {
+	pos += skip_crlf(data, pos, code);
+	if (code != NoError)
 	  return 0;
   }
   std::string method;
@@ -120,7 +124,10 @@ size_t parse_request_line(Request &r, std::string const &data, size_t begin, Sta
 }
 
 // header-field = field-name ":" OWS field-value OWS
-size_t parse_headers(Headers &dst, std::string const &data, size_t begin, StatusCode &code) {
+size_t parse_headers(Headers &dst,
+					 std::string const &data,
+					 size_t begin,
+					 StatusCode &code) {
   size_t pos = begin;
   std::string field_name;
   std::string field_value;
@@ -129,7 +136,7 @@ size_t parse_headers(Headers &dst, std::string const &data, size_t begin, Status
 	return code = StatusBadRequest;
   }
   while (pos + 1 < data.length() && data.compare(pos, 2, "\r\n") != 0) {
-    // field-name = token
+	// field-name = token
 	pos += get_token(field_name, data, pos, code);
 	if (code != NoError)
 	  return 0;
@@ -150,10 +157,10 @@ size_t parse_headers(Headers &dst, std::string const &data, size_t begin, Status
 	do {
 	  size_t local_size = 0;
 	  while (data[pos + local_size] < 0 || isgraph(data[pos + local_size]) ||
-	  isblank(data[pos + local_size]))
+		  isblank(data[pos + local_size]))
 		++local_size;
 	  if (pos + local_size + 2 >= data.length() ||
-	  data.compare(pos+local_size, 2, "\r\n") != 0) {
+		  data.compare(pos + local_size, 2, "\r\n") != 0) {
 		return code = StatusBadRequest;
 	  }
 	  field_value.append(data, pos, local_size);
@@ -161,11 +168,11 @@ size_t parse_headers(Headers &dst, std::string const &data, size_t begin, Status
 	  pos += local_size;
 	  pos += 2;
 	  if (isblank(data[pos]))
-	    obs_fold = true;
+		obs_fold = true;
 	  else
-	    obs_fold = false;
+		obs_fold = false;
 	  while (isblank(data[pos]))
-	    ++pos;
+		++pos;
 	} while (obs_fold);
 	// OWS
 	while (isblank(*field_value.rbegin()))
@@ -187,23 +194,23 @@ size_t parse_headers(Headers &dst, std::string const &data, size_t begin, Status
   return pos - begin;
 }
 
-void calculate_length_message(Request& req, StatusCode &code) {
+void calculate_length_message(Request &req, StatusCode &code) {
   if (req.headers.count("transfer-encoding") && req.headers.count("content-length")) {
-    code = StatusBadRequest;
+	code = StatusBadRequest;
 	return;
   }
   if (req.headers.count("transfer-encoding")) {
-    if (req.transfer_encoding.back().token != "chunked") {
+	if (req.transfer_encoding.back().token != "chunked") {
 	  code = StatusBadRequest;
 	  req.close = true;
-      return;
-    }
+	  return;
+	}
   } else if (req.headers.count("content-length") == 0) {
-    req.content_length = 0;
+	req.content_length = 0;
   }
 }
 
-bool	add_body(Request &req, std::string const &data) {
+bool add_body(Request &req, std::string const &data) {
   bool answer = read_body(req, data, 0, req.code);
   if (req.code != NoError) {
 	return true;
@@ -211,20 +218,19 @@ bool	add_body(Request &req, std::string const &data) {
   return answer;
 }
 
-bool read_body(Request& req, std::string const &data, size_t begin, StatusCode &code) {
+bool read_body(Request &req, std::string const &data, size_t begin, StatusCode &code) {
   bool answer = true;
   if (req.content_length == -1) {
 	answer = decoding_chunked(req, data, begin, code);
 	if (code != NoError)
 	  return code;
-  }
-  else {
-    uint64_t bytes_to_add = req.content_length;
-    bytes_to_add -= req.body.length();
-    if (bytes_to_add > data.length() - begin) {
-      bytes_to_add = data.length() - begin;
-      answer = false;
-    }
+  } else {
+	uint64_t bytes_to_add = req.content_length;
+	bytes_to_add -= req.body.length();
+	if (bytes_to_add > data.length() - begin) {
+	  bytes_to_add = data.length() - begin;
+	  answer = false;
+	}
 	req.body.append(data, begin, bytes_to_add);
   }
   return answer;
@@ -244,7 +250,10 @@ bool read_body(Request& req, std::string const &data, size_t begin, StatusCode &
  *
  * trailer-part = *( header-field CRLF )
  */
-bool decoding_chunked(Request& req, std::string const &data, size_t begin, StatusCode &code) {
+bool decoding_chunked(Request &req,
+					  std::string const &data,
+					  size_t begin,
+					  StatusCode &code) {
   size_t chunk_size;
   size_t pos = begin;
   // read chunk-size, chunk-ext(if any), and CRLF
@@ -254,27 +263,27 @@ bool decoding_chunked(Request& req, std::string const &data, size_t begin, Statu
 
   //read chunk-data
   while (chunk_size > 0) {
-    //read chunk-data and CRLF
-    if (data.length() - pos < chunk_size) {
+	//read chunk-data and CRLF
+	if (data.length() - pos < chunk_size) {
 	  return code = StatusBadRequest;
-    }
-    if (req.body.length() + chunk_size > req.serv_config.limit_size) {
-      req.close = true;
-      req.code = StatusRequestEntityTooLarge;
+	}
+	if (req.body.length() + chunk_size > req.serv_config.limit_size) {
+	  req.close = true;
+	  req.code = StatusRequestEntityTooLarge;
 	  return true;
 //      req.body.append(data, pos, req.serv_config.limit_size - req.body.length());
-    } else {
+	} else {
 	  req.body.append(data, pos, chunk_size);
-    }
-    pos += chunk_size;
-    if (data.compare(pos, 2, "\r\n") != 0) {
+	}
+	pos += chunk_size;
+	if (data.compare(pos, 2, "\r\n") != 0) {
 	  return code = StatusBadRequest;
-    }
-    pos += 2;
-    if (data.length() - pos == 0)
+	}
+	pos += 2;
+	if (data.length() - pos == 0)
 	  return false;
-    pos += read_chunk_size(chunk_size, data, pos, code);
-    if (code != NoError)
+	pos += read_chunk_size(chunk_size, data, pos, code);
+	if (code != NoError)
 	  return code;
   }
   //read trailer field
@@ -290,7 +299,7 @@ bool decoding_chunked(Request& req, std::string const &data, size_t begin, Statu
  * chunk-ext-name = token
  * chunk-ext-val = token / quoted-string
  */
-size_t read_chunk_size(size_t& chunk_size, std::string const &data, size_t begin,
+size_t read_chunk_size(size_t &chunk_size, std::string const &data, size_t begin,
 					   StatusCode &code) {
   size_t pos = begin;
   std::string ext_name;
@@ -346,18 +355,18 @@ std::string methodToString(Method m) {
   return "";
 }
 
-bool	check_config(Request& req) {
+bool check_config(Request &req) {
   if (req.content_length != -1) {
-    if (size_t(req.content_length) > req.serv_config.limit_size) {
-      req.content_length = static_cast<int64_t>(req.serv_config.limit_size);
-    }
+	if (size_t(req.content_length) > req.serv_config.limit_size) {
+	  req.content_length = static_cast<int64_t>(req.serv_config.limit_size);
+	}
   }
   if (req.serv_config.accepted_methods.count(methodToString(req.method)) == 0) {
-    req.code = StatusMethodNotAllowed;
+	req.code = StatusMethodNotAllowed;
 	return false;
   }
   if (!req.serv_config.redirection_url.empty()) {
-    req.code = StatusCode(req.serv_config.redirection_status_code);
+	req.code = StatusCode(req.serv_config.redirection_status_code);
 	return false;
   }
   struct stat buf = {};
@@ -411,24 +420,24 @@ std::string get_random_filename(const std::string &name_dir) {
 bool read_all_file(const std::string &name, Response &resp) {
   std::ifstream in(name.c_str(), std::ios::in | std::ios::binary);
   if (in) {
-    in.seekg(0, std::ios::end);
-    resp.body.resize(in.tellg());
-    in.seekg(0, std::ios::beg);
-    in.read(&resp.body[0], static_cast<int64_t>(resp.body.size()));
+	in.seekg(0, std::ios::end);
+	resp.body.resize(in.tellg());
+	in.seekg(0, std::ios::beg);
+	in.read(&resp.body[0], static_cast<int64_t>(resp.body.size()));
 	in.close();
-    if (in.bad() || in.fail()) {
-      resp.body.clear();
-      resp.code = StatusInternalServerError;
+	if (in.bad() || in.fail()) {
+	  resp.body.clear();
+	  resp.code = StatusInternalServerError;
 	  return false;
-    }
+	}
 	return true;
   } else {
-    resp.code = StatusInternalServerError;
+	resp.code = StatusInternalServerError;
 	return false;
   }
 }
 
-void method_get(const Request& req, Response &resp) {
+void method_get(const Request &req, Response &resp) {
   struct stat buf = {};
   if (stat(req.serv_config.name_file.c_str(), &buf) == -1) {
 	if (errno == ENOENT || errno == EACCES) {
@@ -439,27 +448,27 @@ void method_get(const Request& req, Response &resp) {
 	return;
   }
   if (S_ISDIR(buf.st_mode)) {
-    if (req.serv_config.autoindex) {
+	if (req.serv_config.autoindex) {
 	  DIR *dir;
 	  struct dirent *ent;
-	  if ((dir = opendir (req.serv_config.name_file.c_str())) != NULL) {
-		while ((ent = readdir (dir)) != NULL) {
+	  if ((dir = opendir(req.serv_config.name_file.c_str())) != NULL) {
+		while ((ent = readdir(dir)) != NULL) {
 		  resp.body.append(ent->d_name);
 		}
-		closedir (dir);
+		closedir(dir);
 	  } else {
 		resp.code = StatusInternalServerError;
 		return;
 	  }
-    } else {
-      if (!read_all_file(req.serv_config.file_request_if_dir, resp)) {
+	} else {
+	  if (!read_all_file(req.serv_config.file_request_if_dir, resp)) {
 		return;
-      }
-    }
+	  }
+	}
   } else {
-    if (!read_all_file(req.serv_config.name_file, resp)) {
+	if (!read_all_file(req.serv_config.name_file, resp)) {
 	  return;
-    }
+	}
   }
   resp.code = StatusOK;
 }
@@ -467,21 +476,21 @@ void method_get(const Request& req, Response &resp) {
 bool write_in_file(const std::string &name, std::string const &str, Response &resp) {
   std::ofstream out(name.c_str(), std::ios::out);
   if (out) {
-    out.write(str.c_str(), static_cast<int64_t>(str.length()));
-    out.close();
-    if (out.fail() || out.bad()) {
-      resp.code = StatusInternalServerError;
+	out.write(str.c_str(), static_cast<int64_t>(str.length()));
+	out.close();
+	if (out.fail() || out.bad()) {
+	  resp.code = StatusInternalServerError;
 	  return false;
-    }
-    resp.body = str;
+	}
+	resp.body = str;
 	return true;
   } else {
-    resp.code = StatusInternalServerError;
+	resp.code = StatusInternalServerError;
 	return false;
   }
 }
 
-void method_post(const Request& req, Response &resp) {
+void method_post(const Request &req, Response &resp) {
   struct stat buf = {};
   if (stat(req.serv_config.name_file.c_str(), &buf) == -1) {
 	if (errno == ENOENT || errno == EACCES) {
@@ -492,27 +501,27 @@ void method_post(const Request& req, Response &resp) {
 	return;
   }
   if (S_ISDIR(buf.st_mode)) {
-    if (!req.serv_config.route_for_uploaded_files.empty()) {
-      if (!write_in_file(get_random_filename(req.serv_config.route_for_uploaded_files),
+	if (!req.serv_config.route_for_uploaded_files.empty()) {
+	  if (!write_in_file(get_random_filename(req.serv_config.route_for_uploaded_files),
 						 req.body, resp)) {
 		return;
-      }
-      resp.code = StatusCreated;
-    } else {
-      if (!write_in_file(get_random_filename(req.serv_config.name_file), req.body, resp)) {
+	  }
+	  resp.code = StatusCreated;
+	} else {
+	  if (!write_in_file(get_random_filename(req.serv_config.name_file), req.body, resp)) {
 		return;
-      }
-      resp.code = StatusCreated;
-    }
+	  }
+	  resp.code = StatusCreated;
+	}
   } else {
 	if (!write_in_file(req.serv_config.name_file, req.body, resp)) {
 	  return;
 	}
-    resp.code = StatusOK;
+	resp.code = StatusOK;
   }
 }
 
-void method_delete(const Request& req, Response &resp) {
+void method_delete(const Request &req, Response &resp) {
   struct stat buf = {};
   if (stat(req.serv_config.name_file.c_str(), &buf) == -1) {
 	if (errno == ENOENT || errno == EACCES) {
@@ -533,43 +542,57 @@ void method_delete(const Request& req, Response &resp) {
   }
 }
 
-void get_response(const Request& req, Response &resp) {
+void get_response(const Request &req, Response &resp) {
   if (resp.code == NoError && req.code == NoError) {
 	switch (req.method) {
-	  case GET:
-	    method_get(req, resp);
+	  case GET: method_get(req, resp);
 		break;
-	  case POST:
-	    method_post(req, resp);
+	  case POST: method_post(req, resp);
 		break;
-	  case DELETE:
-	    method_delete(req, resp);
+	  case DELETE: method_delete(req, resp);
 		break;
 	}
   }
   if (resp.code == NoError) {
 	resp.code = req.code;
-	}
-	switch (resp.code) {
-	  case NoError:
-	  case StatusOK: error200(req, resp); break;
-	  case StatusCreated: error201(req, resp); break;
-	  case StatusMovedPermanently: error301(req, resp); break;
-	  case StatusFound: error302(req, resp); break;
-	  case StatusSeeOther: error303(req, resp); break;
-	  case StatusTemporaryRedirect: error307(req, resp); break;
-	  case StatusBadRequest: error400(req, resp); break;
-	  case StatusForbidden: error403(req, resp); break;
-	  case StatusNotFound: error404(req, resp); break;
-	  case StatusMethodNotAllowed: error405(req, resp); break;
-	  case StatusRequestTimeout: error408(req, resp); break;
-	  case StatusRequestEntityTooLarge: error413(req, resp); break;
-	  case StatusRequestURITooLong: error414(req, resp); break;
-	  case StatusInternalServerError: error500(req, resp); break;
-	  case StatusNotImplemented: error501(req, resp); break;
-	  case StatusServiceUnavailable: error503(req, resp); break;
-	  case StatusHTTPVersionNotSupported: error505(req, resp); break;
-	}
+  }
+  switch (resp.code) {
+	case NoError:
+	case StatusOK: error200(req, resp);
+	  break;
+	case StatusCreated: error201(req, resp);
+	  break;
+	case StatusMovedPermanently: error301(req, resp);
+	  break;
+	case StatusFound: error302(req, resp);
+	  break;
+	case StatusSeeOther: error303(req, resp);
+	  break;
+	case StatusTemporaryRedirect: error307(req, resp);
+	  break;
+	case StatusBadRequest: error400(req, resp);
+	  break;
+	case StatusForbidden: error403(req, resp);
+	  break;
+	case StatusNotFound: error404(req, resp);
+	  break;
+	case StatusMethodNotAllowed: error405(req, resp);
+	  break;
+	case StatusRequestTimeout: error408(req, resp);
+	  break;
+	case StatusRequestEntityTooLarge: error413(req, resp);
+	  break;
+	case StatusRequestURITooLong: error414(req, resp);
+	  break;
+	case StatusInternalServerError: error500(req, resp);
+	  break;
+	case StatusNotImplemented: error501(req, resp);
+	  break;
+	case StatusServiceUnavailable: error503(req, resp);
+	  break;
+	case StatusHTTPVersionNotSupported: error505(req, resp);
+	  break;
+  }
 }
 
 void ResponseToString(const Response &resp, std::string &str) {
@@ -583,8 +606,8 @@ void ResponseToString(const Response &resp, std::string &str) {
   Headers::const_iterator begin = resp.header.begin();
   Headers::const_iterator end = resp.header.end();
   while (begin != end) {
-    str.append((*begin).first + ": " + (*begin).second + "\r\n");
-    ++begin;
+	str.append((*begin).first + ": " + (*begin).second + "\r\n");
+	++begin;
   }
   str.append("\r\n");
   str.append(resp.body);

@@ -4,96 +4,94 @@
 
 namespace http {
 
-const char* const BadRequest = "<html>\n"
+const char *const BadRequest = "<html>\n"
 							   "<head><title>400 Bad Request</title></head>\n"
 							   "<body>\n"
 							   "<center><h1>400 Bad Request</h1></center>\n"
 							   "</body>\n"
 							   "</html>";
 
-const char* const Forbidden = "<html>\n"
-							   "<head><title>403 Forbidden</title></head>\n"
-							   "<body>\n"
-							   "<center><h1>403 Forbidden</h1></center>\n"
-							   "</body>\n"
-							   "</html>";
-
-
-const char* const NotFound = "<html>\n"
-							  "<head><title>404 Not Found</title></head>\n"
+const char *const Forbidden = "<html>\n"
+							  "<head><title>403 Forbidden</title></head>\n"
 							  "<body>\n"
-							  "<center><h1>404 Not Found</h1></center>\n"
+							  "<center><h1>403 Forbidden</h1></center>\n"
 							  "</body>\n"
 							  "</html>";
 
-const char* const MethodNotAllowed = "<html>\n"
-							  "<head><title>405 Method Not Allowed</title></head>\n"
-							  "<body>\n"
-							  "<center><h1>405 Method Not Allowed</h1></center>\n"
-							  "</body>\n"
-							  "</html>";
+const char *const NotFound = "<html>\n"
+							 "<head><title>404 Not Found</title></head>\n"
+							 "<body>\n"
+							 "<center><h1>404 Not Found</h1></center>\n"
+							 "</body>\n"
+							 "</html>";
 
-const char* const RequestTimeout = "<html>\n"
-									 "<head><title>408 Request Timeout</title></head>\n"
+const char *const MethodNotAllowed = "<html>\n"
+									 "<head><title>405 Method Not Allowed</title></head>\n"
 									 "<body>\n"
-									 "<center><h1>408 Request Timeout</h1></center>\n"
+									 "<center><h1>405 Method Not Allowed</h1></center>\n"
 									 "</body>\n"
 									 "</html>";
 
-const char* const RequestEntityTooLarge = "<html>\n"
-								   "<head><title>413 Request Entity Too "
-								   "Large</title></head>\n"
+const char *const RequestTimeout = "<html>\n"
+								   "<head><title>408 Request Timeout</title></head>\n"
 								   "<body>\n"
-								   "<center><h1>413 Request Entity Too "
-								   "Large</h1></center>\n"
+								   "<center><h1>408 Request Timeout</h1></center>\n"
 								   "</body>\n"
 								   "</html>";
 
-
-const char* const RequestURITooLong = "<html>\n"
-										  "<head><title>414 Request URI Too Long"
-										  "</title></head>\n"
+const char *const RequestEntityTooLarge = "<html>\n"
+										  "<head><title>413 Request Entity Too "
+										  "Large</title></head>\n"
 										  "<body>\n"
-										  "<center><h1>414 Request URI Too Long"
-										  "</h1></center>\n"
+										  "<center><h1>413 Request Entity Too "
+										  "Large</h1></center>\n"
 										  "</body>\n"
 										  "</html>";
 
-const char* const InternalServerError = "<html>\n"
-									  "<head><title>500 Internal Server Error"
+const char *const RequestURITooLong = "<html>\n"
+									  "<head><title>414 Request URI Too Long"
 									  "</title></head>\n"
 									  "<body>\n"
-									  "<center><h1>500 Internal Server Error"
+									  "<center><h1>414 Request URI Too Long"
 									  "</h1></center>\n"
 									  "</body>\n"
 									  "</html>";
 
-const char* const NotImplemented = "<html>\n"
-									  "<head><title>501 Not Implemented"
-									  "</title></head>\n"
-									  "<body>\n"
-									  "<center><h1>501 Not Implemented"
-									  "</h1></center>\n"
-									  "</body>\n"
-									  "</html>";
+const char *const InternalServerError = "<html>\n"
+										"<head><title>500 Internal Server Error"
+										"</title></head>\n"
+										"<body>\n"
+										"<center><h1>500 Internal Server Error"
+										"</h1></center>\n"
+										"</body>\n"
+										"</html>";
 
-const char* const ServiceUnavailable = "<html>\n"
-									  "<head><title>503 Service Unavailable"
-									  "</title></head>\n"
-									  "<body>\n"
-									  "<center><h1>503 Service Unavailable"
-									  "</h1></center>\n"
-									  "</body>\n"
-									  "</html>";
+const char *const NotImplemented = "<html>\n"
+								   "<head><title>501 Not Implemented"
+								   "</title></head>\n"
+								   "<body>\n"
+								   "<center><h1>501 Not Implemented"
+								   "</h1></center>\n"
+								   "</body>\n"
+								   "</html>";
 
-const char* const HTTPVersionNotSupported = "<html>\n"
-									  "<head><title>505 HTTP Version Not Supported"
-									  "</title></head>\n"
-									  "<body>\n"
-									  "<center><h1>505 HTTP Version Not Supported"
-									  "</h1></center>\n"
-									  "</body>\n"
-									  "</html>";
+const char *const ServiceUnavailable = "<html>\n"
+									   "<head><title>503 Service Unavailable"
+									   "</title></head>\n"
+									   "<body>\n"
+									   "<center><h1>503 Service Unavailable"
+									   "</h1></center>\n"
+									   "</body>\n"
+									   "</html>";
+
+const char *const HTTPVersionNotSupported = "<html>\n"
+											"<head><title>505 HTTP Version Not Supported"
+											"</title></head>\n"
+											"<body>\n"
+											"<center><h1>505 HTTP Version Not Supported"
+											"</h1></center>\n"
+											"</body>\n"
+											"</html>";
 
 void error200(const Request &, Response &resp) {
   resp.status = "OK";
@@ -158,12 +156,12 @@ bool read_all_file(const std::string &name, std::string &body) {
 void error400(const Request &req, Response &resp) {
   resp.status = "Bad Request";
   if (req.serv_config.error_pages.count(400)) {
-    if (!read_all_file(req.serv_config.error_pages.at(400), resp.body)) {
+	if (!read_all_file(req.serv_config.error_pages.at(400), resp.body)) {
 	  error500(req, resp);
 	  return;
-    }
+	}
   } else {
-    resp.body = BadRequest;
+	resp.body = BadRequest;
   }
   std::stringstream ss;
   ss << resp.body.length();
@@ -278,7 +276,7 @@ void error414(const Request &req, Response &resp) {
 void error500(const Request &req, Response &resp) {
   resp.status = "Internal Server Error";
   if (req.serv_config.error_pages.count(500)) {
-    if (!read_all_file(req.serv_config.error_pages.at(501), resp.body)) {
+	if (!read_all_file(req.serv_config.error_pages.at(501), resp.body)) {
 	  resp.body = InternalServerError;
 	}
   } else {

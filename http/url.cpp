@@ -4,14 +4,14 @@
 #include "utility_http.hpp"
 #include <sys/types.h>
 
-namespace http{
+namespace http {
 
 namespace url {
 
 // pct-encoded = "%" HEXDIG HEXDIG
 bool isPctEncoded(std::string const &str, size_t pos) {
   if (str.length() < pos + 3 || str[pos] != '%' ||
-  !isxdigit(str[pos+1]) || !isxdigit(str[pos+2]))
+	  !isxdigit(str[pos + 1]) || !isxdigit(str[pos + 2]))
 	return false;
   return true;
 }
@@ -36,24 +36,25 @@ std::string decodePCT(std::string const &str) {
 }
 
 bool isGenDelim(char c) {
-  return(c == ':' || c == '/' || c == '?' || c == '#' || c == '[' || c == ']' || c == '@');
+  return (c == ':' || c == '/' || c == '?' || c == '#' || c == '[' || c == ']'
+	  || c == '@');
 }
 
 bool isSubDelim(char c) {
-  return(c == '!' || c == '$' || c == '&' || c == '\'' || c == '(' || c == ')' ||
-  c == '*' || c == '+' || c == ',' || c == ';' || c == '=');
+  return (c == '!' || c == '$' || c == '&' || c == '\'' || c == '(' || c == ')' ||
+	  c == '*' || c == '+' || c == ',' || c == ';' || c == '=');
 }
 
 // unreserved = ALPHA DIGIT - . _ ~
 bool isUnreserved(char c) {
-  return(isalnum(c) || c == '-' || c == '.' || c == '_' || c == '~');
+  return (isalnum(c) || c == '-' || c == '.' || c == '_' || c == '~');
 }
 
 //scheme = ALPHA *( ALPHA / DIGIT / «+» / «-» / «.» )
 ssize_t get_scheme(std::string &scheme, std::string const &str, size_t begin) {
   size_t pos = begin;
   if (pos >= str.length() || !isalpha(str[pos])) {
-    return -1;
+	return -1;
   }
   ++pos;
   while (pos < str.length()) {
@@ -144,8 +145,8 @@ bool isIPv6(std::string const &host) {
   int beforeDoubleColon = 0;
   int afterDoubleColon = 0;
   while (host.compare(i, 2, "::") && !isLs32(host, i)) {
-    j = skip_h16(host, i);
-    if (j == -1)
+	j = skip_h16(host, i);
+	if (j == -1)
 	  return false;
 	i += j;
 	if (i >= host.length() || host[i] != ':')
@@ -161,7 +162,7 @@ bool isIPv6(std::string const &host) {
 	  return false;
 	while (i < host.length()) {
 	  if (isLs32(host, i)) {
-	    if (afterDoubleColon > 5)
+		if (afterDoubleColon > 5)
 		  return false;
 		return true;
 	  }
@@ -215,7 +216,7 @@ bool isIPvFuture(std::string const &host) {
 // IP-literal = (IPv6address/IPvFuture)
 bool isIPliteral(std::string const &host) {
   if (host.length() != 0 && host[0] == 'v') {
-    return(isIPvFuture(host));
+	return (isIPvFuture(host));
   } else {
 	return (isIPv6(host));
   }
@@ -296,8 +297,8 @@ ssize_t get_host(std::string &dst, std::string const &str, size_t begin) {
 	}
 	return static_cast<ssize_t>(dst.length()) + 2;
   } else {
-    size_t end = str.find_first_of(":/?#", begin);
-    if (end != std::string::npos) {
+	size_t end = str.find_first_of(":/?#", begin);
+	if (end != std::string::npos) {
 	  dst = str.substr(begin, end - begin);
 	} else {
 	  dst = str.substr(begin);
@@ -327,7 +328,7 @@ ssize_t get_authority(URL &url, std::string const &str, size_t begin) {
   ssize_t size;
 
   if (str.find('@') != std::string::npos) {
-    pos += get_userinfo(url.userinfo, str, pos);
+	pos += get_userinfo(url.userinfo, str, pos);
 	if (str[pos] == '@')
 	  ++pos;
 	else
@@ -538,8 +539,8 @@ bool parse_origin_form(URL &url, const std::string &str) {
 	url.raw_path.clear();
   }
   if (begin_word < str.length() && str[begin_word] == '?') {
-    ++begin_word;
-    begin_word += get_query(url.raw_query, str, begin_word);
+	++begin_word;
+	begin_word += get_query(url.raw_query, str, begin_word);
   }
   if (begin_word != str.length())
 	return false;

@@ -56,7 +56,6 @@ TEST(GetHttpVersion, Fail3) {
   ASSERT_EQ(err, 400);
 }
 
-
 TEST(GetHttpVersion, Fail4) {
   std::string current;
   http::StatusCode err = http::NoError;

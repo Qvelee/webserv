@@ -108,7 +108,7 @@ TEST(TestMessageBody, CalculateLength1) {
   std::string message = "Transfer-Encoding:chunked\r\n"
 						"\r\n";
   http::Request req = {
-  	.content_length = -1,
+	  .content_length = -1,
   };
   http::StatusCode err = http::NoError;
   http::parse_headers(req.headers, message, 0, err);
@@ -257,7 +257,7 @@ TEST(ReadBody, Chunked) {
   std::string message3 = "0\r\n"
 						 "\r\n";
   http::Request req = {
-  	.content_length = -1,
+	  .content_length = -1,
   };
   http::StatusCode err = http::NoError;
   http::parse_headers(req.headers, header, 0, err);
@@ -286,7 +286,7 @@ TEST(ReadBody, Chunked2) {
   std::string message3 = "0\r\n"
 						 "\r\n";
   http::Request req = {
-  	.content_length = -1,
+	  .content_length = -1,
   };
   http::StatusCode err = http::NoError;
   http::parse_headers(req.headers, header, 0, err);
@@ -316,7 +316,7 @@ TEST(ReadBody, Chunked3) {
 						 "Field1:value1\r\n"
 						 "\r\n";
   http::Request req = {
-  	.content_length = -1,
+	  .content_length = -1,
   };
   http::StatusCode err = http::NoError;
   http::parse_headers(req.headers, header, 0, err);

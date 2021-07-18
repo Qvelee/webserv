@@ -5,16 +5,16 @@
 TEST(TestParserStartLine, NoFail) {
   std::string message = "GET /me HTTP/1.1\r\n";
   http::Request expected = {
-    .method = http::GET,
-	.url = {
-		.path = "/me",
-      },
-	.proto = "HTTP/1.1",
-	.content_length = 0,
-	};
+	  .method = http::GET,
+	  .url = {
+		  .path = "/me",
+	  },
+	  .proto = "HTTP/1.1",
+	  .content_length = 0,
+  };
   http::StatusCode err = http::NoError;
   http::Request current = {
-  	.content_length = 0,
+	  .content_length = 0,
   };
   http::parse_request_line(current, message, 0, err);
   ASSERT_EQ(current, expected);
@@ -89,12 +89,12 @@ TEST(TestParserStartLine, url) {
   std::string message = "GET /me?param1=one&param2=two HTTP/1.1\r\n";
   http::Request current;
   http::Request expected = {
-  	.method = http::GET,
-  	.url= {
-  		.path = "/me",
-  		.raw_query = "param1=one&param2=two",
-  	},
-  	.proto= "HTTP/1.1",
+	  .method = http::GET,
+	  .url= {
+		  .path = "/me",
+		  .raw_query = "param1=one&param2=two",
+	  },
+	  .proto= "HTTP/1.1",
   };
   http::StatusCode err = http::NoError;
   http::parse_request_line(current, message, 0, err);

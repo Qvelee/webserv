@@ -27,7 +27,7 @@ TEST(TestParserTransferEncoding, TransferEncoding3) {
 	  {"size", "1"},
   };
   http::TransferEncoding expected = {
-	  {"chunked",tp},
+	  {"chunked", tp},
   };
   http::Request req;
   http::StatusCode err = http::NoError;
