@@ -370,6 +370,7 @@ bool check_config(Request &req) {
 	return false;
   }
   struct stat buf = {};
+  req.serv_config.name_file.insert(0, ".");
   if (stat(req.serv_config.name_file.c_str(), &buf) == -1) {
 	if (errno == ENOENT || errno == EACCES) {
 	  req.code = StatusNotFound;
