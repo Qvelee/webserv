@@ -244,19 +244,19 @@ void content_type(Request &req, std::string const &value, StatusCode &code) {
   size_t begin_word = 0;
   parameter tmp_par;
 
-  begin_word += get_token(req.metadata.media_type.type, value, begin_word, code);
+  begin_word += get_token(req.metadata.media_type_.type, value, begin_word, code);
   if (code != NoError)
 	return;
-  tolower(req.metadata.media_type.type);
+  tolower(req.metadata.media_type_.type);
   if (value[begin_word] != '/') {
 	code = StatusBadRequest;
 	return;
   }
   ++begin_word;
-  begin_word += get_token(req.metadata.media_type.subtype, value, begin_word, code);
+  begin_word += get_token(req.metadata.media_type_.subtype, value, begin_word, code);
   if (code != NoError)
 	return;
-  tolower(req.metadata.media_type.subtype);
+  tolower(req.metadata.media_type_.subtype);
 //  validate_media_type(req.metadata.media_type);
 
   begin_word += skip_space(value, begin_word, OWS, code);
@@ -288,7 +288,7 @@ void content_type(Request &req, std::string const &value, StatusCode &code) {
 	  if (code != NoError)
 		return;
 	}
-	req.metadata.media_type.parameters.push_back(tmp_par);
+	req.metadata.media_type_.parameters.push_back(tmp_par);
 	tmp_par.name.clear();
 	tmp_par.value.clear();
 	begin_word += skip_space(value, begin_word, OWS, code);

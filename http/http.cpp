@@ -10,6 +10,7 @@
 #include <dirent.h>
 #include "errors.hpp"
 #include "cerrno"
+#include <unistd.h>
 
 namespace http {
 
@@ -370,8 +371,17 @@ bool check_config(Request &req) {
 	return false;
   }
   struct stat buf = {};
-  req.serv_config.name_file.insert(0, ".");
-  if (stat(req.serv_config.name_file.c_str(), &buf) == -1) {
+  std::string tmp_name;
+  if (req.serv_config.name_file == "") {
+	char cur_dir[256];
+	getcwd(cur_dir, 256);
+	tmp_name += cur_dir;
+	tmp_name += "/";
+	req.serv_config.name_file = tmp_name;
+  } else {
+    tmp_name = req.serv_config.name_file;
+  }
+  if (stat(tmp_name.c_str(), &buf) == -1) {
 	if (errno == ENOENT || errno == EACCES) {
 	  req.code = StatusNotFound;
 	} else {
@@ -447,9 +457,7 @@ void method_get(const Request &req, Response &resp) {
 		while ((ent = readdir(dir)) != NULL) {
 		  std::string name = ent->d_name;
 		  name = req.serv_config.name_file + name;
-		  struct stat tmp_buf = {};
-		  stat(name.c_str(), &tmp_buf);
-		  if (S_ISDIR(tmp_buf.st_mode)) {
+		  if (S_ISDIR(buf.st_mode)) {
 			name += "/";
 		  }
 		  resp.body.append("<a href=\"");

@@ -684,6 +684,7 @@ tServerInformation	chooseServer(http::url::URL url, map<string, tServer >  tmp)
 
 						serverInformation.file_request_if_dir = itLoc->file_request_if_dir;
 
+						serverInformation.autoindex = itLoc->autoindex;
 						itLoc = server.locationMap.end();
 						path_for_alias = "";
 

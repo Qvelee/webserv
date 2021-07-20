@@ -32,7 +32,7 @@ enum StatusCode {
   StatusMovedPermanently = 301,
   StatusFound = 302,
   StatusSeeOther = 303,
-//  StatusUseProxy = 305,
+  //  StatusUseProxy = 305,
   StatusTemporaryRedirect = 307,
   StatusBadRequest = 400,
 //  StatusPaymentRequired = 402,
@@ -74,7 +74,7 @@ struct media_type {
 };
 
 struct representation_metadata {
-  media_type media_type;
+  media_type media_type_;
   std::vector<std::string> content_language;
   url::URL content_location;
 };
