@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/13 13:58:58 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/16 16:02:34 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/20 21:08:02 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -53,8 +53,9 @@ class Client
 		enum RecvStatus
 		{
 			EMPTY = 0,
-			NOTFINISHED,
-			FINISHED	
+			NOTFINHEADER,
+			NOTFINBODY,
+			FINISHED
 		};
 
 		int				_client_socket;

@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/06 12:56:02 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/16 16:13:38 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/20 21:28:50 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -197,7 +197,10 @@ bool	Server::TrySendResponse(Client &client, const fd_set &write_fds)
 		}
 		bytes += client.getAlreadySendBytes();
 		if (bytes == client.getResponse().size())
+		{
 			client.setState(Client::State::FINISHEDSEND);
+			bytes = 0;
+		}
 		client.setAlreadySendBytes(bytes);
 	}
 	return SUCCESS;
@@ -221,7 +224,7 @@ int		Server::SendData(int socket, const char *buffer,\
 	if ((bytes = send(socket, &buffer[start_pos],\
 		buffer_size - start_pos, MSG_DONTWAIT)) == -1)
 	{
-		std::cout << "cannot send data" << std::endl;
+		std::cout << "Error: cannot send data" << std::endl;
 		return -1;
 	}
 	return bytes;

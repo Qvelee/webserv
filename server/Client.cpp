@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/13 14:03:29 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/20 12:37:51 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/20 21:32:46 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,27 +39,38 @@ void	Client::setAlreadySendBytes(int bytes) { _bytes_already_send = bytes; }
 bool	Client::CreateResponse(const char *request, int requset_size,\
 	const std::map<std::string, config::tServer> &config)
 {
-	_request_string = std::string(request, requset_size);
-	if (_recv_status == EMPTY && http::parse_request(_request, _request_string,\
-		config))
-		_recv_status = FINISHED;
-	else
-		if (_recv_status == EMPTY)
-			_recv_status = NOTFINISHED;
-		else
-			if (http::add_body(_request, _request_string))
+	if (_recv_status == EMPTY || _recv_status == NOTFINHEADER)
+	{
+		_request_string.append(std::string(request, requset_size));
+		if (_request_string.find("\r\n\r\n", 0) != std::string::npos)
+		{
+			if (http::parse_request(_request, _request_string, config))
 				_recv_status = FINISHED;
 			else
-				_recv_status = NOTFINISHED;
+			{
+				_request_string.clear();
+				_recv_status = NOTFINBODY;
+			}
+		}
+		else
+			_recv_status = NOTFINHEADER;
+	}
+	else if (_recv_status == NOTFINBODY)
+	{
+		_request_string = std::string(request, requset_size);
+		if (http::add_body(_request, _request_string))
+			_recv_status = FINISHED;
+	}
 	if (_recv_status == FINISHED)
 	{
+		_response_string.clear();
+		_request_string.clear();
 		http::get_response(_request, _response);
 		http::ResponseToString(_response, _response_string);
 		_request = http::Request();
 		_response = http::Response();
 		_recv_status = EMPTY;
-		return SUCCESS;
+		return SUCCESS;	
 	}
-	else
-		return FAILURE;
+	return FAILURE;
 }
