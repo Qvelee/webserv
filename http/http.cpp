@@ -382,17 +382,6 @@ bool check_config(Request &req) {
 }
 
 Response::Response() : code(NoError) {}
-//  std::string answer;
-//  if (req.code != NoError) {
-//    answer.append("HTTP/1.1 400 BadRequest\r\n\r\n");
-//  } else {
-//	answer.append("HTTP/1.1 200 OK\r\n"
-//				  "Content-Length: 12\r\n"
-//				  "Content-Type: text/plain\r\n"
-//				  "\r\n"
-//				  "Hello world!");
-//  }
-//  return answer;
 
 std::string get_random_str() {
   std::string answer;
@@ -452,8 +441,21 @@ void method_get(const Request &req, Response &resp) {
 	  DIR *dir;
 	  struct dirent *ent;
 	  if ((dir = opendir(req.serv_config.name_file.c_str())) != NULL) {
+		resp.body.append("<h1>Index of " + req.serv_config.name_file + "/</h1>\n");
+		resp.body.append("<hr>\n<pre>\n");
 		while ((ent = readdir(dir)) != NULL) {
-		  resp.body.append(ent->d_name);
+		  std::string name = ent->d_name;
+		  name = req.serv_config.name_file + name;
+		  struct stat tmp_buf = {};
+		  stat(name.c_str(), &tmp_buf);
+		  if (S_ISDIR(tmp_buf.st_mode)) {
+			name += "/";
+		  }
+		  resp.body.append("<a href=\"");
+		  resp.body.append(name);
+		  resp.body.append("\">");
+		  resp.body.append(name);
+		  resp.body.append("</a>\n");
 		}
 		closedir(dir);
 	  } else {
