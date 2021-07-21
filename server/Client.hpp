@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/13 13:58:58 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/20 21:08:02 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/21 15:59:56 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,7 @@
 # define CLIENT_HPP
 
 # include "http.hpp"
+# include "Cgi.hpp"
 
 # define SUCCESS false
 # define FAILURE true
@@ -65,9 +66,10 @@ class Client
 		http::Request	_request;
 		http::Response	_response;
 		int				_bytes_already_send;
+		Cgi				*_cgi;
 
 		RecvStatus		_recv_status;
 		State			_connection_state;
-};
+	};
 
 #endif

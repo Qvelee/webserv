@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/06 13:07:13 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/16 16:20:02 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/21 15:46:46 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,22 +26,22 @@ int		main(int argc, char **argv)
 	catch (const char *error)
 	{
 		std::cerr << "Error: " << error << std::endl;
-		return 1;
+		return EXIT_FAILURE;
 	}
 	catch (...)
 	{
 		std::cerr << "Error: something went wrong" << std::endl;
-		return 1;
+		return EXIT_FAILURE;
 	}
 
 	if (webserver.Setup(*config))
 	{
 		delete config;
-		return 2;
+		return EXIT_FAILURE;
 	}
 	while (true)
 		if (webserver.Connection())
-			return 3;
+			return EXIT_FAILURE;
 	delete config;
-	return 0;
+	return EXIT_SUCCESS;
 }

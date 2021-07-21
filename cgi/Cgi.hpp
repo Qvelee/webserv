@@ -3,35 +3,58 @@
 /*                                                        :::      ::::::::   */
 /*   Cgi.hpp                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: bbenny <bbenny@student.21-school.ru>       +#+  +:+       +#+        */
+/*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2021/04/24 21:50:29 by bbenny            #+#    #+#             */
-/*   Updated: 2021/04/24 21:50:30 by bbenny           ###   ########.fr       */
+/*   Created: 2021/07/21 12:35:21 by nelisabe          #+#    #+#             */
+/*   Updated: 2021/07/21 15:38:05 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef CGI_HPP
 # define CGI_HPP
 
-#include <map>
-#include <string>
+# include "http.hpp"
+# include <errno.h>
+# include <string.h>
+# include <unistd.h>
+# include <map>
 
-namespace config{
+using	std::string;
+using	std::map;
 
-using std::map;
-using std::string;
+# define SUCCESS false
+# define FAILURE true
 
-class Cgi{
-	private:
+class Cgi
+{
 	public:
-		Cgi();
+		Cgi(const http::Request &request);
 		virtual ~Cgi();
-		Cgi(Cgi const &copy);
-		Cgi &operator=(Cgi const &eq);
-		map<string, string> param;
-};
 
-}
+		bool	Start(void);
+	private:
+		Cgi(const Cgi &);
+		
+		Cgi	&operator=(const Cgi &);
+
+		bool	FindVariable(const std::string &variable,\
+			const map<string, string> &table);
+		void	GetVariables(const http::Request &request);
+		bool	CopyStdIO(void);
+		bool	CreatePipes(void);
+		bool	ExecCgi(void);
+		void	RestoreStdIO(void);
+		bool	Error(const std::string error) const;
+
+		int		_fd_stdin;
+		int		_fd_stdout;
+		int		_fd_cgi_input[2];
+		int		_fd_cgi_output[2];
+
+		const char	*_cgi_script;
+		char		**_script_arguments;
+		char		**_cgi_variables;
+};
 
 #endif
 
