@@ -515,7 +515,10 @@ bool write_in_file(const std::string &name, std::string const &str, Response &re
 
 void method_post(const Request &req, Response &resp) {
   struct stat buf = {};
-  if (stat(req.serv_config.name_file.c_str(), &buf) == -1) {
+  std::string file_name = req.serv_config.name_file;
+  if (file_name.empty())
+	file_name = req.current_dir;
+  if (stat(file_name.c_str(), &buf) == -1) {
 	if (errno == ENOENT || errno == EACCES) {
 	  resp.code = StatusNotFound;
 	} else {

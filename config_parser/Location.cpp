@@ -17,7 +17,7 @@ namespace config{
 
 Location::Location()
 {
-	//autoindex = "off";
+	autoindex = 0;
 	accepted_methods.insert(std::make_pair("GET", 0));
 	accepted_methods.insert(std::make_pair("POST", 0));
 	accepted_methods.insert(std::make_pair("DELETE", 0));
