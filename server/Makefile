@@ -6,7 +6,7 @@
 #    By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2021/05/14 14:50:43 by nelisabe          #+#    #+#              #
-#    Updated: 2021/07/16 15:00:18 by nelisabe         ###   ########.fr        #
+#    Updated: 2021/07/21 20:38:32 by nelisabe         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -34,7 +34,8 @@ SERV_SRC_DIR =		./
 
 #SRC
 
-SERV_SRC =			WebServer.cpp \
+SERV_SRC =			SelectController.cpp \
+					WebServer.cpp \
 					Server.cpp \
 					Client.cpp
 

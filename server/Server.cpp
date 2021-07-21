@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/06 12:56:02 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/20 21:28:50 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/21 20:24:02 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,10 +28,12 @@ Server::~Server()
 Server	&Server::operator=(const Server &) { return *this; }
 
 bool	Server::Setup(ushort port, const std::string &ip,\
-	const std::map<std::string, config::tServer> &config)
+	const std::map<std::string, config::tServer> &config,\
+	IIOController *fd_controller)
 {
 	_config = config;
 	_server_ip = ip;
+	_fd_controller = fd_controller;
 	_max_connections = MAX_CONNECTIONS;
 	if ((_server_port = port) < 1024)
 		return Error("Set port is forbidden");
@@ -72,7 +74,7 @@ bool	Server::CreateSocket(void)
 
 int		Server::getSocket() const { return _server_socket; }
 
-int		Server::AddClientsSockets(fd_set &read_fds, fd_set &write_fds)
+int		Server::AddClientsSockets(void)
 {
 	Client	*client;
 	int		client_socket;
@@ -86,20 +88,20 @@ int		Server::AddClientsSockets(fd_set &read_fds, fd_set &write_fds)
 		switch (client->getState())
 		{
 			case Client::State::SLEEP:
-				FD_SET(client_socket, &read_fds);
+				_fd_controller->AddFDToWatch(client_socket, IIOController::READ);
 				break;
 			case Client::State::RECVING:
-				FD_SET(client_socket, &read_fds);
+				_fd_controller->AddFDToWatch(client_socket, IIOController::READ);
 				break;
 			case Client::State::SENDING:
-				FD_SET(client_socket, &write_fds);
+				_fd_controller->AddFDToWatch(client_socket, IIOController::WRITE);
 				break;
 			case Client::State::FINISHEDRECV:
-				FD_SET(client_socket, &write_fds);
+				_fd_controller->AddFDToWatch(client_socket, IIOController::WRITE);
 				client->setState(Client::State::SENDING);
 				break;
 			case Client::State::FINISHEDSEND:
-				FD_SET(client_socket, &read_fds);
+				_fd_controller->AddFDToWatch(client_socket, IIOController::READ);
 				client->setState(Client::State::SLEEP);
 				break;
 			default:
@@ -111,13 +113,13 @@ int		Server::AddClientsSockets(fd_set &read_fds, fd_set &write_fds)
 	return maxFd;
 }
 
-void	Server::HandleClients(const fd_set &read_fds, const fd_set &write_fds)
+void	Server::HandleClients(void)
 {
 	Client		*client;
 	bool		status;
 
 	status = SUCCESS;
-	if (FD_ISSET(_server_socket, &read_fds))
+	if (_fd_controller->CheckIfFDReady(_server_socket, IIOController::READ))
 		AcceptNewClient();
 	for (std::vector<Client*>::iterator it = _clients.begin();\
 		it < _clients.end(); it++)
@@ -127,13 +129,13 @@ void	Server::HandleClients(const fd_set &read_fds, const fd_set &write_fds)
 		switch (client->getState())
 		{
 			case Client::State::SLEEP:
-				status = TryRecvRequest(*client, read_fds);
+				status = TryRecvRequest(*client);
 				break;
 			case Client::State::RECVING:
-				status = TryRecvRequest(*client, read_fds);
+				status = TryRecvRequest(*client);
 				break;
 			case Client::State::SENDING:
-				status = TrySendResponse(*client, write_fds);
+				status = TrySendResponse(*client);
 				break;
 			default:
 				break;
@@ -156,14 +158,14 @@ void	Server::AcceptNewClient(void)
 	_clients.push_back(newClient);
 }
 
-bool	Server::TryRecvRequest(Client &client, const fd_set &read_fds)
+bool	Server::TryRecvRequest(Client &client)
 {
 	int			client_socket;
 	char		*request;
 	int			request_size;
 
 	client_socket = client.getSocket();
-	if (FD_ISSET(client_socket, &read_fds))
+	if (_fd_controller->CheckIfFDReady(client_socket, IIOController::READ))
 	{
 		if (RecvData(client_socket, &request, &request_size) == FAILURE)
 		{	
@@ -180,13 +182,13 @@ bool	Server::TryRecvRequest(Client &client, const fd_set &read_fds)
 	return SUCCESS;
 }
 
-bool	Server::TrySendResponse(Client &client, const fd_set &write_fds)
+bool	Server::TrySendResponse(Client &client)
 {
 	int		client_socket;
 	int		bytes;
 	
 	client_socket = client.getSocket();
-	if (FD_ISSET(client_socket, &write_fds))
+	if (_fd_controller->CheckIfFDReady(client_socket, IIOController::WRITE))
 	{
 		if ((bytes = SendData(client_socket, client.getResponse().c_str(),\
 			client.getResponse().size(), client.getAlreadySendBytes())) == -1)

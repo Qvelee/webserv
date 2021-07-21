@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/07/16 14:00:27 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/21 19:17:37 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/21 20:24:54 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,50 +37,34 @@ bool		WebServer::Setup(const config::WebserverConf &config)
 		
 		const std::map<std::string, config::tServer> server_conf = \
 			config.getServerMap().at((*it).first);
-		if (server->Setup((*it).first, (*it).second, server_conf) == FAILURE)
+		if (server->Setup((*it).first, (*it).second, server_conf, \
+			&_fd_controller) == FAILURE)
 			return FAILURE;
 		_servers.push_back(server);
 	}
 	return SUCCESS;
 }
 
-bool		WebServer::Connection()
+bool		WebServer::Connection(void)
 {
-	fd_set	read_fds;
-	fd_set	write_fds;
-	int		readyFds;
-	int		maxFd;
-
-	if ((maxFd = InitFdSets(read_fds, write_fds)) == -1)
-		return Error("there is no sockets to treat");
-	if ((readyFds = select(maxFd + 1, &read_fds, &write_fds, NULL, NULL)) == -1)
+	InitFdSets();
+	if (_fd_controller.Wait() == FAILURE)
 		return Error("select");
 	for (std::vector<Server*>::iterator it = _servers.begin();\
 		it < _servers.end(); it++)
-		(*it)->HandleClients(read_fds, write_fds);
+		(*it)->HandleClients();
 	return SUCCESS;
 }
 
-int			WebServer::InitFdSets(fd_set &read_fds, fd_set &write_fds)
+void		WebServer::InitFdSets(void)
 {
-	int		maxFd = -1;
-	int		temp;
-
-	FD_ZERO(&read_fds);
-	FD_ZERO(&write_fds);
+	_fd_controller.Clear();
 	for (std::vector<Server*>::iterator it = _servers.begin();\
 		it < _servers.end(); it++)
-	{
-		FD_SET((*it)->getSocket(), &read_fds);
-		maxFd = (*it)->getSocket() > maxFd ? (*it)->getSocket() : maxFd;
-	}
+		_fd_controller.AddFDToWatch((*it)->getSocket(), SelectController::READ);
 	for (std::vector<Server*>::iterator it = _servers.begin();\
 		it < _servers.end(); it++)
-	{
-		temp = (*it)->AddClientsSockets(read_fds, write_fds);
-		maxFd = temp > maxFd ? temp : maxFd;
-	}
-	return maxFd;
+		(*it)->AddClientsSockets();
 }
 
 bool	WebServer::Error(const std::string error) const
