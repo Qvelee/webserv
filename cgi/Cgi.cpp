@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/07/21 12:35:15 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/21 18:01:39 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/21 19:12:04 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -88,7 +88,7 @@ bool	Cgi::Start(void)
 		return FAILURE;
 	if (dup2(_fd_cgi_input[0], STDIN_FILENO) == -1)
 		return Error("can't dup2() fds");
-	if (dup2(_fd_cgi_input[1], STDOUT_FILENO) == -1)
+	if (dup2(_fd_cgi_output[1], STDOUT_FILENO) == -1)
 		return Error("can't dup2() fds");
 	if (ExecCgi())
 		return FAILURE;
@@ -120,16 +120,11 @@ bool	Cgi::ExecCgi(void)
 		case -1:
 			return Error("can't create new process");
 		case 0:
-			RestoreStdIO();
 			execve(_cgi_script, _script_arguments, _cgi_variables);
 			exit(errno);
 		default:
 			RestoreStdIO();
-			write(_fd_cgi_input[1], "There is not much i can send to you", 37);
-			char	buffer[65536];
-
-			read(_fd_cgi_output[0], buffer, 65536);
-			std::cout << buffer;
+			// write(_fd_cgi_input[1], )
 			// write data to _fd_sgi_input[1];
 			// read data from _fd_sgi_output[0];
 			break;
