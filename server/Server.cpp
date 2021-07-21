@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/06 12:56:02 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/21 21:56:24 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/21 22:13:15 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -167,6 +167,7 @@ bool	Server::TryRecvRequest(Client &client)
 		{	
 			close(client_socket);
 			delete &client;
+			delete[] request;
 			return FAILURE;
 		}
 		if (client.CreateResponse(request, request_size, _config) == SUCCESS)
