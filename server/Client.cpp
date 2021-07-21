@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/13 14:03:29 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/21 16:01:14 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/21 17:58:49 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -66,13 +66,16 @@ bool	Client::CreateResponse(const char *request, int requset_size,\
 		_response_string.clear();
 		_request_string.clear();
 		// CGI object creating and call
-		if (_request.serv_config.is_cgi)
+		if (true)//_request.serv_config.is_cgi)
 		{
 			_request.serv_config.cgi.insert(std::make_pair("PATH_TRANSLATED",\
-				"/home/guplee/42/webserv/cgi-bin/cgitest.cpp"));
+				"/home/guplee/42/webserv/cgi-bin/cpptest"));
 			_cgi = new Cgi(_request);
 			if (_cgi->Start() == FAILURE)
+			{
+				delete _cgi;
 				return FAILURE;
+			}
 		}
 		http::get_response(_request, _response);
 		if (_response.code == http::StatusCreated) {
