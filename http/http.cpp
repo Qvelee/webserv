@@ -383,6 +383,29 @@ bool check_config(Request &req) {
 	}
 	return false;
   }
+  if (req.serv_config.is_cgi) {
+    // auth - не делаем
+	std::stringstream ss;
+	ss << req.content_length;
+	req.serv_config.cgi["CONTENT_LENGTH"] = ss.str();
+	req.serv_config.cgi["CONTENT_TYPE"] = req.metadata.media_type_.type + "/" +
+		req.metadata.media_type_.subtype;
+	req.serv_config.cgi["GATEWAY_INTERFACE"] = "cgi/1.1";
+	// http_accept могу достать
+	// user_Agent могу достать
+	// path info Тоня
+	// path translated Тоня
+	// query string Тоня
+	// remote addr Саша
+	// remote host Тоня
+	// remote ident не делаем
+	req.serv_config.cgi["REQUEST_METHOD"] = methodToString(req.method);
+	//scripc name Тоня
+	// SERVER_NAME не делаем
+	//SERVER_PORT Саша
+	req.serv_config.cgi["SERVER_PROTOCOL"] = "HTTP/1.1";
+	//SERVER_SOFTWARE не делаем
+  }
   return true;
 }
 
