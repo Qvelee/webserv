@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/06 12:56:02 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/21 20:55:57 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/21 21:56:24 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -173,7 +173,7 @@ bool	Server::TryRecvRequest(Client &client)
 			client.setState(Client::State::FINISHEDRECV);
 		else
 			client.setState(Client::State::RECVING);
-		delete request;
+		delete[] request;
 	}
 	return SUCCESS;
 }
