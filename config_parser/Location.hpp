@@ -17,7 +17,6 @@
 #include <map>
 #include <list>
 #include <vector>
-#include <array>
 #include <iostream>
 
 namespace config{
@@ -38,17 +37,14 @@ class Location{
 		string				locationMask;
 		string				root;///root
 		string				alias;
-		bool	autoindex;//0
+		bool				autoindex;//0
 		map<string, int>	accepted_methods;//map->set
-		string route_for_uploaded_files;
-		int redirection_status_code;//
-		string redirection_url;
-
-		string file_request_if_dir;//default
-
+		string 				route_for_uploaded_files;
+		int 				redirection_status_code;//
+		string 				redirection_url;
+		string 				file_request_if_dir;//default
+		string				filename_cgi;
 		
-		
-
 		void	fillAll(list<string>::iterator &itList, std::list<std::string> tokenList);
 		void	setAutoindex(list<string>::iterator &itList, std::list<std::string> tokenList);
 		void	setRoot(list<string>::iterator &itList, std::list<std::string> tokenList);
@@ -57,6 +53,7 @@ class Location{
 		void	setRootUploadedFiles(list<string>::iterator &itList, std::list<std::string> tokenList);
 		void	setRedirection(list<string>::iterator &itList, std::list<std::string> tokenList);
 		void	setIndex(list<string>::iterator &itList, std::list<std::string> tokenList);
+		void	setFileNameCGI(list<string>::iterator &itList, std::list<std::string> tokenList);
 };
 }
 #endif

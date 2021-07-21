@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/04/18 23:24:54 by bbenny            #+#    #+#             */
-/*   Updated: 2021/07/16 15:43:59 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/15 13:25:50 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,7 +17,6 @@
 #include <map>
 #include <list>
 #include <vector>
-#include <array>
 #include <iostream>
 #include "Location.hpp"
 #include <set>
@@ -25,17 +24,6 @@
 
 
 namespace config{
-/*namespace http{
-	namespace url{
-struct URL {
-  std::string scheme;
-  std::string userinfo;
-  std::string host;
-  std::string path;//!
-  std::string raw_path;
-  std::string raw_query;
-};
-}}*/
 
 using std::map;
 using std::string;
@@ -44,35 +32,32 @@ using std::list;
 using std::set;
 using std::make_pair;
 
-
 typedef struct sServerInformation{
-	//int port;
-	//string ip;
-	//string serverName;
-	map<int, string> error_pages;//0 default
-	size_t limit_size;//-1?64
-	bool	autoindex;//0
-	string file_request_if_dir;//default
-	int redirection_status_code;//
-	string redirection_url;//
-	string name_file;//url_after_alias!
+
+	map<int, string>	error_pages;
+	size_t				limit_size;
+	bool				autoindex;//0
+	string				file_request_if_dir;//default
+	int					redirection_status_code;
+	string				redirection_url;
+	string				name_file;//url_after_alias!
 	map<string, int>	accepted_methods;//map->set
-	string route_for_uploaded_files;//where 
-	//cgi struct
-
-
+	string				route_for_uploaded_files;//where
+	bool				is_cgi;
+	map<string, string> cgi;
 }tServerInformation;
 
 typedef struct sLocation{
-	map<int, string> error_pages;//0 default
-	size_t limit_size;//-1?64
-	bool	autoindex;//0
-	string file_request_if_dir;//default
-	int redirection_status_code;//
-	string redirection_url;//
-	string name_file;//url_after_alias!
-	map<string, int>	accepted_methods;//map->set
-	string route_for_uploaded_files;
+	map<int, string>	error_pages;
+	size_t				limit_size;//100000
+	bool				autoindex;//0
+	string				file_request_if_dir;//default
+	int					redirection_status_code;
+	string				redirection_url;//default
+	string				name_file;//url_path_after_alias!
+	map<string, int>	accepted_methods;//map->set?
+	string				route_for_uploaded_files;
+	string				filename_cgi;
 }tLocation;
 
 typedef struct	sServer{
@@ -87,8 +72,6 @@ typedef struct	sServer{
 
 
 class WebserverConf{
-	//
-	//using std::string;
 	private:
 	
 		WebserverConf(WebserverConf const &copy);
@@ -99,35 +82,30 @@ class WebserverConf{
 		void	allLinesToToken();
 		void	checkToken();
 		void	tokenToServerMap();
-		void	fillOneServer(std::list<std::string>::iterator	itList);
-		void	fillMapServer(tServer &server, std::map<int, std::string> &map_ip_port);
-		void	setListen(std::list<std::string>::iterator &itList, tServer	&server, std::map<int, std::string> &map_ip_port);
-		void	setServer_name(std::list<std::string>::iterator &itList, tServer &server, std::map<int, std::string> &map_ip_port);
-		void	setError_page(std::list<std::string>::iterator &itList, tServer	&server, std::map<int, std::string>  &map_ip_port);
-		void	setLocation(std::list<std::string>::iterator &itList, tServer	&server, std::map<int, std::string> &map_ip_port);
-		void	setClient_max_body_size(std::list<std::string>::iterator &itList, tServer&server, std::map<int, std::string> &map_ip_port);
-		//std::vector<tServer> serverVector;//
-		//map<int, map<string, map<string, tServer *> > > serverMap;
+		void	fillOneServer(list<string>::iterator	itList);
+		void	fillMapServer(tServer &server, map<int, string> &map_ip_port);
+		void	setListen(list<string>::iterator &itList, tServer	&server, map<int, string> &map_ip_port);
+		void	setServer_name(list<string>::iterator &itList, tServer &server, map<int, string> &map_ip_port);
+		void	setError_page(list<string>::iterator &itList, tServer	&server, map<int, string>  &map_ip_port);
+		void	setLocation(list<string>::iterator &itList, tServer	&server, map<int, string> &map_ip_port);
+		void	setClient_max_body_size(list<string>::iterator &itList, tServer&server, map<int, string> &map_ip_port);
+
 		map<int, map<string, tServer > > serverMap;//getter нужен
-		//set<tServer *> pointerToServerSet;
-		std::list<std::string> fileLineToList;
-		std::list<std::string> tokenList;//separate ' ' or ';' or '{' or '}'
-		std::map<int, std::string> map_global_port_ip;
-
-		void printServerMap();
-
+		list<string> fileLineToList;
+		list<string> tokenList;//separate ' ' or ';' or '{' or '}'
+		map<int, string> map_global_port_ip;
 
 	public:
 		
 		map<int, map<string, tServer > >  const &getServerMap() const;//getter
-		std::map<int, std::string> const &getPorts() const;
-		
+		map<int, string >   const &getPorts() const ;//getter
 		WebserverConf(char const *name = "webserver.conf");
 		virtual ~WebserverConf();
-		//tServerInformation chooseServer(http::url::URL url, map<string, tServer >  tmp) const;//вынести из класса
 
 };
-tServerInformation chooseServer(http::url::URL url, map<string, tServer >  tmp);//вынести из класса
+
+tServerInformation chooseServer(http::url::URL url, map<string, tServer >  tmp);
+
 }
 
 #endif

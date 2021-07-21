@@ -513,16 +513,20 @@ void method_post(const Request &req, Response &resp) {
   }
   if (S_ISDIR(buf.st_mode)) {
 	if (!req.serv_config.route_for_uploaded_files.empty()) {
-	  if (!write_in_file(get_random_filename(req.serv_config.route_for_uploaded_files),
-						 req.body, resp)) {
+	  std::string tmp_file_name = get_random_filename(req.serv_config
+	  	.route_for_uploaded_files);
+	  if (!write_in_file(tmp_file_name, req.body, resp)) {
 		return;
 	  }
 	  resp.code = StatusCreated;
+	  resp.header["Location"] = tmp_file_name;
 	} else {
-	  if (!write_in_file(get_random_filename(req.serv_config.name_file), req.body, resp)) {
+	  std::string tmp_file_name = get_random_filename(req.serv_config.name_file);
+	  if (!write_in_file(tmp_file_name, req.body, resp)) {
 		return;
 	  }
 	  resp.code = StatusCreated;
+	  resp.header["Location"] = tmp_file_name;
 	}
   } else {
 	if (!write_in_file(req.serv_config.name_file, req.body, resp)) {

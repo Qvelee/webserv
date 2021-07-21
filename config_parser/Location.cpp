@@ -18,15 +18,9 @@ namespace config{
 Location::Location()
 {
 	//autoindex = "off";
-	accepted_methods.insert(std::make_pair("GET", 0));//!
-	//method.insert(std::make_pair("HEAD", 0));
-	accepted_methods.insert(std::make_pair("POST", 0));//!
-	//method.insert(std::make_pair("PUT", 0));
-	accepted_methods.insert(std::make_pair("DELETE", 0));//!
-	//method.insert(std::make_pair("CONNECT", 0));
-	///method.insert(std::make_pair("OPTIONS", 0));
-	//method.insert(std::make_pair("TRACE", 0));
-	//method.insert(std::make_pair("PATCH", 0));
+	accepted_methods.insert(std::make_pair("GET", 0));
+	accepted_methods.insert(std::make_pair("POST", 0));
+	accepted_methods.insert(std::make_pair("DELETE", 0));
 }
 Location::~Location()
 {}
@@ -43,12 +37,13 @@ Location &Location::operator=(Location const &eq)
 	redirection_status_code = eq.redirection_status_code;//
 	redirection_url = eq.redirection_url;
 	file_request_if_dir = eq.file_request_if_dir;
+	filename_cgi = eq.filename_cgi;
 
 	return (*this);
 }
 		
 
-void	Location::setRootUploadedFiles(list<string>::iterator &itList, std::list<std::string> tokenList)
+void	Location::setRootUploadedFiles(list<string>::iterator &itList, std::list<std::string>)
 {
 	itList++;
 
@@ -56,25 +51,21 @@ void	Location::setRootUploadedFiles(list<string>::iterator &itList, std::list<st
 	|| (*itList).compare(0, 2, "{") == 0)
 		throw "something wrong after alias";
 	route_for_uploaded_files = *itList;
-	std::cout << "route_for_uploaded_files = " << route_for_uploaded_files << std::endl;
 	itList++;
 	if ((*itList).compare(0, 2, ";") != 0)
 		throw "there is not ; after alias";
 }
 
-void	Location::setIndex(list<string>::iterator &itList, std::list<std::string> tokenList)
+void	Location::setIndex(list<string>::iterator &itList, std::list<std::string>)
 {
 	itList++;
 
 	if ((*itList).empty() || (*itList).compare(0, 2, ";") == 0)
 		throw "something wrong after index";
-	//while (itList != tokenList.end() && (*itList).compare(0, 2, ";") != 0)
-	//{
-		//file_request_if_dir.push_back(*itList);
-		file_request_if_dir = *itList;
-	//	std::cout << "file_request_if_dir = " << *itList << std::endl;
-		itList++;
-	//}
+
+	file_request_if_dir = *itList;
+	itList++;
+
 	if ((*itList).compare(0, 2, ";") != 0)
 		throw "there is not ; after index";
 }
@@ -90,7 +81,6 @@ void	Location::setRedirection(list<string>::iterator &itList, std::list<std::str
 	if (itList != tokenList.end() && *itList != ";")
 	{
 		return_status_code = *itList;
-		std::cout << "return ==== " << *itList << std::endl;
 		while (return_status_code[i])
 		{
 			if (return_status_code[i] < '0' || return_status_code[i] > '9')
@@ -116,6 +106,21 @@ void	Location::setRedirection(list<string>::iterator &itList, std::list<std::str
 
 }
 
+void	Location::setFileNameCGI(list<string>::iterator &itList, std::list<std::string>)
+{
+	itList++;
+
+	if ((*itList).empty() || (*itList).compare(0, 2, ";") == 0)
+		throw "something wrong after cgi_filename";
+
+	filename_cgi = *itList;
+	
+	itList++;
+
+	if ((*itList).compare(0, 2, ";") != 0)
+		throw "there is not ; after cgi_filename";
+}
+
 void	Location::fillAll(list<string>::iterator &itList, list<std::string> tokenList)
 {
 	map<string, void (Location::*)(list<string>::iterator &itList, list<std::string> tokenList)> funMap;
@@ -128,16 +133,15 @@ void	Location::fillAll(list<string>::iterator &itList, list<std::string> tokenLi
 	funMap.insert(std::make_pair("upload_store", &Location::setRootUploadedFiles));
 	funMap.insert(std::make_pair("return", &Location::setRedirection));
 	funMap.insert(std::make_pair("index", &Location::setIndex));
+	funMap.insert(std::make_pair("cgi_filename", &Location::setFileNameCGI));
 
 	itList++;
 
 	locationMask = *itList;
-	//std::cout << "*itList = " << *itList << std::endl;
 	if (locationMask.empty() ||  locationMask == "{" \
 		|| locationMask == "}" || locationMask == ";")
 		throw "location there is not mask location";
 	itList++;
-	std::cout << "locationMask = " << locationMask << std::endl;
 	if ((*itList).empty() || *itList != "{")
 		throw "location there is not {";
 	itList++;
@@ -154,9 +158,8 @@ void	Location::fillAll(list<string>::iterator &itList, list<std::string> tokenLi
 		throw "location there is not }";
 }
 
-void	Location::setAutoindex(list<string>::iterator &itList, list<std::string> tokenList)
+void	Location::setAutoindex(list<string>::iterator &itList, list<std::string>)
 {
-	//itList != tokenList.end()
 	itList++;
 
 	if ((*itList).compare(0, 3, "on") != 0 && (*itList).compare(0, 4, "off"))
@@ -167,7 +170,7 @@ void	Location::setAutoindex(list<string>::iterator &itList, list<std::string> to
 		throw "there is not ; after autoindex";
 }
 
-void	Location::setRoot(list<string>::iterator &itList, list<std::string> tokenList)
+void	Location::setRoot(list<string>::iterator &itList, list<std::string>)
 {
 	itList++;
 
@@ -179,27 +182,23 @@ void	Location::setRoot(list<string>::iterator &itList, list<std::string> tokenLi
 	if ((*itList).compare(0, 2, ";") != 0)
 		throw "there is not ; after root";
 
-	//check root if is directory
 }
 
 
 
-void	Location::setAlias(list<string>::iterator &itList, list<std::string> tokenList)
+void	Location::setAlias(list<string>::iterator &itList, list<std::string>)
 {
-	//itList != tokenList.end()
 	itList++;
 
 	if ((*itList).empty() || (*itList).compare(0, 2, ";") == 0 || (*itList).compare(0, 2, "}") == 0 \
 	|| (*itList).compare(0, 2, "{") == 0)
 		throw "something wrong after alias";
 	alias = *itList;
-	std::cout << "alias = " << alias << std::endl;
 	itList++;
 	if ((*itList).compare(0, 2, ";") != 0)
 		throw "there is not ; after alias";
 
 
-	//check root if is directory
 }
 
 void	Location::setMethod(list<string>::iterator &itList, list<std::string> tokenList)
