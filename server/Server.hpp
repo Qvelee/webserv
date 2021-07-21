@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/06 12:56:25 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/21 20:22:36 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/21 20:55:47 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -52,7 +52,7 @@ class Server
 		bool	Setup(ushort port, const std::string &ip,\
 			const std::map<std::string, config::tServer> &config,\
 			IIOController *fd_controller);
-		int		AddClientsSockets(void);
+		void	AddClientsSockets(void);
 		void	HandleClients(void);
 
 		int		getSocket() const;

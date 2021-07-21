@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/06 12:56:02 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/21 20:24:02 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/21 20:55:57 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -74,11 +74,10 @@ bool	Server::CreateSocket(void)
 
 int		Server::getSocket() const { return _server_socket; }
 
-int		Server::AddClientsSockets(void)
+void	Server::AddClientsSockets(void)
 {
 	Client	*client;
 	int		client_socket;
-	int		maxFd = 0;
 
 	for (std::vector<Client*>::iterator it = _clients.begin();\
 		it < _clients.end(); it++)
@@ -107,10 +106,7 @@ int		Server::AddClientsSockets(void)
 			default:
 				break;
 		}
-		if (client_socket > maxFd)
-			maxFd = client_socket;
 	}
-	return maxFd;
 }
 
 void	Server::HandleClients(void)
