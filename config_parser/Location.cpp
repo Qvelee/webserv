@@ -17,7 +17,6 @@ namespace config{
 
 Location::Location()
 {
-	autoindex = 0;
 	accepted_methods.insert(std::make_pair("GET", 0));
 	accepted_methods.insert(std::make_pair("POST", 0));
 	accepted_methods.insert(std::make_pair("DELETE", 0));
@@ -156,6 +155,7 @@ void	Location::fillAll(list<string>::iterator &itList, list<std::string> tokenLi
 	}
 	if ((*itList).empty() || *itList != "}")
 		throw "location there is not }";
+	itList++;
 }
 
 void	Location::setAutoindex(list<string>::iterator &itList, list<std::string>)
