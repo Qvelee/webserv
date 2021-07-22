@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/06 12:56:25 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/21 11:57:39 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/22 10:36:18 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,7 @@
 # define SERVER_HPP
 
 # include "Client.hpp"
+# include "IIOController.hpp"
 
 # include <iostream>
 # include <string>
@@ -49,9 +50,10 @@ class Server
 		virtual ~Server();
 
 		bool	Setup(ushort port, const std::string &ip,\
-			const std::map<std::string, config::tServer> &config);
-		int		AddClientsSockets(fd_set &read_fds, fd_set &write_fds);
-		void	HandleClients(const fd_set &read_fds, const fd_set &write_fds);
+			const std::map<std::string, config::tServer> &config,\
+			IIOController *fd_controller);
+		void	AddClientsSockets(void);
+		void	HandleClients(void);
 
 		int		getSocket() const;
 	private:
@@ -62,8 +64,8 @@ class Server
 		bool	Error(const std::string error) const;
 		bool	CreateSocket(void);
 		void	AcceptNewClient(void);
-		bool	TryRecvRequest(Client &client, const fd_set &read_fds);
-		bool	TrySendResponse(Client &client, const fd_set &write_fds);
+		bool	TryRecvRequest(Client &client);
+		bool	TrySendResponse(Client &client);
 		bool	RecvData(int socket_ID, char **buffer, int *bytes_recv);
 		int		SendData(int socket_ID, const char *buffer,\
 			int buffer_size, int start_pos) const;
@@ -76,6 +78,7 @@ class Server
 		std::string				_server_ip;
 		t_sockaddr_in			_socket_address; // struct with address info for socket
 		std::vector<Client*>	_clients;
+		IIOController			*_fd_controller;
 
 		const int				_IO_BUFFER_SIZE;
 };

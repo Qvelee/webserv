@@ -504,7 +504,7 @@ namespace config{
 		tServerInformation serverInformation;
 
 		serverInformation.limit_size = 100000;
-		serverInformation.autoindex = true;
+		serverInformation.autoindex = false;
 		serverInformation.redirection_status_code = 0;
 		serverInformation.is_cgi = false;
 

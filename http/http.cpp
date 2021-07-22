@@ -362,7 +362,7 @@ bool check_config(Request &req) {
 	  req.content_length = static_cast<int64_t>(req.serv_config.limit_size);
 	}
   }
-  if (req.serv_config.accepted_methods.count(methodToString(req.method)) == 0) {
+  if (req.serv_config.accepted_methods[methodToString(req.method)] == 0) {
 	req.code = StatusMethodNotAllowed;
 	return false;
   }
@@ -370,24 +370,41 @@ bool check_config(Request &req) {
 	req.code = StatusCode(req.serv_config.redirection_status_code);
 	return false;
   }
+  char cur_dir[256];
+  getcwd(cur_dir, 256);
+  req.current_dir += cur_dir;
+  req.current_dir += "/";
   struct stat buf = {};
-  std::string tmp_name;
-  if (req.serv_config.name_file == "") {
-	char cur_dir[256];
-	getcwd(cur_dir, 256);
-	tmp_name += cur_dir;
-	tmp_name += "/";
-	req.serv_config.name_file = tmp_name;
-  } else {
-    tmp_name = req.serv_config.name_file;
-  }
-  if (stat(tmp_name.c_str(), &buf) == -1) {
+  if (stat(req.serv_config.name_file.c_str(), &buf) == -1 && !req.serv_config.name_file.empty()) {
 	if (errno == ENOENT || errno == EACCES) {
 	  req.code = StatusNotFound;
 	} else {
 	  req.code = StatusInternalServerError;
 	}
 	return false;
+  }
+  if (req.serv_config.is_cgi) {
+    // auth - не делаем
+	std::stringstream ss;
+	ss << req.content_length;
+	req.serv_config.cgi["CONTENT_LENGTH"] = ss.str();
+	req.serv_config.cgi["CONTENT_TYPE"] = req.metadata.media_type_.type + "/" +
+		req.metadata.media_type_.subtype;
+	req.serv_config.cgi["GATEWAY_INTERFACE"] = "cgi/1.1";
+	// http_accept могу достать
+	// user_Agent могу достать
+	// path info Тоня
+	// path translated Тоня
+	// query string Тоня
+	// remote addr Саша
+	// remote host Тоня
+	// remote ident не делаем
+	req.serv_config.cgi["REQUEST_METHOD"] = methodToString(req.method);
+	//scripc name Тоня
+	// SERVER_NAME не делаем
+	//SERVER_PORT Саша
+	req.serv_config.cgi["SERVER_PROTOCOL"] = "HTTP/1.1";
+	//SERVER_SOFTWARE не делаем
   }
   return true;
 }
@@ -437,9 +454,42 @@ bool read_all_file(const std::string &name, Response &resp) {
   }
 }
 
+bool get_files_in_dir(Request const& req, std::string const &file_name, Response &resp) {
+  DIR *dir;
+  struct dirent *ent;
+  if ((dir = opendir(file_name.c_str())) != NULL) {
+	resp.body.append("<h1>Index of " + req.serv_config.name_file);
+	if (req.serv_config.name_file.empty() || *(req.serv_config.name_file.rbegin()) !=
+	'/') {
+	  resp.body.append("/");
+	}
+	resp.body.append("</h1>\n");
+	resp.body.append("<hr>\n<pre>\n");
+	while ((ent = readdir(dir)) != NULL) {
+	  struct stat buf = {};
+	  stat(ent->d_name, &buf);
+	  std::string name = ent->d_name;
+	  if (S_ISDIR(buf.st_mode)) {
+		name += "/";
+	  }
+	  resp.body.append("<a href=\"");
+	  resp.body.append(name);
+	  resp.body.append("\">");
+	  resp.body.append(name);
+	  resp.body.append("</a>\n");
+	}
+	closedir(dir);
+  } else
+	return false;
+  return true;
+}
+
 void method_get(const Request &req, Response &resp) {
   struct stat buf = {};
-  if (stat(req.serv_config.name_file.c_str(), &buf) == -1) {
+  std::string file_name = req.serv_config.name_file;
+  if (file_name.empty())
+    file_name = req.current_dir;
+  if (stat(file_name.c_str(), &buf) == -1) {
 	if (errno == ENOENT || errno == EACCES) {
 	  resp.code = StatusNotFound;
 	} else {
@@ -448,33 +498,18 @@ void method_get(const Request &req, Response &resp) {
 	return;
   }
   if (S_ISDIR(buf.st_mode)) {
-	if (req.serv_config.autoindex) {
-	  DIR *dir;
-	  struct dirent *ent;
-	  if ((dir = opendir(req.serv_config.name_file.c_str())) != NULL) {
-		resp.body.append("<h1>Index of " + req.serv_config.name_file + "/</h1>\n");
-		resp.body.append("<hr>\n<pre>\n");
-		while ((ent = readdir(dir)) != NULL) {
-		  std::string name = ent->d_name;
-		  name = req.serv_config.name_file + name;
-		  if (S_ISDIR(buf.st_mode)) {
-			name += "/";
-		  }
-		  resp.body.append("<a href=\"");
-		  resp.body.append(name);
-		  resp.body.append("\">");
-		  resp.body.append(name);
-		  resp.body.append("</a>\n");
-		}
-		closedir(dir);
-	  } else {
+	if (!req.serv_config.file_request_if_dir.empty()) {
+	  if (!read_all_file(req.serv_config.file_request_if_dir, resp)) {
+		return;
+	  }
+	} else if (req.serv_config.autoindex) {
+	  if (!get_files_in_dir(req, file_name, resp)) {
 		resp.code = StatusInternalServerError;
 		return;
 	  }
 	} else {
-	  if (!read_all_file(req.serv_config.file_request_if_dir, resp)) {
-		return;
-	  }
+	  resp.code = StatusForbidden;
+	  return;
 	}
   } else {
 	if (!read_all_file(req.serv_config.name_file, resp)) {
@@ -503,7 +538,10 @@ bool write_in_file(const std::string &name, std::string const &str, Response &re
 
 void method_post(const Request &req, Response &resp) {
   struct stat buf = {};
-  if (stat(req.serv_config.name_file.c_str(), &buf) == -1) {
+  std::string file_name = req.serv_config.name_file;
+  if (file_name.empty())
+	file_name = req.current_dir;
+  if (stat(file_name.c_str(), &buf) == -1) {
 	if (errno == ENOENT || errno == EACCES) {
 	  resp.code = StatusNotFound;
 	} else {

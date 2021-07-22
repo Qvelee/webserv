@@ -78,10 +78,6 @@ bool	Client::CreateResponse(const char *request, int requset_size,\
 		// 	}
 		// }
 		http::get_response(_request, _response);
-		if (_response.code == http::StatusCreated) {
-		  _response.code = http::StatusSeeOther;
-		  _response.status = "See Other";
-		}
 		http::ResponseToString(_response, _response_string);
 		_request = http::Request();
 		_response = http::Response();
