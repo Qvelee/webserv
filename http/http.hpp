@@ -95,6 +95,7 @@ struct Request {
   representation_metadata metadata;
   StatusCode code;
   config::tServerInformation serv_config;
+  std::string current_dir;
 };
 
 typedef void (*field_handlers)(Request &req, std::string const &field, StatusCode &code);
