@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/06 12:56:02 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/21 22:13:15 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/22 12:04:47 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -103,6 +103,12 @@ void	Server::AddClientsSockets(void)
 				_fd_controller->AddFDToWatch(client_socket, IIOController::READ);
 				client->setState(Client::State::SLEEP);
 				break;
+			case Client::State::CGISENDING:
+				client->CgiAddFd(IIOController::IOMode::WRITE);
+				break;
+			case Client::State::CGIRECVING:
+				client->CgiAddFd(IIOController::IOMode::READ);
+				break;
 			default:
 				break;
 		}
@@ -133,6 +139,12 @@ void	Server::HandleClients(void)
 			case Client::State::SENDING:
 				status = TrySendResponse(*client);
 				break;
+			case Client::State::CGISENDING:
+				client->CgiSend();
+				break;
+			case Client::State::CGIRECVING:
+				client->CgiRecv();
+				break;
 			default:
 				break;
 		}
@@ -148,8 +160,8 @@ void	Server::AcceptNewClient(void)
 
 	newSocket = accept(_server_socket, NULL, NULL);	
 	if (newSocket == -1 && errno != EAGAIN)
-		Error("cannot accept incoming connetion");
-	newClient = new Client;
+		Error("can't accept incoming connetion");
+	newClient = new Client(_fd_controller);
 	newClient->setSocket(newSocket);
 	_clients.push_back(newClient);
 }
@@ -170,10 +182,11 @@ bool	Server::TryRecvRequest(Client &client)
 			delete[] request;
 			return FAILURE;
 		}
-		if (client.CreateResponse(request, request_size, _config) == SUCCESS)
-			client.setState(Client::State::FINISHEDRECV);
-		else
-			client.setState(Client::State::RECVING);
+		// if (client.CreateResponse(request, request_size, _config) == SUCCESS)
+		// 	client.setState(Client::State::FINISHEDRECV);
+		// else
+		// 	client.setState(Client::State::RECVING);
+		client.CreateResponse(request, request_size, _config);
 		delete[] request;
 	}
 	return SUCCESS;

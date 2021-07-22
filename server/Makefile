@@ -6,7 +6,7 @@
 #    By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2021/05/14 14:50:43 by nelisabe          #+#    #+#              #
-#    Updated: 2021/07/22 10:36:27 by nelisabe         ###   ########.fr        #
+#    Updated: 2021/07/22 10:38:04 by nelisabe         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -64,7 +64,6 @@ $(addprefix $(SERV_OBJ_DIR), %.o): %.cpp
 	@$(COMP) -c $(FLAGS) $(INCLUDES) $< -o $@ -MMD
 
 clean:
-	@echo -e "$(GRAY)Deleting...$(RESET)"
 	@rm -rf temp
 	@echo -e "$(RED)$(BOLD)Server object files deleted!$(RESET)$(RED)$(RESET)"
 

@@ -6,7 +6,7 @@
 #    By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2021/07/21 16:20:10 by nelisabe          #+#    #+#              #
-#    Updated: 2021/07/21 16:24:45 by nelisabe         ###   ########.fr        #
+#    Updated: 2021/07/22 10:37:40 by nelisabe         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -61,7 +61,6 @@ $(addprefix $(CGI_OBJ_DIR), %.o): %.cpp
 	@$(COMP) -c $(FLAGS) $(INCLUDES) $< -o $@ -MMD
 
 clean:
-	@echo -e "$(GRAY)Deleting...$(RESET)"
 	@rm -rf temp
 	@echo -e "$(RED)$(BOLD)Cgi object files deleted!$(RESET)$(RED)$(RESET)"
 

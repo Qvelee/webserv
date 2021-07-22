@@ -6,14 +6,16 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/07/21 12:35:15 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/21 19:12:04 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/22 16:05:14 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Cgi.hpp"
 
-Cgi::Cgi(const http::Request &request) : _fd_stdin(-1), _fd_stdout(-1),\
-	_cgi_script(NULL), _script_arguments(NULL), _cgi_variables(NULL)
+Cgi::Cgi(const http::Request &request) :\
+	_fd_stdin(-1), _fd_stdout(-1), _cgi_script(NULL),\
+	_script_arguments(NULL), _cgi_variables(NULL), _already_send_bytes(0),
+	_IO_BUFFER(65536)
 {
 	_fd_cgi_input[0] = -1;
 	_fd_cgi_input[1] = -1;
@@ -25,6 +27,7 @@ Cgi::Cgi(const http::Request &request) : _fd_stdin(-1), _fd_stdout(-1),\
 	_cgi_script = (*(request.serv_config.cgi.find("PATH_TRANSLATED"))).second.c_str();
 	
 	GetVariables(request);
+	_body = request.body;
 }
 
 Cgi::Cgi(const Cgi &) { }
@@ -123,10 +126,9 @@ bool	Cgi::ExecCgi(void)
 			execve(_cgi_script, _script_arguments, _cgi_variables);
 			exit(errno);
 		default:
+			close(_fd_cgi_output[1]);
+			close(_fd_cgi_input[0]);
 			RestoreStdIO();
-			// write(_fd_cgi_input[1], )
-			// write data to _fd_sgi_input[1];
-			// read data from _fd_sgi_output[0];
 			break;
 	}
 	return SUCCESS;
@@ -147,6 +149,55 @@ void	Cgi::RestoreStdIO(void)
 			Error("can't restore standart output");
 		close(_fd_stdout);
 		_fd_stdout = -1;
+	}
+}
+
+bool	Cgi::AddCgiFdToWatch(IIOController *fd_controller, IIOController::IOMode mode) const
+{
+	if (_fd_cgi_input[1] == -1 || _fd_cgi_output[0] == -1)
+		return Error("start cgi process first");
+	if (mode == IIOController::IOMode::WRITE)
+		fd_controller->AddFDToWatch(_fd_cgi_input[1], IIOController::IOMode::WRITE);
+	else
+		fd_controller->AddFDToWatch(_fd_cgi_output[0], IIOController::IOMode::READ);
+	return SUCCESS;
+}
+
+Cgi::Status	Cgi::Write(IIOController *fd_controller)
+{
+	if (fd_controller->CheckIfFDReady(_fd_cgi_input[1], IIOController::IOMode::WRITE))
+	{
+		int			bytes;
+		const char	*buffer = _body.c_str();
+		
+		bytes = write(_fd_cgi_input[1], &buffer[_already_send_bytes],\
+			_body.size() - _already_send_bytes);
+		if (bytes == -1)
+			return Status::ERROR;
+		_already_send_bytes += bytes;
+		if (_already_send_bytes == _body.size())
+		{
+			close(_fd_cgi_input[1]);
+			_fd_cgi_input[1] = -1;
+			return Status::FINISHED;
+		}
+	}
+	return Status::PROCESSING;
+}
+
+Cgi::Status	Cgi::Read(IIOController *fd_controller)
+{
+	if (fd_controller->CheckIfFDReady(_fd_cgi_output[0], IIOController::IOMode::READ))
+	{
+		int		bytes;
+		char	buffer[_IO_BUFFER];
+
+		if ((bytes = read(_fd_cgi_output[0], buffer, _IO_BUFFER)) == -1)
+			return Status::ERROR;
+		else if (bytes == 0)
+			return Status::FINISHED;
+		_cgi_response.append(buffer, bytes);
+		return Status::PROCESSING;
 	}
 }
 

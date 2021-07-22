@@ -6,15 +6,18 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/13 14:03:29 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/21 19:12:24 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/22 14:32:57 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 # include "Client.hpp"
 
-Client::Client(void) : \
+Client::Client(IIOController *fd_controller) : \
 	_client_socket(-1), _recv_status(EMPTY), _connection_state(SLEEP),\
-	_bytes_already_send(0) { }
+	_bytes_already_send(0), _cgi(NULL)
+{
+	_fd_controller = fd_controller;
+}
 
 Client::Client(Client const &) {}
 
@@ -36,7 +39,7 @@ int		Client::getAlreadySendBytes() const { return _bytes_already_send; }
 
 void	Client::setAlreadySendBytes(int bytes) { _bytes_already_send = bytes; }
 
-bool	Client::CreateResponse(const char *request, int requset_size,\
+void	Client::CreateResponse(const char *request, int requset_size,\
 	const std::map<std::string, config::tServer> &config)
 {
 	if (_recv_status == EMPTY || _recv_status == NOTFINHEADER)
@@ -65,24 +68,69 @@ bool	Client::CreateResponse(const char *request, int requset_size,\
 	{
 		_response_string.clear();
 		_request_string.clear();
-		// CGI object creating and call
-		// if (true)//_request.serv_config.is_cgi)
-		// {
-		// 	_request.serv_config.cgi.insert(std::make_pair("PATH_TRANSLATED",\
-		// 		"/home/guplee/42/webserv/cgi-bin/cpptest"));
-		// 	_cgi = new Cgi(_request);
-		// 	if (_cgi->Start() == FAILURE)
-		// 	{
-		// 		delete _cgi;
-		// 		return FAILURE;
-		// 	}
-		// }
+		if (true)//_request.serv_config.is_cgi)
+		{
+			if (InitCgi() == SUCCESS)
+			{
+				_connection_state = CGISENDING;
+				return ;
+			}
+		}
 		http::get_response(_request, _response);
 		http::ResponseToString(_response, _response_string);
 		_request = http::Request();
 		_response = http::Response();
 		_recv_status = EMPTY;
-		return SUCCESS;	
+		_connection_state = FINISHEDRECV;
+		return ;
 	}
-	return FAILURE;
+	_connection_state = RECVING;
+}
+
+bool	Client::InitCgi(void)
+{
+	_request.serv_config.cgi.insert(std::make_pair("PATH_TRANSLATED",\
+		"/home/guplee/42/webserv/cgi-bin/cpptest"));
+	_cgi = new Cgi(_request);
+	if (_cgi->Start() == FAILURE)
+	{
+		delete _cgi;
+		return FAILURE;
+	}
+	return SUCCESS;
+}
+
+void	Client::CgiAddFd(IIOController::IOMode mode) const
+{
+	_cgi->AddCgiFdToWatch(_fd_controller, mode);
+}
+
+void	Client::CgiSend(void)
+{
+	switch (_cgi->Write(_fd_controller))
+	{
+		case Cgi::Status::FINISHED:
+			_connection_state = CGIRECVING;
+			break;
+		case Cgi::Status::ERROR:
+			// DO SOMETHING
+			break;
+		default:
+			break;
+	}
+}
+
+void	Client::CgiRecv(void)
+{
+	switch (_cgi->Read(_fd_controller))
+	{
+		case Cgi::Status::FINISHED:
+			_connection_state = SENDING;
+			break;
+		case Cgi::Status::ERROR:
+			//DO SOMETHING;
+			break;
+		default:
+			break;
+	}
 }

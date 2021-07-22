@@ -6,7 +6,7 @@
 #    By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2021/05/14 16:22:01 by nelisabe          #+#    #+#              #
-#    Updated: 2021/07/22 10:36:05 by nelisabe         ###   ########.fr        #
+#    Updated: 2021/07/22 10:38:59 by nelisabe         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -18,6 +18,7 @@ BOLD =			\033[1m
 RED =			\033[31m
 GREEN =			\033[32m
 YELLOW =		\033[33m
+GRAY =			\033[2m
 ##############
 
 NAME =			webserv
@@ -73,6 +74,7 @@ $(addprefix $(OBJ_DIR), %.o): %.cpp
 	@$(COMP) -c $(FLAGS) $(INCLUDES) $< -o $@ -MMD
 
 clean:
+	@echo -e "$(GRAY)Deleting...$(RESET)"
 	@rm -rf temp
 	@$(MAKE) clean -C ./server/
 	@$(MAKE) clean -C ./http/
