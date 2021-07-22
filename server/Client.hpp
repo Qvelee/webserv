@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/13 13:58:58 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/20 21:08:02 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/22 19:49:44 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,9 +14,7 @@
 # define CLIENT_HPP
 
 # include "http.hpp"
-
-# define SUCCESS false
-# define FAILURE true
+# include "Errors.hpp"
 
 class Client
 {

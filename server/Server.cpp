@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/06 12:56:02 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/21 22:13:15 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/22 21:43:16 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,16 +36,16 @@ bool	Server::Setup(ushort port, const std::string &ip,\
 	_fd_controller = fd_controller;
 	_max_connections = MAX_CONNECTIONS;
 	if ((_server_port = port) < 1024)
-		return Error("Set port is forbidden");
+		return Error("port {-} is forbidden", port, false);
 	if (CreateSocket() == FAILURE)
 		return FAILURE;
 	if (bind(_server_socket, reinterpret_cast<t_sockaddr*>(&_socket_address), \
 		sizeof(_socket_address)))
-		return Error("cannot bind socket to port");
+		return Error("can't bind socket to port {-}", _server_port, true);
 	if (listen(_server_socket, _max_connections))
-		return Error("cannot listen port");
+		return Error("can't listen port {-}", _server_port, true);
 	std::cout << "Server setup with port " << _server_port <<\
-		" finished successfully." << std::endl;
+		" and IP " << _server_ip << " finished successfully." << std::endl;
 	return SUCCESS;
 }
 
@@ -67,7 +67,7 @@ bool	Server::CreateSocket(void)
 	_socket_address.sin_family = AF_INET;
 	if ((_socket_address.sin_addr.s_addr = \
 		inet_addr(_server_ip.c_str())) == INADDR_NONE)
-		return Error("Non valid IP address");
+		return Error("IP address {-} is not valid", _server_ip, false);
 	_socket_address.sin_port = htons(_server_port);
 	return SUCCESS;
 }
@@ -148,7 +148,7 @@ void	Server::AcceptNewClient(void)
 
 	newSocket = accept(_server_socket, NULL, NULL);	
 	if (newSocket == -1 && errno != EAGAIN)
-		Error("cannot accept incoming connetion");
+		Error("can't accept incoming connetion");
 	newClient = new Client;
 	newClient->setSocket(newSocket);
 	_clients.push_back(newClient);
@@ -223,14 +223,8 @@ int		Server::SendData(int socket, const char *buffer,\
 	if ((bytes = send(socket, &buffer[start_pos],\
 		buffer_size - start_pos, MSG_DONTWAIT)) == -1)
 	{
-		std::cout << "Error: cannot send data" << std::endl;
+		Error("can't send data", false);
 		return -1;
 	}
 	return bytes;
-}
-
-bool	Server::Error(const std::string error) const
-{
-	std::cerr << "Error: " + error + ": " << strerror(errno) << std::endl;
-	return FAILURE;
 }

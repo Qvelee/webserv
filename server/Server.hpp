@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/06 12:56:25 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/21 20:55:47 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/22 19:54:51 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,9 +35,6 @@
 # define MAX_CONNECTIONS 5
 // ---------------------
 
-# define SUCCESS false
-# define FAILURE true
-
 typedef	struct sockaddr_in		t_sockaddr_in;
 typedef	struct sockaddr			t_sockaddr;
 typedef struct addrinfo 		t_addrinfo;
@@ -61,7 +58,6 @@ class Server
 
 		Server &operator=(const Server &);
 
-		bool	Error(const std::string error) const;
 		bool	CreateSocket(void);
 		void	AcceptNewClient(void);
 		bool	TryRecvRequest(Client &client);

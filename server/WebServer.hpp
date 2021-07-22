@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/07/16 14:00:25 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/21 20:12:12 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/22 19:54:48 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,7 +29,6 @@ class WebServer
 		
 		WebServer	&operator=(const WebServer &);
 
-		bool	Error(const std::string error) const;
 		void	InitFdSets(void);
 		bool	CheckIfSocketReady(const fd_set &set, int socket) const;
 
