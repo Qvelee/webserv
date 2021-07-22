@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/07/22 19:30:32 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/22 21:43:38 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/22 21:59:59 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,6 +27,7 @@ bool	Error(const std::string &error, T parameter,\
 			bool print_errno)
 {
 	size_t	replacement_pos;
+
 	std::cerr << "Error: ";
 	if ((replacement_pos = error.find("{-}", 0)) != std::string::npos)
 	{
