@@ -550,10 +550,16 @@ namespace config{
 						if (itLoc->locationMask == path_for_alias)
 						{
 							serverInformation.name_file = url.path;
-							serverInformation.name_file.erase(0, path_for_alias.length());
+							if (itLoc->alias != "")
+							{
+								serverInformation.name_file.erase(0, path_for_alias.length());
 						
 							//add
-							tmp_file_name = itLoc->alias + serverInformation.name_file;
+
+								tmp_file_name = itLoc->alias + serverInformation.name_file;
+							}
+							else
+								tmp_file_name = url.path;
 							if (tmp_file_name.size() > 1 && tmp_file_name[0] == '/')
 								tmp_file_name.erase(0,1);
 							serverInformation.name_file = tmp_file_name;
