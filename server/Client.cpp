@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/13 14:03:29 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/23 12:28:04 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/23 18:07:13 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -87,7 +87,11 @@ void	Client::CreateResponse(const char *request, int requset_size,\
 
 bool	Client::InitCgi(void)
 {
+	_request.serv_config.cgi.insert(std::make_pair("PATH_INFO", "/cgi-test.txt"));
 	_request.serv_config.cgi.insert(std::make_pair("PATH_TRANSLATED",\
+		"/home/guplee/42/webserv/cgi-test.txt"));
+	_request.serv_config.cgi.insert(std::make_pair("SCRIPT_NAME", "cpptest"));
+	_request.serv_config.cgi.insert(std::make_pair("SCRIPT_FILENAME",\
 		"/home/guplee/42/webserv/cgi-bin/cpptest"));
 	_cgi = new Cgi(_request);
 	if (_cgi->Start() == FAILURE)

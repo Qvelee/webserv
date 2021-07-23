@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/07/21 12:35:21 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/23 17:41:44 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/23 18:09:10 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -83,6 +83,7 @@ class Cgi
 		int		_fd_cgi_input[2]; // write data to _fd_sgi_input[1];
 		int		_fd_cgi_output[2]; // read data from _fd_sgi_output[0];
 		pid_t	_cgi_process;
+		string	_target_file;
 
 		http::Request	_request;
 		CgiHeaders		_cgi_headers;

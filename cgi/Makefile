@@ -6,7 +6,7 @@
 #    By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2021/07/21 16:20:10 by nelisabe          #+#    #+#              #
-#    Updated: 2021/07/22 10:37:40 by nelisabe         ###   ########.fr        #
+#    Updated: 2021/07/23 17:47:27 by nelisabe         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -26,7 +26,7 @@ COMP ?=				clang++
 
 FLAGS ?=			-g #-Wall -Wextra -Werror -std=c++98
 
-INCLUDES ?=			-I. -I./../http/ -I./../config_parser/
+INCLUDES ?=			-I. -I./../http/ -I./../config_parser/ -I./../server/
 
 #SRC DIRS
 
