@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/13 13:58:58 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/23 09:41:30 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/23 11:58:27 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,7 @@
 # include "http.hpp"
 # include "Cgi.hpp"
 # include "IIOController.hpp"
+# include "Errors.hpp"
 
 class Client
 {
@@ -30,8 +31,7 @@ class Client
 			SENDING,
 			FINISHEDRECV,
 			FINISHEDSEND,
-			CGISENDING,
-			CGIRECVING
+			CGIPROCESSING
 		};
 
 		void	CreateResponse(const char *request, int request_size,\
@@ -44,9 +44,8 @@ class Client
 		void				setState(State state);
 		int					getAlreadySendBytes() const;
 		void				setAlreadySendBytes(int bytes);
-		void				CgiAddFd(IIOController::IOMode mode) const;
-		void				CgiSend(void);
-		void				CgiRecv(void);
+		void				CgiAddFd(void) const;
+		bool				CgiProcess(void);
 	private:
 		Client(Client const &);
 

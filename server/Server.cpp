@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/06 12:56:02 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/23 09:41:51 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/23 12:02:01 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -103,11 +103,9 @@ void	Server::AddClientsSockets(void)
 				_fd_controller->AddFDToWatch(client_socket, IIOController::READ);
 				client->setState(Client::State::SLEEP);
 				break;
-			case Client::State::CGISENDING:
-				client->CgiAddFd(IIOController::IOMode::WRITE);
-				break;
-			case Client::State::CGIRECVING:
-				client->CgiAddFd(IIOController::IOMode::READ);
+			case Client::State::CGIPROCESSING:
+				client->CgiAddFd();
+				_fd_controller->AddFDToWatch(client_socket, IIOController::WRITE);
 				break;
 			default:
 				break;
@@ -139,11 +137,12 @@ void	Server::HandleClients(void)
 			case Client::State::SENDING:
 				status = TrySendResponse(*client);
 				break;
-			case Client::State::CGISENDING:
-				client->CgiSend();
-				break;
-			case Client::State::CGIRECVING:
-				client->CgiRecv();
+			case Client::State::CGIPROCESSING:
+				if (client->CgiProcess() == SUCCESS)
+				{
+					client->setState(Client::State::SENDING);
+					status = TrySendResponse(*client);
+				}
 				break;
 			default:
 				break;
@@ -161,11 +160,7 @@ void	Server::AcceptNewClient(void)
 	newSocket = accept(_server_socket, NULL, NULL);	
 	if (newSocket == -1 && errno != EAGAIN)
 		Error("can't accept incoming connetion");
-<<<<<<< HEAD
 	newClient = new Client(_fd_controller);
-=======
-	newClient = new Client;
->>>>>>> stable
 	newClient->setSocket(newSocket);
 	_clients.push_back(newClient);
 }
@@ -186,10 +181,6 @@ bool	Server::TryRecvRequest(Client &client)
 			delete[] request;
 			return FAILURE;
 		}
-		// if (client.CreateResponse(request, request_size, _config) == SUCCESS)
-		// 	client.setState(Client::State::FINISHEDRECV);
-		// else
-		// 	client.setState(Client::State::RECVING);
 		client.CreateResponse(request, request_size, _config);
 		delete[] request;
 	}

@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/13 14:03:29 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/23 09:41:03 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/23 12:28:04 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -69,13 +69,11 @@ void	Client::CreateResponse(const char *request, int requset_size,\
 		_response_string.clear();
 		_request_string.clear();
 		if (true)//_request.serv_config.is_cgi)
-		{
 			if (InitCgi() == SUCCESS)
 			{
-				_connection_state = CGISENDING;
+				_connection_state = CGIPROCESSING;
 				return ;
 			}
-		}
 		http::get_response(_request, _response);
 		http::ResponseToString(_response, _response_string);
 		_request = http::Request();
@@ -100,37 +98,17 @@ bool	Client::InitCgi(void)
 	return SUCCESS;
 }
 
-void	Client::CgiAddFd(IIOController::IOMode mode) const
+void	Client::CgiAddFd(void) const
 {
-	_cgi->AddCgiFdToWatch(_fd_controller, mode);
+	_cgi->AddCgiFdToWatch(_fd_controller);
 }
 
-void	Client::CgiSend(void)
+bool	Client::CgiProcess(void)
 {
-	switch (_cgi->Write(_fd_controller))
+	if (_cgi->ContinueIO(_fd_controller, _response) == SUCCESS)
 	{
-		case Cgi::Status::FINISHED:
-			_connection_state = CGIRECVING;
-			break;
-		case Cgi::Status::ERROR:
-			// DO SOMETHING
-			break;
-		default:
-			break;
+		http::ResponseToString(_response, _response_string);
+		return SUCCESS;
 	}
-}
-
-void	Client::CgiRecv(void)
-{
-	switch (_cgi->Read(_fd_controller))
-	{
-		case Cgi::Status::FINISHED:
-			_connection_state = SENDING;
-			break;
-		case Cgi::Status::ERROR:
-			//DO SOMETHING;
-			break;
-		default:
-			break;
-	}
+	return FAILURE;
 }
