@@ -21,5 +21,6 @@ void error500(const Request &req, Response &resp);
 void error501(const Request &req, Response &resp);
 void error503(const Request &req, Response &resp);
 void error505(const Request &req, Response &resp);
+void add_length(Response &resp, bool chunked);
 }
 #endif

@@ -576,7 +576,10 @@ void method_post(const Request &req, Response &resp) {
 
 void method_delete(const Request &req, Response &resp) {
   struct stat buf = {};
-  if (stat(req.serv_config.name_file.c_str(), &buf) == -1) {
+  std::string file_name = req.serv_config.name_file;
+  if (file_name.empty())
+	file_name = req.current_dir;
+  if (stat(file_name.c_str(), &buf) == -1) {
 	if (errno == ENOENT || errno == EACCES) {
 	  resp.code = StatusNotFound;
 	} else {
@@ -646,6 +649,7 @@ void get_response(const Request &req, Response &resp) {
 	case StatusHTTPVersionNotSupported: error505(req, resp);
 	  break;
   }
+  add_length(resp, 0);
 }
 
 void ResponseToString(const Response &resp, std::string &str) {

@@ -95,20 +95,10 @@ const char *const HTTPVersionNotSupported = "<html>\n"
 
 void error200(const Request &, Response &resp) {
   resp.status = "OK";
-  std::stringstream ss;
-  ss << resp.body.length();
-  std::string length;
-  ss >> length;
-  resp.header["Content-length"] = length;
 }
 
 void error201(const Request &, Response &resp) {
   resp.status = "Created";
-  std::stringstream ss;
-  ss << resp.body.length();
-  std::string length;
-  ss >> length;
-  resp.header["Content-length"] = length;
 }
 
 void error301(const Request &req, Response &resp) {
@@ -163,11 +153,6 @@ void error400(const Request &req, Response &resp) {
   } else {
 	resp.body = BadRequest;
   }
-  std::stringstream ss;
-  ss << resp.body.length();
-  std::string length;
-  ss >> length;
-  resp.header["Content-length"] = length;
 }
 
 void error403(const Request &req, Response &resp) {
@@ -180,11 +165,6 @@ void error403(const Request &req, Response &resp) {
   } else {
 	resp.body = Forbidden;
   }
-  std::stringstream ss;
-  ss << resp.body.length();
-  std::string length;
-  ss >> length;
-  resp.header["Content-length"] = length;
 }
 
 void error404(const Request &req, Response &resp) {
@@ -197,11 +177,6 @@ void error404(const Request &req, Response &resp) {
   } else {
 	resp.body = NotFound;
   }
-  std::stringstream ss;
-  ss << resp.body.length();
-  std::string length;
-  ss >> length;
-  resp.header["Content-length"] = length;
 }
 
 void error405(const Request &req, Response &resp) {
@@ -214,11 +189,6 @@ void error405(const Request &req, Response &resp) {
   } else {
 	resp.body = MethodNotAllowed;
   }
-  std::stringstream ss;
-  ss << resp.body.length();
-  std::string length;
-  ss >> length;
-  resp.header["Content-length"] = length;
 }
 
 void error408(const Request &req, Response &resp) {
@@ -231,11 +201,6 @@ void error408(const Request &req, Response &resp) {
   } else {
 	resp.body = RequestTimeout;
   }
-  std::stringstream ss;
-  ss << resp.body.length();
-  std::string length;
-  ss >> length;
-  resp.header["Content-length"] = length;
 }
 
 void error413(const Request &req, Response &resp) {
@@ -248,11 +213,6 @@ void error413(const Request &req, Response &resp) {
   } else {
 	resp.body = RequestEntityTooLarge;
   }
-  std::stringstream ss;
-  ss << resp.body.length();
-  std::string length;
-  ss >> length;
-  resp.header["Content-length"] = length;
 }
 
 void error414(const Request &req, Response &resp) {
@@ -265,12 +225,6 @@ void error414(const Request &req, Response &resp) {
   } else {
 	resp.body = RequestURITooLong;
   }
-  std::stringstream ss;
-  ss << resp.body.length();
-  std::string length;
-  ss >> length;
-  resp.header["Content-length"] = length;
-
 }
 
 void error500(const Request &req, Response &resp) {
@@ -282,11 +236,6 @@ void error500(const Request &req, Response &resp) {
   } else {
 	resp.body = InternalServerError;
   }
-  std::stringstream ss;
-  ss << resp.body.length();
-  std::string length;
-  ss >> length;
-  resp.header["Content-length"] = length;
 }
 
 void error501(const Request &req, Response &resp) {
@@ -299,11 +248,6 @@ void error501(const Request &req, Response &resp) {
   } else {
 	resp.body = NotImplemented;
   }
-  std::stringstream ss;
-  ss << resp.body.length();
-  std::string length;
-  ss >> length;
-  resp.header["Content-length"] = length;
 }
 
 void error503(const Request &req, Response &resp) {
@@ -316,11 +260,6 @@ void error503(const Request &req, Response &resp) {
   } else {
 	resp.body = ServiceUnavailable;
   }
-  std::stringstream ss;
-  ss << resp.body.length();
-  std::string length;
-  ss >> length;
-  resp.header["Content-length"] = length;
 }
 
 void error505(const Request &req, Response &resp) {
@@ -333,11 +272,17 @@ void error505(const Request &req, Response &resp) {
   } else {
 	resp.body = HTTPVersionNotSupported;
   }
-  std::stringstream ss;
-  ss << resp.body.length();
-  std::string length;
-  ss >> length;
-  resp.header["Content-length"] = length;
-}
+  }
 
+void add_length(Response &resp, bool chunked) {
+  if (chunked) {
+    resp.header["Transfer-Encoding"] = "chunked";
+  } else {
+	std::stringstream ss;
+	ss << resp.body.length();
+	std::string length;
+	ss >> length;
+	resp.header["Content-length"] = length;
+  }
+}
 }
