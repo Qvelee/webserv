@@ -6,15 +6,15 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/07/21 12:35:15 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/23 19:01:29 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/23 22:05:37 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Cgi.hpp"
 
 Cgi::Cgi(const http::Request &request) :\
-	_fd_stdin(-1), _fd_stdout(-1), _cgi_script(NULL),\
-	_script_arguments(NULL), _cgi_variables(NULL), _already_send_bytes(0),
+	_fd_stdin(-1), _fd_stdout(-1), _script_arguments(NULL),\
+	_cgi_variables(NULL), _already_send_bytes(0),
 	_IO_BUFFER(65536)
 {
 	_fd_cgi_input[0] = -1;
@@ -29,10 +29,12 @@ Cgi::Cgi(const http::Request &request) :\
 	if (FindVariable("PATH_TRANSLATED", request.serv_config.cgi) == FAILURE)
 		throw "execept"; // TODO add exception
 
-	_cgi_script = (*(request.serv_config.cgi.find("SCRIPT_NAME"))).second.c_str();
-	_target_file = (*(request.serv_config.cgi.find("PATH_TRANSLATED"))).second.c_str();
+	_CGI_BIN_PATH = "./cgi-bin/";
+	_cgi_script = _CGI_BIN_PATH;
+	_cgi_script.append((*(request.serv_config.cgi.find("SCRIPT_NAME"))).second);
+	_target_file = (*(request.serv_config.cgi.find("PATH_TRANSLATED"))).second;
 	GetVariables(request);
-	_request = request;
+	_request = &request;
 }
 
 Cgi::Cgi(const Cgi &) : _IO_BUFFER(65536) { }
@@ -70,17 +72,19 @@ bool	Cgi::FindVariable(const std::string &variable,\
 
 void	Cgi::GetVariables(const http::Request &request)
 {
-	int		i = 0;
 	string	key_value_pair;
+	int		i = 0;
+	size_t	cgi_vars_size;
 
-	_cgi_variables = new char*[request.serv_config.cgi.size() + 1];
+	cgi_vars_size = request.serv_config.cgi.size() + 1;
+	_cgi_variables = new char*[cgi_vars_size];
 	for (map<string, string>::const_iterator it = request.serv_config.cgi.begin(); \
 		it != request.serv_config.cgi.end(); it++)
 	{
 		key_value_pair.append((*it).first);
 		key_value_pair.append("=");
 		key_value_pair.append((*it).second);
-		_cgi_variables[i] = new char[key_value_pair.length()];
+		_cgi_variables[i] = new char[key_value_pair.length() + 1];
 		strcpy(_cgi_variables[i], key_value_pair.c_str());
 		i++;
 		key_value_pair.clear();
@@ -141,7 +145,7 @@ bool	Cgi::ExecCgi(void)
 			// 	all cgi processes will freeze;
 			for (int i = 3; i < 1024; i++)
 				close(i);
-			execve(_cgi_script, _script_arguments, _cgi_variables);
+			execve(_cgi_script.c_str(), _script_arguments, _cgi_variables);
 			exit(errno);
 		default:
 			// because cgi process use _fd_cgi_input[0] to read data
@@ -227,9 +231,9 @@ void	Cgi::FillResponse(http::Response &response)
 	if (_cgi_headers.ended == false)
 		return ;
 	response.code = static_cast<http::StatusCode>(atoi(_cgi_headers.status.c_str()));
-	i = _cgi_headers.status.length() - 1;
-	while (_cgi_headers.status.at(i) != ' ')
-		response.status.push_back(_cgi_headers.status.at(i));
+	i = _cgi_headers.status.find_first_of(' ') + 1;
+	while (i < _cgi_headers.status.length())
+		response.status.push_back(_cgi_headers.status.at(i++));
 	if (_cgi_headers.content_length != "")
 		response.header.insert(std::make_pair("Content-length",\
 			_cgi_headers.content_length));
@@ -244,17 +248,17 @@ bool	Cgi::Write(IIOController *fd_controller)
 	if (fd_controller->CheckIfFDReady(_fd_cgi_input[1], IIOController::IOMode::WRITE))
 	{
 		int			bytes;
-		const char	*buffer = _request.body.c_str();
+		const char	*buffer = _request->body.c_str();
 		
 		bytes = write(_fd_cgi_input[1], &buffer[_already_send_bytes],\
-			_request.body.size() - _already_send_bytes);
+			_request->body.size() - _already_send_bytes);
 		if (bytes == -1)
 		{
 			_state = ERROR;
 			return SUCCESS;
 		}
 		_already_send_bytes += bytes;
-		if (_already_send_bytes == _request.body.size()) // data sending finished
+		if (_already_send_bytes == _request->body.size()) // data sending finished
 		{
 			close(_fd_cgi_input[1]);
 			_fd_cgi_input[1] = -1;
@@ -338,12 +342,15 @@ bool	Cgi::AddHeader(const string &headers, string &add_to,\
 {
 	size_t	position;
 	size_t	header_name_len;
+	size_t	n_position;
 
 	header_name_len = header_name.length();
 	if ((position = headers.find(header_name)) != string::npos)
 	{
+		n_position = headers.find_first_of('\n', position + header_name_len);
 		add_to = headers.substr(position + header_name_len,\
-			headers.find_first_of('\n', position + header_name_len));
+			n_position - position - header_name_len);
+		add_to.erase(add_to.find(' '), 1);
 		return SUCCESS;
 	}
 	return FAILURE;
@@ -377,5 +384,5 @@ int		Cgi::TryWaitCgiProcess(bool force_terminate)
 
 void	Cgi::CreateErrorResponse(http::Response &response) const
 {
-	http::error500(_request, response);
+	http::error500(*_request, response);
 }

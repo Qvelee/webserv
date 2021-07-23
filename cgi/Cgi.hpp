@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/07/21 12:35:21 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/23 18:09:10 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/23 22:04:19 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -85,15 +85,16 @@ class Cgi
 		pid_t	_cgi_process;
 		string	_target_file;
 
-		http::Request	_request;
-		CgiHeaders		_cgi_headers;
-		string			_body;
+		const http::Request	*_request;
+		CgiHeaders			_cgi_headers;
+		string				_body;
 
-		const char	*_cgi_script;
-		char		**_script_arguments;
-		char		**_cgi_variables;
-		int			_already_send_bytes;
+		string	_cgi_script;
+		char	**_script_arguments;
+		char	**_cgi_variables;
+		int		_already_send_bytes;
 
+		string		_CGI_BIN_PATH;
 		const int	_IO_BUFFER;
 };
 
