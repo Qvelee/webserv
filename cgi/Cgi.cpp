@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/07/21 12:35:15 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/23 22:05:37 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/23 22:37:31 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -55,7 +55,7 @@ Cgi::~Cgi()
 		int		i = -1;
 		
 		while (_cgi_variables[++i] != NULL)
-			delete _cgi_variables[i];
+			delete [] _cgi_variables[i];
 		delete [] _cgi_variables;
 	}
 }
@@ -145,7 +145,7 @@ bool	Cgi::ExecCgi(void)
 			// 	all cgi processes will freeze;
 			for (int i = 3; i < 1024; i++)
 				close(i);
-			execve(_cgi_script.c_str(), _script_arguments, _cgi_variables);
+			execve(_cgi_script.c_str(), _script_arguments, _cgi_variables); // TODO send file in args
 			exit(errno);
 		default:
 			// because cgi process use _fd_cgi_input[0] to read data

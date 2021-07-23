@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/13 14:03:29 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/23 18:07:13 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/23 22:40:55 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -68,7 +68,7 @@ void	Client::CreateResponse(const char *request, int requset_size,\
 	{
 		_response_string.clear();
 		_request_string.clear();
-		if (true)//_request.serv_config.is_cgi)
+		if (_request.serv_config.is_cgi)
 			if (InitCgi() == SUCCESS)
 			{
 				_connection_state = CGIPROCESSING;
@@ -112,6 +112,7 @@ bool	Client::CgiProcess(void)
 	if (_cgi->ContinueIO(_fd_controller, _response) == SUCCESS)
 	{
 		http::ResponseToString(_response, _response_string);
+		delete _cgi;
 		return SUCCESS;
 	}
 	return FAILURE;
