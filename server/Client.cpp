@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/13 14:03:29 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/23 22:40:55 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/23 23:02:37 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -113,6 +113,9 @@ bool	Client::CgiProcess(void)
 	{
 		http::ResponseToString(_response, _response_string);
 		delete _cgi;
+		_recv_status = EMPTY;
+		_request = http::Request();
+		_response = http::Response();
 		return SUCCESS;
 	}
 	return FAILURE;
