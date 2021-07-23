@@ -379,6 +379,7 @@ namespace config{
 	{
 		std::map<int, std::string> map_port_ip;//
 		tServer	server;// = new tServer;
+		server.client_max_body_size = 100000;
 		size_t		i;
 		std::vector<std::string> arrVar;
 		arrVar.push_back("listen");
@@ -493,17 +494,20 @@ namespace config{
 
 	}
 
-	map<int, map<string, tServer > >  const &WebserverConf::getServerMap() const {return
-	serverMap;}
-	map<int, string >   const &WebserverConf::getPorts() const {return map_global_port_ip;
-	}//getter
+	map<int, map<string, tServer > >  const &WebserverConf::getServerMap() const {
+	  return serverMap;
+	}
+
+	map<int, string >   const &WebserverConf::getPorts() const {
+	  return map_global_port_ip;
+	}
 
 
 	tServerInformation	chooseServer(http::url::URL url, map<string, tServer >  tmp)
 	{
 		tServerInformation serverInformation;
 
-		serverInformation.limit_size = 100000;
+		//serverInformation.limit_size = 100000;
 		serverInformation.autoindex = false;
 		serverInformation.redirection_status_code = 0;
 		serverInformation.is_cgi = false;
@@ -524,8 +528,8 @@ namespace config{
 		else
 			server_name = url.host;
 
-			map<string, tServer > ipServer = tmp;
-			map<string, tServer > ::iterator itIpSrv = ipServer.find(server_name);
+		map<string, tServer > ipServer = tmp;
+		map<string, tServer > ::iterator itIpSrv = ipServer.find(server_name);
 			if (itIpSrv != ipServer.end())
 			{
 
@@ -541,7 +545,6 @@ namespace config{
 				string path_for_alias = url.path;
 				while (itLoc != server.locationMap.end() && path_for_alias != "")
 				{
-					
 					while (itLoc != server.locationMap.end() && path_for_alias != "")
 					{
 						if (itLoc->locationMask == path_for_alias)
@@ -559,9 +562,9 @@ namespace config{
 						
 							serverInformation.redirection_status_code = itLoc->redirection_status_code;
 							serverInformation.redirection_url = itLoc->redirection_url;
-
 							serverInformation.route_for_uploaded_files =
 								itLoc->route_for_uploaded_files;
+
 							serverInformation.autoindex = itLoc->autoindex;
 
 							serverInformation.file_request_if_dir = itLoc->file_request_if_dir;
@@ -571,6 +574,7 @@ namespace config{
 								serverInformation.is_cgi = true;
 								serverInformation.cgi["SCRIPT_FILENAME"] = itLoc->filename_cgi;
 								serverInformation.cgi["QUERY_STRING"] = url.raw_query;
+								serverInformation.cgi["PATH_TRANSLATED"] = url.raw_query;
 								//serverInformation.cgi["REQUEST_METHOD"] = ;
 								//serverInformation.cgi["CONTENT_TYPE"] =;
 								//serverInformation.cgi["CONTENT_LENGTH"] =;
