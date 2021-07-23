@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/07/16 14:00:27 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/22 10:36:10 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/23 09:42:06 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -65,10 +65,4 @@ void		WebServer::InitFdSets(void)
 	for (std::vector<Server*>::iterator it = _servers.begin();\
 		it < _servers.end(); it++)
 		(*it)->AddClientsSockets();
-}
-
-bool	WebServer::Error(const std::string error) const
-{
-	std::cerr << "Error: " + error + ": " << strerror(errno) << std::endl;
-	return FAILURE;
 }

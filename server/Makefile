@@ -6,7 +6,7 @@
 #    By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2021/05/14 14:50:43 by nelisabe          #+#    #+#              #
-#    Updated: 2021/07/22 10:38:04 by nelisabe         ###   ########.fr        #
+#    Updated: 2021/07/23 09:41:45 by nelisabe         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -34,10 +34,11 @@ SERV_SRC_DIR =		./
 
 #SRC
 
-SERV_SRC =			SelectController.cpp \
-					WebServer.cpp \
+SERV_SRC =			WebServer.cpp \
+					SelectController.cpp \
 					Server.cpp \
-					Client.cpp
+					Client.cpp \
+					Errors.cpp
 
 #OBJ DIRS
 

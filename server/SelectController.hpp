@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/07/21 19:37:23 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/21 20:26:02 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/22 19:53:27 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,11 +14,9 @@
 # define SELECTCTRL_HPP
 
 # include "IIOController.hpp"
+# include "Errors.hpp"
 # include <sys/select.h>
 # include <unistd.h>
-
-# define SUCCESS false
-# define FAILURE true	
 
 class SelectController : public IIOController
 {

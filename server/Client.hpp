@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/13 13:58:58 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/22 12:02:46 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/23 09:41:30 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,9 +16,6 @@
 # include "http.hpp"
 # include "Cgi.hpp"
 # include "IIOController.hpp"
-
-# define SUCCESS false
-# define FAILURE true
 
 class Client
 {
