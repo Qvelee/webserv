@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/13 13:58:58 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/23 11:58:27 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/24 19:31:45 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,7 +31,8 @@ class Client
 			SENDING,
 			FINISHEDRECV,
 			FINISHEDSEND,
-			CGIPROCESSING
+			CGIPROCESSING,
+			CGICHUNKED
 		};
 
 		void	CreateResponse(const char *request, int request_size,\
@@ -46,6 +47,7 @@ class Client
 		void				setAlreadySendBytes(int bytes);
 		void				CgiAddFd(void) const;
 		bool				CgiProcess(void);
+		void				ChunkResponseToString(void);
 	private:
 		Client(Client const &);
 

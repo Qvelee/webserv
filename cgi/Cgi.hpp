@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/07/21 12:35:21 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/23 22:04:19 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/24 21:12:49 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,6 +24,7 @@
 # include <fcntl.h>
 # include <sys/types.h>
 # include <sys/wait.h>
+# include <sstream>
 
 using	std::string;
 using	std::map;
@@ -34,9 +35,16 @@ class Cgi
 		Cgi(const http::Request &request);
 		virtual ~Cgi();
 
+		enum Status
+		{
+			PROCESSING = 0,
+			READY,
+			CHUNKED
+		};
+
 		bool	Start(void);
 		bool	AddCgiFdToWatch(IIOController *fd_controller) const;
-		bool	ContinueIO(IIOController *fd_controller, http::Response &response);
+		Status	ContinueIO(IIOController *fd_controller, http::Response &response);
 	private:
 		Cgi(const Cgi &);
 		
@@ -47,6 +55,8 @@ class Cgi
 			WRITING,
 			READING,
 			FINISHED,
+			RECVCHUNKS,
+			FINCHUNKS,
 			ERROR
 		};
 
@@ -67,9 +77,12 @@ class Cgi
 		bool	ExecCgi(void);
 		void	RestoreStdIO(void);
 		void	FillResponse(http::Response &response);
+		void	FillChunkResponse(http::Response &response);
+		void	FillHeaders(http::Response &response);
 		bool	Write(IIOController *fd_controller);
 		bool	Read(IIOController *fd_controller);
 		void	AddToResponse(const char *buffer, int bytes);
+		bool	CheckForChunks(void);
 		bool	ParseHeaders(const string &headers);
 		bool	AddHeader(const string &headers, string &add_to,\
 			const string &header_name);
@@ -77,6 +90,7 @@ class Cgi
 		void	CreateErrorResponse(http::Response &response) const;
 
 		State	_state;
+		bool	_chunked_headers_send;
 
 		int		_fd_stdin;
 		int		_fd_stdout;

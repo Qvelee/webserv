@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/06 12:56:02 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/23 12:02:01 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/24 20:43:24 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,6 +23,10 @@ Server::~Server()
 {
 	if (_server_socket != -1)
 		close(_server_socket);
+	if (!_clients.empty())
+		for (std::vector<Client*>::iterator it = _clients.begin();\
+			it < _clients.end(); it++)
+			delete *it;
 }
 
 Server	&Server::operator=(const Server &) { return *this; }
@@ -107,6 +111,10 @@ void	Server::AddClientsSockets(void)
 				client->CgiAddFd();
 				_fd_controller->AddFDToWatch(client_socket, IIOController::WRITE);
 				break;
+			case Client::State::CGICHUNKED:
+				client->CgiAddFd();
+				_fd_controller->AddFDToWatch(client_socket, IIOController::WRITE);
+				break;
 			default:
 				break;
 		}
@@ -139,10 +147,10 @@ void	Server::HandleClients(void)
 				break;
 			case Client::State::CGIPROCESSING:
 				if (client->CgiProcess() == SUCCESS)
-				{
-					client->setState(Client::State::SENDING);
 					status = TrySendResponse(*client);
-				}
+				break;
+			case Client::State::CGICHUNKED:
+				status = TrySendResponse(*client);
 				break;
 			default:
 				break;
@@ -205,7 +213,10 @@ bool	Server::TrySendResponse(Client &client)
 		bytes += client.getAlreadySendBytes();
 		if (bytes == client.getResponse().size())
 		{
-			client.setState(Client::State::FINISHEDSEND);
+			if (client.getState() != Client::State::CGICHUNKED)
+				client.setState(Client::State::FINISHEDSEND);
+			else
+				client.setState(Client::State::CGIPROCESSING);
 			bytes = 0;
 		}
 		client.setAlreadySendBytes(bytes);

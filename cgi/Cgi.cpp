@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/07/21 12:35:15 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/23 22:37:31 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/24 21:16:54 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,6 +23,7 @@ Cgi::Cgi(const http::Request &request) :\
 	_fd_cgi_output[1] = -1;
 
 	_cgi_headers.ended = false;
+	_chunked_headers_send = false;
 
 	if (FindVariable("SCRIPT_NAME", request.serv_config.cgi) == FAILURE)
 		throw "execept"; // TODO add exception
@@ -185,13 +186,15 @@ bool	Cgi::AddCgiFdToWatch(IIOController *fd_controller) const
 		fd_controller->AddFDToWatch(_fd_cgi_input[1], IIOController::IOMode::WRITE);
 	else if (_state == READING && _fd_cgi_output[0] != -1)
 		fd_controller->AddFDToWatch(_fd_cgi_output[0], IIOController::IOMode::READ);
+	else if (_state == RECVCHUNKS && _fd_cgi_output[0] != -1)
+		fd_controller->AddFDToWatch(_fd_cgi_output[0], IIOController::IOMode::READ);
 	return SUCCESS;
 }
 
 // TODO timeout скрипта
 // TODO redirect?
 
-bool	Cgi::ContinueIO(IIOController *fd_controller, http::Response &response)
+Cgi::Status	Cgi::ContinueIO(IIOController *fd_controller, http::Response &response)
 {
 	bool	status;
 
@@ -203,6 +206,9 @@ bool	Cgi::ContinueIO(IIOController *fd_controller, http::Response &response)
 		case READING:
 			status = Read(fd_controller);
 			break;
+		case RECVCHUNKS:
+			status = Read(fd_controller);
+			break;
 		default:
 			break;
 	}
@@ -212,35 +218,77 @@ bool	Cgi::ContinueIO(IIOController *fd_controller, http::Response &response)
 		{
 			CreateErrorResponse(response);
 			TryWaitCgiProcess(true);
+			return READY;
 		}
 		if (_state == FINISHED)
 		{
 			FillResponse(response);
 			TryWaitCgiProcess(true);
+			return READY;
 		}
-		if (_state != READING)
-			return SUCCESS;
+		if (_state == RECVCHUNKS)
+		{
+			FillChunkResponse(response);
+			_body.clear();
+			_chunked_headers_send = true;
+			return CHUNKED;
+		}
+		if (_state == FINCHUNKS)
+		{
+			response.body.append("0\r\n\r\n");
+			TryWaitCgiProcess(true);
+			return READY;
+		}
 	}
-	return FAILURE;
+	return PROCESSING;
 }
 
 void	Cgi::FillResponse(http::Response &response)
+{
+	FillHeaders(response);
+	response.body = _body;
+}
+
+void	Cgi:: FillChunkResponse(http::Response &response)
+{
+	std::stringstream	stream;
+
+	stream << std::hex << _body.size();
+	
+	if (!_chunked_headers_send)
+		FillHeaders(response);
+	if (_cgi_headers.ended && !_chunked_headers_send)
+		response.header.insert(std::make_pair("Transfer-encoding", "chunked"));
+	response.body.append(stream.str());
+	response.body.append("\r\n");
+	response.body.append(_body);
+	response.body.append("\r\n");
+}
+
+void	Cgi::FillHeaders(http::Response &response)
 {
 	int		i;
 
 	if (_cgi_headers.ended == false)
 		return ;
-	response.code = static_cast<http::StatusCode>(atoi(_cgi_headers.status.c_str()));
-	i = _cgi_headers.status.find_first_of(' ') + 1;
-	while (i < _cgi_headers.status.length())
-		response.status.push_back(_cgi_headers.status.at(i++));
+	if (_cgi_headers.status != "")
+	{
+		response.code = static_cast<http::StatusCode>(atoi(_cgi_headers.status.c_str()));
+		i = _cgi_headers.status.find_first_of(' ') + 1;
+		while (i < _cgi_headers.status.length())
+			response.status.push_back(_cgi_headers.status.at(i++));
+	}
+	else
+	{
+		response.code = static_cast<http::StatusCode>(200);
+		response.status.append("OK");
+	}
 	if (_cgi_headers.content_length != "")
 		response.header.insert(std::make_pair("Content-length",\
 			_cgi_headers.content_length));
 	if (_cgi_headers.content_type != "")
 		response.header.insert(std::make_pair("Content-type",\
 			_cgi_headers.content_type));
-	response.body = _body;
 }
 
 bool	Cgi::Write(IIOController *fd_controller)
@@ -283,11 +331,17 @@ bool	Cgi::Read(IIOController *fd_controller)
 		}
 		else if (bytes == 0)
 		{
-			_state = FINISHED;
+			_state = _state != RECVCHUNKS ? FINISHED : FINCHUNKS;
 			return SUCCESS;
 		}
 		AddToResponse(buffer, bytes);
-		if (_body.size() == atoi(_cgi_headers.content_length.c_str()))
+		if (CheckForChunks())
+		{
+			_state = RECVCHUNKS;
+			return SUCCESS;
+		}
+		if (_cgi_headers.ended &&\
+			_body.size() == atoi(_cgi_headers.content_length.c_str()))
 		{
 			_state = FINISHED;
 			return SUCCESS;
@@ -318,6 +372,14 @@ void	Cgi::AddToResponse(const char *buffer, int bytes)
 	}
 	else
 		_body.append(response_string);
+}
+
+bool	Cgi::CheckForChunks(void)
+{
+	if (_state == RECVCHUNKS ||\
+		(_cgi_headers.ended && _cgi_headers.content_length == ""))
+		return true;
+	return false;
 }
 
 bool	Cgi::ParseHeaders(const string &headers)

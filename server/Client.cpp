@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/13 14:03:29 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/23 23:02:37 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/24 22:16:47 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,11 @@ Client::Client(IIOController *fd_controller) : \
 
 Client::Client(Client const &) {}
 
-Client::~Client(void) {}
+Client::~Client(void)
+{
+	if (_cgi)
+		delete _cgi;
+}
 
 Client	&Client::operator=(Client const &) {return *this; }
 
@@ -93,10 +97,18 @@ bool	Client::InitCgi(void)
 	_request.serv_config.cgi.insert(std::make_pair("SCRIPT_NAME", "cpptest"));
 	_request.serv_config.cgi.insert(std::make_pair("SCRIPT_FILENAME",\
 		"/home/guplee/42/webserv/cgi-bin/cpptest"));
+	// _request.serv_config.cgi.insert(std::make_pair("PATH_INFO", "/cgi-test.txt"));
+	// _request.serv_config.cgi.insert(std::make_pair("PATH_TRANSLATED",\
+	// 	"/home/guplee/42/webserv/cgi-test.txt"));
+	// _request.serv_config.cgi.insert(std::make_pair("SCRIPT_NAME", "cppchunkedtest"));
+	// _request.serv_config.cgi.insert(std::make_pair("SCRIPT_FILENAME",\
+	// 	"/home/guplee/42/webserv/cgi-bin/cppchunkedtest"));
+
 	_cgi = new Cgi(_request);
 	if (_cgi->Start() == FAILURE)
 	{
 		delete _cgi;
+		_cgi = NULL;
 		return FAILURE;
 	}
 	return SUCCESS;
@@ -109,13 +121,35 @@ void	Client::CgiAddFd(void) const
 
 bool	Client::CgiProcess(void)
 {
-	if (_cgi->ContinueIO(_fd_controller, _response) == SUCCESS)
+	Cgi::Status	status;
+
+	status = _cgi->ContinueIO(_fd_controller, _response);
+	if (status == Cgi::PROCESSING)
+		return FAILURE;
+	if (status == Cgi::READY)
 	{
-		http::ResponseToString(_response, _response_string);
+		_response_string.clear();
+		if (_response.code != http::StatusCode::NoError)
+			http::ResponseToString(_response, _response_string);
+		else
+			_response_string = _response.body;
 		delete _cgi;
+		_cgi = NULL;
 		_recv_status = EMPTY;
 		_request = http::Request();
 		_response = http::Response();
+		_connection_state = SENDING;
+		return SUCCESS;
+	}
+	if (status == Cgi::CHUNKED)
+	{
+		_response_string.clear();
+		if (!_response.header.empty())
+			http::ResponseToString(_response, _response_string);
+		else
+			_response_string = _response.body;
+		_response = http::Response();
+		_connection_state = CGICHUNKED;
 		return SUCCESS;
 	}
 	return FAILURE;

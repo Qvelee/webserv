@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/06 13:07:13 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/21 15:46:46 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/24 15:41:16 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,7 +17,7 @@ int		main(int argc, char **argv)
 {
 	WebServer 				webserver;
 	config::WebserverConf	*config;
-	
+
 	try
 	{
 		argc != 2 ? config = new config::WebserverConf() :\

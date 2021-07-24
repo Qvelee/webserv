@@ -20,18 +20,32 @@ void	AddVariables(char **envp, string &body)
 
 int		main(int argc, char **argv, char **envp)
 {
-	std::cerr << "cpptest started\n";
-	string	body = "This is body.\nSome text.....\n";
-	AddVariables(envp, body);
-	cout << "Content-length: "<< body.length() << "\n";
-	cout << "Content-type: text/plain\n";
-	cout << "Status: 200 OK\n\n";
-	cout << body;
+	std::cerr << "cppchunkedtest started\n";
+
 	string	buffer;
 	std::cerr << "You send to me:\n";
 	while (std::getline(cin, buffer))
 		std::cout << buffer << std::endl;
+
+	string	body_1 = "This is chunked body.\nI added here some text for no reason";
+	string	body_2 = "\nSome text.....";
+
+	string	body_3;
+	AddVariables(envp, body_3);
+
+	cout << "Content-type: text/plain\n";
+	cout << "Status: 200 OK\n\n";
+	cout << body_1;
+	std::cerr << "Send first part:\n";
+	sleep(30);
+
+	cout << body_2;
+	std::cerr << "Send second part:\n";
+	// sleep(15);
+
+	// cout << body_3;
+
 	std::cerr << "---END---\n";
-	std::cerr << "cpptest finished\n";
+	std::cerr << "cppchunkedtest finished\n";
 	return EXIT_SUCCESS;
 }
