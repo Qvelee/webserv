@@ -41,9 +41,6 @@ int		main(int argc, char **argv, char **envp)
 
 	cout << body_2;
 	std::cerr << "Send second part:\n";
-	// sleep(15);
-
-	// cout << body_3;
 
 	std::cerr << "---END---\n";
 	std::cerr << "cppchunkedtest finished\n";
