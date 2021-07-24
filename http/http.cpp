@@ -467,7 +467,7 @@ bool get_files_in_dir(Request const& req, std::string const &file_name, Response
 	resp.body.append("<hr>\n<pre>\n");
 	while ((ent = readdir(dir)) != NULL) {
 	  struct stat buf = {};
-	  stat(ent->d_name, &buf);
+	  stat((file_name + ent->d_name).c_str(), &buf);
 	  std::string name = ent->d_name;
 	  if (S_ISDIR(buf.st_mode)) {
 		name += "/";
