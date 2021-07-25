@@ -37,7 +37,7 @@ const std::string	&Client::getResponse() const { return _response_string; }
 
 const Client::State	Client::getState() const { return _connection_state; }
 
-void	Client::setState(Client::State state) { _connection_state = state; }
+void	Client::setState(State state) { _connection_state = state; }
 
 int		Client::getAlreadySendBytes() const { return _bytes_already_send; }
 

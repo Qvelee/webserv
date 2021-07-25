@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/13 13:58:58 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/24 19:31:45 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/25 12:15:43 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,12 +18,14 @@
 # include "IIOController.hpp"
 # include "Errors.hpp"
 
+
+
 class Client
 {
 	public:
 		Client(IIOController *fd_controller);
 		virtual ~Client();
-		
+
 		enum State
 		{
 			SLEEP = 0,
