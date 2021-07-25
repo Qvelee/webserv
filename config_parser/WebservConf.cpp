@@ -16,6 +16,7 @@
 #include <stack>
 #include <sstream>
 #include <cctype>
+#include <unistd.h>
 
 namespace config{
 	WebserverConf::WebserverConf(char const *name)
@@ -46,7 +47,7 @@ namespace config{
 	{
 		size_t	found;
 
-		found = buf.find("#");
+		found = buf.find('#');
 		if (found != std::string::npos)
 			buf.erase(found);
 	}
@@ -375,6 +376,32 @@ namespace config{
 		
 	}
 
+	void	WebserverConf::setCgi(std::list<string>::iterator &itList, tServer &server,map<int, string>&)
+	{
+		string key;
+
+		itList++;
+		if (itList != tokenList.end() && *itList != ";" && *itList != "{" && *itList != "}")
+		{
+			key = *itList;
+			itList++;
+		}
+		else
+			throw "there are not enough elements after cgi ";
+
+		if (itList != tokenList.end() && *itList != ";" && *itList != "{" && *itList != "}")
+		{
+			server.cgi_handler.insert(std::make_pair(key, *itList));
+			itList++;
+		}
+		else
+			throw "there are not enough elements after cgi ";
+
+		if (itList == tokenList.end() || *itList != ";")
+			throw "there is no ; in the Server_name line";
+		itList++;
+	}
+
 	void	WebserverConf::fillOneServer(std::list<std::string>::iterator itList)
 	{
 		std::map<int, std::string> map_port_ip;//
@@ -387,11 +414,12 @@ namespace config{
 		arrVar.push_back("error_page");
 		arrVar.push_back("client_max_body_size");
 		arrVar.push_back("location");
+		arrVar.push_back("cgi");
 		void	(WebserverConf::*arrF[])(std::list<std::string>::iterator &itList, \
 				tServer	&server,map<int, string> &map_ip_port) = \
 		{&WebserverConf::setListen, &WebserverConf::setServer_name, \
 		&WebserverConf::setError_page, &WebserverConf::setClient_max_body_size, \
-		&WebserverConf::setLocation};
+		&WebserverConf::setLocation, &WebserverConf::setCgi};
 		//int		port;
 
 		if (itList != tokenList.end() && *itList == "{")
@@ -494,13 +522,8 @@ namespace config{
 
 	}
 
-	map<int, map<string, tServer > >  const &WebserverConf::getServerMap() const {
-	  return serverMap;
-	}
-
-	map<int, string >   const &WebserverConf::getPorts() const {
-	  return map_global_port_ip;
-	}
+	map<int, map<string, tServer > >  const &WebserverConf::getServerMap()const {return serverMap;}
+	map<int, string >   const &WebserverConf::getPorts() const{return map_global_port_ip;}//getter
 
 
 	tServerInformation	chooseServer(http::url::URL url, map<string, tServer >  tmp)
@@ -532,7 +555,7 @@ namespace config{
 		map<string, tServer > ::iterator itIpSrv = ipServer.find(server_name);
 			if (itIpSrv != ipServer.end())
 			{
-
+				//std::cout << "here \n";
 				map<string, tServer >::iterator itNameSrv = itIpSrv;
 
 				tServer server = itNameSrv->second;
@@ -540,9 +563,43 @@ namespace config{
 				serverInformation.limit_size = server.client_max_body_size;
 
 				serverInformation.error_pages = server.error_page;
+
+				//CGI
+				map<string,string>::iterator itCgiHandler = server.cgi_handler.begin();
+				while (itCgiHandler != server.cgi_handler.end())//if (itLoc->filename_cgi != "")
+				{
+					string key = "."+itCgiHandler->first;
+					size_t n = url.path.find("."+itCgiHandler->first);
+					char buf[256];
+					int i = 0;
+					while (i!= 256)
+					{
+						buf[i] = 0;
+						i++;
+					}
+					getcwd(buf, 256);
+					if ( n != std::string::npos)
+					{
+						serverInformation.is_cgi = true;
+						serverInformation.cgi["SCRIPT_NAME"] = url.path.substr(0, n + key.length());
+						serverInformation.cgi["SCRIPT_FILENAME"] = buf + url.path.substr(0, n + key.length());//
+						serverInformation.cgi["QUERY_STRING"] = url.raw_query;
+						serverInformation.cgi["PATH_INFO"] = url.path.substr(n + key.length());
+						serverInformation.cgi["PATH_TRANSLATED"] = buf + url.path.substr(n + key.length());
+						//serverInformation.cgi["REQUEST_METHOD"] = ;
+						//serverInformation.cgi["CONTENT_TYPE"] =;
+						//serverInformation.cgi["CONTENT_LENGTH"] =;
+						}
+
+					itCgiHandler++;
+				}
+
+
+
 				vector<Location>::iterator itLoc = server.locationMap.begin();
 				string locationMask;
 				string path_for_alias = url.path;
+				//std::cout << "path for alias "<< itLoc->alias << std::endl;
 				while (itLoc != server.locationMap.end() && path_for_alias != "")
 				{
 					while (itLoc != server.locationMap.end() && path_for_alias != "")
@@ -568,24 +625,15 @@ namespace config{
 						
 							serverInformation.redirection_status_code = itLoc->redirection_status_code;
 							serverInformation.redirection_url = itLoc->redirection_url;
-							serverInformation.route_for_uploaded_files =
-								itLoc->route_for_uploaded_files;
 
 							serverInformation.autoindex = itLoc->autoindex;
 
 							serverInformation.file_request_if_dir = itLoc->file_request_if_dir;
-							
-							if (itLoc->filename_cgi != "")
-							{
-								serverInformation.is_cgi = true;
-								serverInformation.cgi["SCRIPT_FILENAME"] = itLoc->filename_cgi;
-								serverInformation.cgi["QUERY_STRING"] = url.raw_query;
-								serverInformation.cgi["PATH_TRANSLATED"] = url.raw_query;
-								//serverInformation.cgi["REQUEST_METHOD"] = ;
-								//serverInformation.cgi["CONTENT_TYPE"] =;
-								//serverInformation.cgi["CONTENT_LENGTH"] =;
-							}
 
+							serverInformation.route_for_uploaded_files = itLoc->route_for_uploaded_files;
+
+							
+							//
 							itLoc = server.locationMap.end();
 							path_for_alias = "";
 

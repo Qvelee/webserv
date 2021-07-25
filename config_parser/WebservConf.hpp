@@ -45,6 +45,7 @@ typedef struct sServerInformation{
 	string				route_for_uploaded_files;//where
 	bool				is_cgi;
 	map<string, string> cgi;
+	map<string, string> cgi_handler;
 }tServerInformation;
 
 typedef struct sLocation{
@@ -68,6 +69,8 @@ typedef struct	sServer{
 	map<int, string>	error_page;
 	size_t				client_max_body_size;
 	vector<Location>	locationMap;
+	//string				filename_cgi;
+	map<string, string> cgi_handler;
 }				tServer;
 
 
@@ -89,6 +92,8 @@ class WebserverConf{
 		void	setError_page(list<string>::iterator &itList, tServer	&server, map<int, string>  &map_ip_port);
 		void	setLocation(list<string>::iterator &itList, tServer	&server, map<int, string> &map_ip_port);
 		void	setClient_max_body_size(list<string>::iterator &itList, tServer&server, map<int, string> &map_ip_port);
+		void	setCgi(list<string>::iterator &itList, tServer&server, map<int, string> &map_ip_port);
+		
 
 		map<int, map<string, tServer > > serverMap;//getter нужен
 		list<string> fileLineToList;
@@ -98,7 +103,7 @@ class WebserverConf{
 	public:
 		
 		map<int, map<string, tServer > >  const &getServerMap() const;//getter
-		map<int, string >   const &getPorts() const ;//getter
+		map<int, string >   const &getPorts() const;//getter
 		WebserverConf(char const *name = "webserver.conf");
 		virtual ~WebserverConf();
 

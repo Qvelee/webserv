@@ -53,7 +53,7 @@ class Location{
 		void	setRootUploadedFiles(list<string>::iterator &itList, std::list<std::string> tokenList);
 		void	setRedirection(list<string>::iterator &itList, std::list<std::string> tokenList);
 		void	setIndex(list<string>::iterator &itList, std::list<std::string> tokenList);
-		void	setFileNameCGI(list<string>::iterator &itList, std::list<std::string> tokenList);
+		//void	setFileNameCGI(list<string>::iterator &itList, std::list<std::string> tokenList);
 };
 }
 #endif

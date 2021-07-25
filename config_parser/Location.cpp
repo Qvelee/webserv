@@ -105,7 +105,7 @@ void	Location::setRedirection(list<string>::iterator &itList, std::list<std::str
 
 }
 
-void	Location::setFileNameCGI(list<string>::iterator &itList, std::list<std::string>)
+/*void	Location::setFileNameCGI(list<string>::iterator &itList, std::list<std::string>)
 {
 	itList++;
 
@@ -118,7 +118,7 @@ void	Location::setFileNameCGI(list<string>::iterator &itList, std::list<std::str
 
 	if ((*itList).compare(0, 2, ";") != 0)
 		throw "there is not ; after cgi_filename";
-}
+}*/
 
 void	Location::fillAll(list<string>::iterator &itList, list<std::string> tokenList)
 {
@@ -132,7 +132,7 @@ void	Location::fillAll(list<string>::iterator &itList, list<std::string> tokenLi
 	funMap.insert(std::make_pair("upload_store", &Location::setRootUploadedFiles));
 	funMap.insert(std::make_pair("return", &Location::setRedirection));
 	funMap.insert(std::make_pair("index", &Location::setIndex));
-	funMap.insert(std::make_pair("cgi_filename", &Location::setFileNameCGI));
+	//funMap.insert(std::make_pair("cgi_filename", &Location::setFileNameCGI));
 
 	itList++;
 

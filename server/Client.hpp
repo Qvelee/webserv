@@ -18,22 +18,24 @@
 # define SUCCESS false
 # define FAILURE true
 
+enum State
+{
+  SLEEP = 0,
+  RECVING,
+  SENDING,
+  FINISHEDRECV,
+  FINISHEDSEND,
+  ERROR,
+  CLOSED
+};
+
 class Client
 {
 	public:
 		Client(void);
 		virtual ~Client();
 		
-		enum State
-		{
-			SLEEP = 0,
-			RECVING,
-			SENDING,
-			FINISHEDRECV,
-			FINISHEDSEND,
-			ERROR,
-			CLOSED
-		};
+
 
 		bool		CreateResponse(const char *request, int request_size,\
 			const std::map<std::string, config::tServer> &config);

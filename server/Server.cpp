@@ -85,22 +85,22 @@ int		Server::AddClientsSockets(fd_set &read_fds, fd_set &write_fds)
 		client_socket = client->getSocket();
 		switch (client->getState())
 		{
-			case Client::State::SLEEP:
+			case SLEEP:
 				FD_SET(client_socket, &read_fds);
 				break;
-			case Client::State::RECVING:
+			case RECVING:
 				FD_SET(client_socket, &read_fds);
 				break;
-			case Client::State::SENDING:
+			case SENDING:
 				FD_SET(client_socket, &write_fds);
 				break;
-			case Client::State::FINISHEDRECV:
+			case FINISHEDRECV:
 				FD_SET(client_socket, &write_fds);
-				client->setState(Client::State::SENDING);
+				client->setState(SENDING);
 				break;
-			case Client::State::FINISHEDSEND:
+			case FINISHEDSEND:
 				FD_SET(client_socket, &read_fds);
-				client->setState(Client::State::SLEEP);
+				client->setState(SLEEP);
 				break;
 			default:
 				break;
@@ -126,13 +126,13 @@ void	Server::HandleClients(const fd_set &read_fds, const fd_set &write_fds)
 		
 		switch (client->getState())
 		{
-			case Client::State::SLEEP:
+			case SLEEP:
 				status = TryRecvRequest(*client, read_fds);
 				break;
-			case Client::State::RECVING:
+			case RECVING:
 				status = TryRecvRequest(*client, read_fds);
 				break;
-			case Client::State::SENDING:
+			case SENDING:
 				status = TrySendResponse(*client, write_fds);
 				break;
 			default:
@@ -172,9 +172,9 @@ bool	Server::TryRecvRequest(Client &client, const fd_set &read_fds)
 			return FAILURE;
 		}
 		if (client.CreateResponse(request, request_size, _config) == SUCCESS)
-			client.setState(Client::State::FINISHEDRECV);
+			client.setState(FINISHEDRECV);
 		else
-			client.setState(Client::State::RECVING);
+			client.setState(RECVING);
 		delete request;
 	}
 	return SUCCESS;
@@ -198,7 +198,7 @@ bool	Server::TrySendResponse(Client &client, const fd_set &write_fds)
 		bytes += client.getAlreadySendBytes();
 		if (bytes == client.getResponse().size())
 		{
-			client.setState(Client::State::FINISHEDSEND);
+			client.setState(FINISHEDSEND);
 			bytes = 0;
 		}
 		client.setAlreadySendBytes(bytes);
