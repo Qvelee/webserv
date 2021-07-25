@@ -28,7 +28,7 @@ void	Client::setSocket(int socket_ID) { _client_socket = socket_ID; }
 
 const std::string	&Client::getResponse() const { return _response_string; }
 
-const State	Client::getState() const { return _connection_state; }
+const Client::State	Client::getState() const { return _connection_state; }
 
 void	Client::setState(State state) { _connection_state = state; }
 

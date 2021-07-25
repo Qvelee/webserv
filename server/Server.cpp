@@ -85,22 +85,22 @@ int		Server::AddClientsSockets(fd_set &read_fds, fd_set &write_fds)
 		client_socket = client->getSocket();
 		switch (client->getState())
 		{
-			case SLEEP:
+		  case Client::SLEEP:
 				FD_SET(client_socket, &read_fds);
 				break;
-			case RECVING:
+		  case Client::RECVING:
 				FD_SET(client_socket, &read_fds);
 				break;
-			case SENDING:
+		  case Client::SENDING:
 				FD_SET(client_socket, &write_fds);
 				break;
-			case FINISHEDRECV:
+		  case Client::FINISHEDRECV:
 				FD_SET(client_socket, &write_fds);
-				client->setState(SENDING);
+				client->setState(Client::SENDING);
 				break;
-			case FINISHEDSEND:
+			case Client::FINISHEDSEND:
 				FD_SET(client_socket, &read_fds);
-				client->setState(SLEEP);
+				client->setState(Client::SLEEP);
 				break;
 			default:
 				break;
@@ -126,13 +126,13 @@ void	Server::HandleClients(const fd_set &read_fds, const fd_set &write_fds)
 		
 		switch (client->getState())
 		{
-			case SLEEP:
+			case Client::SLEEP:
 				status = TryRecvRequest(*client, read_fds);
 				break;
-			case RECVING:
+			case Client::RECVING:
 				status = TryRecvRequest(*client, read_fds);
 				break;
-			case SENDING:
+			case Client::SENDING:
 				status = TrySendResponse(*client, write_fds);
 				break;
 			default:
@@ -172,9 +172,9 @@ bool	Server::TryRecvRequest(Client &client, const fd_set &read_fds)
 			return FAILURE;
 		}
 		if (client.CreateResponse(request, request_size, _config) == SUCCESS)
-			client.setState(FINISHEDRECV);
+			client.setState(Client::FINISHEDRECV);
 		else
-			client.setState(RECVING);
+			client.setState(Client::RECVING);
 		delete request;
 	}
 	return SUCCESS;
@@ -198,7 +198,7 @@ bool	Server::TrySendResponse(Client &client, const fd_set &write_fds)
 		bytes += client.getAlreadySendBytes();
 		if (bytes == client.getResponse().size())
 		{
-			client.setState(FINISHEDSEND);
+			client.setState(Client::FINISHEDSEND);
 			bytes = 0;
 		}
 		client.setAlreadySendBytes(bytes);
