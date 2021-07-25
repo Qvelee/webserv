@@ -95,32 +95,38 @@ const char *const HTTPVersionNotSupported = "<html>\n"
 
 void error200(const Request &, Response &resp) {
   resp.status = "OK";
+  resp.code = StatusOK;
 }
 
 void error201(const Request &, Response &resp) {
   resp.status = "Created";
+  resp.code = StatusCreated;
 }
 
 void error301(const Request &req, Response &resp) {
   resp.status = "Moved Permanently";
+  resp.code = StatusMovedPermanently;
   resp.header["Location"] = req.serv_config.redirection_url;
   resp.header["Content-length"] = "0";
 }
 
 void error302(const Request &req, Response &resp) {
   resp.status = "Found";
+  resp.code = StatusFound;
   resp.header["Location"] = req.serv_config.redirection_url;
   resp.header["Content-length"] = "0";
 }
 
 void error303(const Request &req, Response &resp) {
   resp.status = "See Other";
+  resp.code = StatusSeeOther;
   resp.header["Location"] = req.serv_config.redirection_url;
   resp.header["Content-length"] = "0";
 }
 
 void error307(const Request &req, Response &resp) {
   resp.status = "Temporary Redirect";
+  resp.code = StatusTemporaryRedirect;
   resp.header["Location"] = req.serv_config.redirection_url;
   resp.header["Content-length"] = "0";
 }
@@ -145,6 +151,7 @@ bool read_all_file(const std::string &name, std::string &body) {
 
 void error400(const Request &req, Response &resp) {
   resp.status = "Bad Request";
+  resp.code = StatusBadRequest;
   if (req.serv_config.error_pages.count(400)) {
 	if (!read_all_file(req.serv_config.error_pages.at(400), resp.body)) {
 	  error500(req, resp);
@@ -157,6 +164,7 @@ void error400(const Request &req, Response &resp) {
 
 void error403(const Request &req, Response &resp) {
   resp.status = "Forbidden";
+  resp.code = StatusForbidden;
   if (req.serv_config.error_pages.count(403)) {
 	if (!read_all_file(req.serv_config.error_pages.at(403), resp.body)) {
 	  error500(req, resp);
@@ -169,6 +177,7 @@ void error403(const Request &req, Response &resp) {
 
 void error404(const Request &req, Response &resp) {
   resp.status = "Not Found";
+  resp.code = StatusNotFound;
   if (req.serv_config.error_pages.count(404)) {
 	if (!read_all_file(req.serv_config.error_pages.at(404), resp.body)) {
 	  error500(req, resp);
@@ -181,6 +190,7 @@ void error404(const Request &req, Response &resp) {
 
 void error405(const Request &req, Response &resp) {
   resp.status = "Method Not Allowed";
+  resp.code = StatusMethodNotAllowed;
   if (req.serv_config.error_pages.count(405)) {
 	if (!read_all_file(req.serv_config.error_pages.at(405), resp.body)) {
 	  error500(req, resp);
@@ -193,6 +203,7 @@ void error405(const Request &req, Response &resp) {
 
 void error408(const Request &req, Response &resp) {
   resp.status = "Request Timeout";
+  resp.code = StatusRequestTimeout;
   if (req.serv_config.error_pages.count(408)) {
 	if (!read_all_file(req.serv_config.error_pages.at(408), resp.body)) {
 	  error500(req, resp);
@@ -205,6 +216,7 @@ void error408(const Request &req, Response &resp) {
 
 void error413(const Request &req, Response &resp) {
   resp.status = "Request Entity Too Large";
+  resp.code = StatusRequestEntityTooLarge;
   if (req.serv_config.error_pages.count(413)) {
 	if (!read_all_file(req.serv_config.error_pages.at(413), resp.body)) {
 	  error500(req, resp);
@@ -217,6 +229,7 @@ void error413(const Request &req, Response &resp) {
 
 void error414(const Request &req, Response &resp) {
   resp.status = "Request URI Too Long";
+  resp.code = StatusRequestURITooLong;
   if (req.serv_config.error_pages.count(414)) {
 	if (!read_all_file(req.serv_config.error_pages.at(414), resp.body)) {
 	  error500(req, resp);
@@ -229,6 +242,7 @@ void error414(const Request &req, Response &resp) {
 
 void error500(const Request &req, Response &resp) {
   resp.status = "Internal Server Error";
+  resp.code = StatusInternalServerError;
   if (req.serv_config.error_pages.count(500)) {
 	if (!read_all_file(req.serv_config.error_pages.at(501), resp.body)) {
 	  resp.body = InternalServerError;
@@ -240,6 +254,7 @@ void error500(const Request &req, Response &resp) {
 
 void error501(const Request &req, Response &resp) {
   resp.status = "Not Implemented";
+  resp.code = StatusNotImplemented;
   if (req.serv_config.error_pages.count(501)) {
 	if (!read_all_file(req.serv_config.error_pages.at(501), resp.body)) {
 	  error500(req, resp);
@@ -252,6 +267,7 @@ void error501(const Request &req, Response &resp) {
 
 void error503(const Request &req, Response &resp) {
   resp.status = "Service Unavailable";
+  resp.code = StatusServiceUnavailable;
   if (req.serv_config.error_pages.count(503)) {
 	if (!read_all_file(req.serv_config.error_pages.at(503), resp.body)) {
 	  error500(req, resp);
@@ -264,6 +280,7 @@ void error503(const Request &req, Response &resp) {
 
 void error505(const Request &req, Response &resp) {
   resp.status = "HTTP Version Not Supported";
+  resp.code = StatusHTTPVersionNotSupported;
   if (req.serv_config.error_pages.count(505)) {
 	if (!read_all_file(req.serv_config.error_pages.at(505), resp.body)) {
 	  error500(req, resp);

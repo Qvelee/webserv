@@ -561,7 +561,7 @@ tServerInformation chooseServer(http::url::URL url, map<string, tServer> tmp) {
 			tmp_file_name = itLoc->alias + serverInformation.name_file;
 		  } else
 			tmp_file_name = url.path;
-		  if (tmp_file_name.size() > 1 && tmp_file_name[0] == '/')
+		  if (/*tmp_file_name.size() > 1 && */tmp_file_name[0] == '/')
 			tmp_file_name.erase(0, 1);
 		  serverInformation.name_file = tmp_file_name;
 
