@@ -370,21 +370,8 @@ bool check_config(Request &req) {
 	req.code = StatusCode(req.serv_config.redirection_status_code);
 	return false;
   }
-  char cur_dir[256];
-  getcwd(cur_dir, 256);
-  req.current_dir += cur_dir;
-  req.current_dir += "/";
-  struct stat buf = {};
-  if (stat(req.serv_config.name_file.c_str(), &buf) == -1 && !req.serv_config.name_file.empty()) {
-	if (errno == ENOENT || errno == EACCES) {
-	  req.code = StatusNotFound;
-	} else {
-	  req.code = StatusInternalServerError;
-	}
-	return false;
-  }
   if (req.serv_config.is_cgi) {
-    // auth - не делаем
+	// auth - не делаем
 	std::stringstream ss;
 	ss << req.content_length;
 	req.serv_config.cgi["CONTENT_LENGTH"] = ss.str();
@@ -405,6 +392,21 @@ bool check_config(Request &req) {
 	//SERVER_PORT Саша
 	req.serv_config.cgi["SERVER_PROTOCOL"] = "HTTP/1.1";
 	//SERVER_SOFTWARE не делаем
+  } else {
+	char cur_dir[256];
+	getcwd(cur_dir, 256);
+	req.current_dir += cur_dir;
+	req.current_dir += "/";
+	struct stat buf = {};
+	if (stat(req.serv_config.name_file.c_str(), &buf) == -1
+		&& !req.serv_config.name_file.empty()) {
+	  if (errno == ENOENT || errno == EACCES) {
+		req.code = StatusNotFound;
+	  } else {
+		req.code = StatusInternalServerError;
+	  }
+	  return false;
+	}
   }
   return true;
 }
