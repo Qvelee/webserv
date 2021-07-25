@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/07/21 12:35:21 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/24 21:12:49 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/25 14:10:07 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,7 +32,7 @@ using	std::map;
 class Cgi
 {
 	public:
-		Cgi(const http::Request &request);
+		Cgi(const http::Request &request, const string &cgi_handler);
 		virtual ~Cgi();
 
 		enum Status
@@ -72,6 +72,7 @@ class Cgi
 		bool	FindVariable(const std::string &variable,\
 			const map<string, string> &table);
 		void	GetVariables(const http::Request &request);
+		void	GetArguments(const string &script_filename);
 		bool	CopyStdIO(void);
 		bool	CreatePipes(void);
 		bool	ExecCgi(void);
@@ -86,30 +87,40 @@ class Cgi
 		bool	ParseHeaders(const string &headers);
 		bool	AddHeader(const string &headers, string &add_to,\
 			const string &header_name);
+		bool	CheckCgiProcessExecuted(void) const;
 		int		TryWaitCgiProcess(bool force_terminate = false);
 		void	CreateErrorResponse(http::Response &response) const;
 
 		State	_state;
 		bool	_chunked_headers_send;
+		int		_already_send_bytes;
 
 		int		_fd_stdin;
 		int		_fd_stdout;
 		int		_fd_cgi_input[2]; // write data to _fd_sgi_input[1];
 		int		_fd_cgi_output[2]; // read data from _fd_sgi_output[0];
 		pid_t	_cgi_process;
-		string	_target_file;
 
 		const http::Request	*_request;
 		CgiHeaders			_cgi_headers;
 		string				_body;
 
-		string	_cgi_script;
-		char	**_script_arguments;
+		string	_cgi_handler;
 		char	**_cgi_variables;
-		int		_already_send_bytes;
+		char	**_cgi_arguments;
 
-		string		_CGI_BIN_PATH;
 		const int	_IO_BUFFER;
+
+		class CgiVariableMissing : public std::exception
+		{
+			public:
+				CgiVariableMissing(string variable);
+
+				virtual const char	*what(void) const throw();
+			private:
+				CgiVariableMissing(void);
+				string	_variable;
+		};
 };
 
 #endif

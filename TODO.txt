@@ -1,3 +1,0 @@
-add returning error pages
-leaks if second server faild to start FIXED
-add info about client

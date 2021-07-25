@@ -6,20 +6,18 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/07/21 12:35:15 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/25 12:56:20 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/25 15:06:38 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Cgi.hpp"
 
 // TODO timeout скрипта
-// TODO redirect?
-// TODO add error pages
-// TODO send file in args
+// TODO выставить данные о клиенте
 
-Cgi::Cgi(const http::Request &request) :\
-	_fd_stdin(-1), _fd_stdout(-1), _script_arguments(NULL),\
-	_cgi_variables(NULL), _already_send_bytes(0),
+Cgi::Cgi(const http::Request &request, const string &cgi_handler) :\
+	_fd_stdin(-1), _fd_stdout(-1), _cgi_variables(NULL),\
+	_cgi_arguments(NULL), _already_send_bytes(0),\
 	_IO_BUFFER(65536)
 {
 	_fd_cgi_input[0] = -1;
@@ -31,19 +29,17 @@ Cgi::Cgi(const http::Request &request) :\
 	_chunked_headers_send = false;
 
 	if (FindVariable("SCRIPT_NAME", request.serv_config.cgi) == FAILURE)
-		throw "execept"; // TODO add exception
+		throw Cgi::CgiVariableMissing("SCRIPT_NAME variable is missing");
 	if (FindVariable("SCRIPT_FILENAME", request.serv_config.cgi) == FAILURE)
-		throw "execept"; // TODO add exception
+		throw Cgi::CgiVariableMissing("SCRIPT_FILENAME variable is missing");
 	if (FindVariable("PATH_INFO", request.serv_config.cgi) == FAILURE)
-		throw "execept"; // TODO add exception
+		throw Cgi::CgiVariableMissing("PATH_INFO variable is missing");
 	if (FindVariable("PATH_TRANSLATED", request.serv_config.cgi) == FAILURE)
-		throw "execept"; // TODO add exception
+		throw Cgi::CgiVariableMissing("PATH_TRANSLATED variable is missing");
 
-	_CGI_BIN_PATH = "./cgi-bin/";
-	_cgi_script = _CGI_BIN_PATH;
-	_cgi_script.append((*(request.serv_config.cgi.find("SCRIPT_NAME"))).second);
-	_target_file = (*(request.serv_config.cgi.find("PATH_TRANSLATED"))).second;
+	_cgi_handler = cgi_handler;
 	GetVariables(request);
+	GetArguments((*(request.serv_config.cgi.find("SCRIPT_FILENAME"))).second);
 	_request = &request;
 }
 
@@ -67,6 +63,14 @@ Cgi::~Cgi()
 		while (_cgi_variables[++i] != NULL)
 			delete [] _cgi_variables[i];
 		delete [] _cgi_variables;
+	}
+	if (_cgi_arguments != NULL)
+	{
+		int		i = -1;
+		
+		while (_cgi_arguments[++i] != NULL)
+			delete [] _cgi_arguments[i];
+		delete [] _cgi_arguments;
 	}
 }
 
@@ -102,6 +106,14 @@ void	Cgi::GetVariables(const http::Request &request)
 	_cgi_variables[i] = NULL;
 }
 
+void	Cgi::GetArguments(const string &script_filename)
+{
+	_cgi_arguments = new char*[2];
+	_cgi_arguments[0] = new char[script_filename.length() + 1];
+	strcpy(_cgi_arguments[0], script_filename.c_str());
+	_cgi_arguments[1] = NULL;
+}
+
 bool	Cgi::Start(void)
 {
 	if (CopyStdIO() == FAILURE)
@@ -113,6 +125,8 @@ bool	Cgi::Start(void)
 	if (dup2(_fd_cgi_output[1], STDOUT_FILENO) == -1)
 		return Error("can't replace stdout");
 	if (ExecCgi())
+		return FAILURE;
+	if (CheckCgiProcessExecuted())
 		return FAILURE;
 	_state = WRITING;
 	return SUCCESS;
@@ -154,7 +168,7 @@ bool	Cgi::ExecCgi(void)
 			// 	all cgi processes will freeze;
 			for (int i = 3; i < 1024; i++)
 				close(i);
-			execve(_cgi_script.c_str(), _script_arguments, _cgi_variables);
+			execve(_cgi_handler.c_str(), _cgi_arguments, _cgi_variables);
 			exit(errno);
 		default:
 			// because cgi process use _fd_cgi_input[0] to read data
@@ -423,6 +437,21 @@ bool	Cgi::AddHeader(const string &headers, string &add_to,\
 	return FAILURE;
 }
 
+bool	Cgi::CheckCgiProcessExecuted(void) const
+{
+	int		status;
+	int		return_value;
+
+	return_value = waitpid(_cgi_process, &status, WNOHANG);
+	if (return_value != 0)
+	{
+		errno = WEXITSTATUS(status);
+		Error("can't launch cgi process {-}", _cgi_handler, true);
+		return FAILURE;
+	}
+	return SUCCESS;
+}
+
 int		Cgi::TryWaitCgiProcess(bool force_terminate)
 {
 	int		status;
@@ -452,4 +481,16 @@ int		Cgi::TryWaitCgiProcess(bool force_terminate)
 void	Cgi::CreateErrorResponse(http::Response &response) const
 {
 	http::error500(*_request, response);
+}
+
+Cgi::CgiVariableMissing::CgiVariableMissing(void) { }
+
+Cgi::CgiVariableMissing::CgiVariableMissing(string variable)
+{
+	_variable = variable;
+}
+
+const char	*Cgi::CgiVariableMissing::what(void) const throw()
+{
+	return _variable.c_str();
 }
