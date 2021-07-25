@@ -6,7 +6,7 @@
 #    By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2021/05/14 14:50:43 by nelisabe          #+#    #+#              #
-#    Updated: 2021/07/23 09:41:45 by nelisabe         ###   ########.fr        #
+#    Updated: 2021/07/25 21:47:31 by nelisabe         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -24,7 +24,7 @@ NAME =				libserv.a
 
 COMP ?=				clang++
 
-FLAGS ?=			-g #-Wall -Wextra -Werror -std=c++98
+FLAGS ?=			-g -std=c++98 -Wall -Wextra -Werror
 
 INCLUDES ?=			-I. -I./../http/ -I./../config_parser/ -I./../cgi/
 

@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/07/21 12:35:21 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/25 14:10:07 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/25 21:38:30 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,9 +17,10 @@
 # include "IIOController.hpp"
 # include "Errors.hpp"
 # include "errors.hpp"
-# include <errno.h>
+# include <cerrno>
 # include <string.h>
 # include <unistd.h>
+# include <stdlib.h>
 # include <map>
 # include <fcntl.h>
 # include <sys/types.h>
@@ -93,7 +94,7 @@ class Cgi
 
 		State	_state;
 		bool	_chunked_headers_send;
-		int		_already_send_bytes;
+		size_t	_already_send_bytes;
 
 		int		_fd_stdin;
 		int		_fd_stdout;
@@ -115,6 +116,7 @@ class Cgi
 		{
 			public:
 				CgiVariableMissing(string variable);
+				virtual ~CgiVariableMissing() throw();
 
 				virtual const char	*what(void) const throw();
 			private:

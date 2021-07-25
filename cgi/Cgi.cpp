@@ -6,15 +6,15 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/07/21 12:35:15 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/25 21:13:10 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/25 21:40:48 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Cgi.hpp"
 
 Cgi::Cgi(const http::Request &request, const string &cgi_handler) :\
-	_fd_stdin(-1), _fd_stdout(-1), _cgi_variables(NULL),\
-	_cgi_arguments(NULL), _already_send_bytes(0),\
+	_already_send_bytes(0), _fd_stdin(-1), _fd_stdout(-1), \
+	_cgi_variables(NULL), _cgi_arguments(NULL), \
 	_IO_BUFFER(65536)
 {
 	_fd_cgi_input[0] = -1;
@@ -205,17 +205,17 @@ void	Cgi::RestoreStdIO(void)
 bool	Cgi::AddCgiFdToWatch(IIOController *fd_controller) const
 {
 	if (_state == WRITING && _fd_cgi_input[1] != -1)
-		fd_controller->AddFDToWatch(_fd_cgi_input[1], IIOController::IOMode::WRITE);
+		fd_controller->AddFDToWatch(_fd_cgi_input[1], IIOController::WRITE);
 	else if (_state == READING && _fd_cgi_output[0] != -1)
-		fd_controller->AddFDToWatch(_fd_cgi_output[0], IIOController::IOMode::READ);
+		fd_controller->AddFDToWatch(_fd_cgi_output[0], IIOController::READ);
 	else if (_state == RECVCHUNKS && _fd_cgi_output[0] != -1)
-		fd_controller->AddFDToWatch(_fd_cgi_output[0], IIOController::IOMode::READ);
+		fd_controller->AddFDToWatch(_fd_cgi_output[0], IIOController::READ);
 	return SUCCESS;
 }
 
 Cgi::Status	Cgi::ContinueIO(IIOController *fd_controller, http::Response &response)
 {
-	bool	status;
+	bool	status = FAILURE;
 
 	switch (_state)
 	{
@@ -286,7 +286,7 @@ void	Cgi:: FillChunkResponse(http::Response &response)
 
 void	Cgi::FillHeaders(http::Response &response)
 {
-	int		i;
+	size_t	i;
 
 	if (_cgi_headers.ended == false)
 		return ;
@@ -312,7 +312,7 @@ void	Cgi::FillHeaders(http::Response &response)
 
 bool	Cgi::Write(IIOController *fd_controller)
 {
-	if (fd_controller->CheckIfFDReady(_fd_cgi_input[1], IIOController::IOMode::WRITE))
+	if (fd_controller->CheckIfFDReady(_fd_cgi_input[1], IIOController::WRITE))
 	{
 		int			bytes;
 		const char	*buffer = _request->body.c_str();
@@ -338,7 +338,7 @@ bool	Cgi::Write(IIOController *fd_controller)
 
 bool	Cgi::Read(IIOController *fd_controller)
 {
-	if (fd_controller->CheckIfFDReady(_fd_cgi_output[0], IIOController::IOMode::READ))
+	if (fd_controller->CheckIfFDReady(_fd_cgi_output[0], IIOController::READ))
 	{
 		int		bytes;
 		char	buffer[_IO_BUFFER];
@@ -360,7 +360,8 @@ bool	Cgi::Read(IIOController *fd_controller)
 			return SUCCESS;
 		}
 		if (_cgi_headers.ended &&\
-			_body.size() == atoi(_cgi_headers.content_length.c_str()))
+			static_cast<int>(_body.size()) ==\
+			atoi(_cgi_headers.content_length.c_str()))
 		{
 			_state = FINISHED;
 			return SUCCESS;
@@ -403,8 +404,6 @@ bool	Cgi::CheckForChunks(void)
 
 bool	Cgi::ParseHeaders(const string &headers)
 {
-	size_t	position;
-	size_t	header_name_len;
 	bool	status = FAILURE;
 
 	if (_cgi_headers.content_length == "")
@@ -489,6 +488,8 @@ Cgi::CgiVariableMissing::CgiVariableMissing(string variable)
 {
 	_variable = variable;
 }
+
+Cgi::CgiVariableMissing::~CgiVariableMissing() throw() { }
 
 const char	*Cgi::CgiVariableMissing::what(void) const throw()
 {

@@ -6,15 +6,15 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/13 14:03:29 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/25 16:54:39 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/25 21:47:18 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 # include "Client.hpp"
 
 Client::Client(IIOController *fd_controller) : \
-	_client_socket(-1), _recv_status(EMPTY), _connection_state(SLEEP),\
-	_bytes_already_send(0), _cgi(NULL)
+	_client_socket(-1), _bytes_already_send(0),\
+	_cgi(NULL), _recv_status(EMPTY), _connection_state(SLEEP)
 {
 	_fd_controller = fd_controller;
 }
@@ -55,7 +55,7 @@ void	Client::setServerIp(const string &ip) { _server_ip = ip; }
 
 const std::string	&Client::getResponse() const { return _response_string; }
 
-const Client::State	Client::getState() const { return _connection_state; }
+Client::State	Client::getState() const { return _connection_state; }
 
 void	Client::setState(State state) { _connection_state = state; }
 
@@ -148,7 +148,7 @@ bool	Client::CgiProcess(void)
 	if (status == Cgi::READY)
 	{
 		_response_string.clear();
-		if (_response.code != http::StatusCode::NoError)
+		if (_response.code != http::NoError)
 			http::ResponseToString(_response, _response_string);
 		else
 			_response_string = _response.body;

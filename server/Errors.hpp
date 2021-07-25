@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/07/22 19:30:32 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/22 21:59:59 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/25 21:19:03 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,7 @@
 # include <string>
 # include <string.h>
 # include <iostream>
+# include <cerrno>
 
 # define SUCCESS false
 # define FAILURE true

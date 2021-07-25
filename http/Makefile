@@ -6,7 +6,7 @@
 #    By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2021/05/14 14:50:43 by nelisabe          #+#    #+#              #
-#    Updated: 2021/07/22 10:37:49 by nelisabe         ###   ########.fr        #
+#    Updated: 2021/07/25 21:48:26 by nelisabe         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -24,7 +24,7 @@ NAME =				libhttp.a
 
 COMP ?=				clang++
 
-FLAGS ?=			-g #-Wall -Wextra -Werror -std=c++98
+FLAGS ?=			-g -std=c++98 -Wall -Wextra -Werror 
 
 INCLUDES ?=			-I. -I./../config_parser/
 

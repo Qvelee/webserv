@@ -1,6 +1,7 @@
 # include <unistd.h>
 # include <string>
 # include <iostream>
+# include <stdlib.h>
 
 using	std::cout;
 using	std::cin;
@@ -33,7 +34,7 @@ int		main(int argc, char **argv, char **envp)
 	std::cerr << " END-OF-ARGUMETNS\n";
 	std::cerr << "---END---\n";
 
-	string	body = "This is cgi test.we response body.\nSome text.....\n";
+	string	body = "This is cgi test.ws response body.\nSome text.....\n";
 	AddVariables(envp, body);
 	cout << "Content-length: "<< body.length() << "\n";
 	cout << "Content-type: text/plain\n";

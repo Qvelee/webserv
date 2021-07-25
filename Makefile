@@ -6,7 +6,7 @@
 #    By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2021/05/14 16:22:01 by nelisabe          #+#    #+#              #
-#    Updated: 2021/07/22 10:38:59 by nelisabe         ###   ########.fr        #
+#    Updated: 2021/07/25 21:49:47 by nelisabe         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -25,7 +25,7 @@ NAME =			webserv
 
 COMP ?=			clang++
 
-FLAGS ?=		-g #-Wall -Wextra -Werror -std=c++98
+FLAGS ?=		-g -std=c++98 -Wall -Wextra -Werror
 
 INCLUDES ?=		-I./server/ -I./http/ -I./config_parser/ -I./cgi/
 

@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/13 13:58:58 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/25 16:12:28 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/25 21:44:16 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,7 +48,7 @@ class Client
 		void			setServerPort(ushort port);
 		void			setServerIp(const string &ip);
 		const string	&getResponse() const;
-		const State		getState() const;
+		State			getState() const;
 		void			setState(State state);
 		int				getAlreadySendBytes() const;
 		void			setAlreadySendBytes(int bytes);
