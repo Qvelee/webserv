@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/13 14:03:29 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/25 16:07:35 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/25 16:54:39 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -115,6 +115,7 @@ bool	Client::InitCgi(void)
 	_request.serv_config.cgi.insert(std::make_pair("SERVER_ADDR", _server_ip));
 	_request.serv_config.cgi.insert(std::make_pair("REMOTE_PORT", _client_port));
 	_request.serv_config.cgi.insert(std::make_pair("REMOTE_ADDR", _client_ip));
+	_request.serv_config.cgi.insert(std::make_pair("REDIRECT_STATUS", "200"));
 	try { _cgi = new Cgi(_request, _request.serv_config.cgi_handler); }
 	catch(std::exception ex)
 	{

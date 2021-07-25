@@ -6,14 +6,14 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/07/21 12:35:15 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/25 15:06:38 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/25 18:54:42 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Cgi.hpp"
 
 // TODO timeout скрипта
-// TODO выставить данные о клиенте
+// TODO если ошибка вызвать error500
 
 Cgi::Cgi(const http::Request &request, const string &cgi_handler) :\
 	_fd_stdin(-1), _fd_stdout(-1), _cgi_variables(NULL),\
@@ -108,10 +108,12 @@ void	Cgi::GetVariables(const http::Request &request)
 
 void	Cgi::GetArguments(const string &script_filename)
 {
-	_cgi_arguments = new char*[2];
-	_cgi_arguments[0] = new char[script_filename.length() + 1];
-	strcpy(_cgi_arguments[0], script_filename.c_str());
-	_cgi_arguments[1] = NULL;
+	_cgi_arguments = new char*[3];
+	_cgi_arguments[0] = new char[_cgi_handler.length() + 1];
+	strcpy(_cgi_arguments[0], _cgi_handler.c_str());
+	_cgi_arguments[1] = new char[script_filename.length() + 1];
+	strcpy(_cgi_arguments[1], script_filename.c_str());
+	_cgi_arguments[2] = NULL;
 }
 
 bool	Cgi::Start(void)
@@ -169,6 +171,7 @@ bool	Cgi::ExecCgi(void)
 			for (int i = 3; i < 1024; i++)
 				close(i);
 			execve(_cgi_handler.c_str(), _cgi_arguments, _cgi_variables);
+			Error("execve failed");
 			exit(errno);
 		default:
 			// because cgi process use _fd_cgi_input[0] to read data

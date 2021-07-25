@@ -6,11 +6,13 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/06 12:56:02 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/25 16:25:32 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/25 16:40:50 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 # include "Server.hpp"
+
+// TODO timeout клиентов
 
 Server::Server(void) : _server_socket(-1), _IO_BUFFER_SIZE(65536)
 {
