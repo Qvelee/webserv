@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/06 12:56:25 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/24 11:48:15 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/25 12:05:21 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,7 +31,6 @@
 # include <fcntl.h>
 
 // -- server settings --
-# define SERVER_PORT 8080
 # define MAX_CONNECTIONS 5
 // ---------------------
 

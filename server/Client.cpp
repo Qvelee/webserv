@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/13 14:03:29 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/24 22:25:16 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/24 22:49:39 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -91,18 +91,18 @@ void	Client::CreateResponse(const char *request, int requset_size,\
 
 bool	Client::InitCgi(void)
 {
-	// _request.serv_config.cgi.insert(std::make_pair("PATH_INFO", "/cgi-test.txt"));
-	// _request.serv_config.cgi.insert(std::make_pair("PATH_TRANSLATED",\
-	// 	"/home/guplee/42/webserv/cgi-test.txt"));
-	// _request.serv_config.cgi.insert(std::make_pair("SCRIPT_NAME", "cpptest"));
-	// _request.serv_config.cgi.insert(std::make_pair("SCRIPT_FILENAME",\
-	// 	"/home/guplee/42/webserv/cgi-bin/cpptest"));
 	_request.serv_config.cgi.insert(std::make_pair("PATH_INFO", "/cgi-test.txt"));
 	_request.serv_config.cgi.insert(std::make_pair("PATH_TRANSLATED",\
 		"/home/guplee/42/webserv/cgi-test.txt"));
-	_request.serv_config.cgi.insert(std::make_pair("SCRIPT_NAME", "cppchunkedtest"));
+	_request.serv_config.cgi.insert(std::make_pair("SCRIPT_NAME", "cpptest"));
 	_request.serv_config.cgi.insert(std::make_pair("SCRIPT_FILENAME",\
-		"/home/guplee/42/webserv/cgi-bin/cppchunkedtest"));
+		"/home/guplee/42/webserv/cgi-bin/cpptest"));
+	// _request.serv_config.cgi.insert(std::make_pair("PATH_INFO", "/cgi-test.txt"));
+	// _request.serv_config.cgi.insert(std::make_pair("PATH_TRANSLATED",\
+		// "/home/guplee/42/webserv/cgi-test.txt"));
+	// _request.serv_config.cgi.insert(std::make_pair("SCRIPT_NAME", "cppchunkedtest"));
+	// _request.serv_config.cgi.insert(std::make_pair("SCRIPT_FILENAME",\
+		// "/home/guplee/42/webserv/cgi-bin/cppchunkedtest"));
 
 	_cgi = new Cgi(_request);
 	if (_cgi->Start() == FAILURE)
