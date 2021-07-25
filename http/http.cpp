@@ -394,6 +394,9 @@ bool check_config(Request &req) {
 	//SERVER_SOFTWARE не делаем
   } else {
 	char cur_dir[256];
+	for (int i = 0; i < 256; ++i) {
+	  cur_dir[i] = '\0';
+	}
 	getcwd(cur_dir, 256);
 	req.current_dir += cur_dir;
 	req.current_dir += "/";
