@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/07/21 12:35:15 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/25 21:40:48 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/25 22:24:27 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -125,7 +125,7 @@ bool	Cgi::Start(void)
 		return Error("can't replace stdout");
 	if (ExecCgi())
 		return FAILURE;
-	if (CheckCgiProcessExecuted())
+	if (CheckCgiProcessCrashed())
 		return FAILURE;
 	_state = WRITING;
 	return SUCCESS;
@@ -168,7 +168,7 @@ bool	Cgi::ExecCgi(void)
 			for (int i = 3; i < 1024; i++)
 				close(i);
 			execve(_cgi_handler.c_str(), _cgi_arguments, _cgi_variables);
-			Error("execve failed");
+			Error("execve failed"); // TODO change message
 			exit(errno);
 		default:
 			// because cgi process use _fd_cgi_input[0] to read data
@@ -217,6 +217,11 @@ Cgi::Status	Cgi::ContinueIO(IIOController *fd_controller, http::Response &respon
 {
 	bool	status = FAILURE;
 
+	if (CheckCgiProcessCrashed() == FAILURE)
+	{
+		CreateErrorResponse(response);
+		return READY;
+	}
 	switch (_state)
 	{
 		case WRITING:
@@ -436,7 +441,7 @@ bool	Cgi::AddHeader(const string &headers, string &add_to,\
 	return FAILURE;
 }
 
-bool	Cgi::CheckCgiProcessExecuted(void) const
+bool	Cgi::CheckCgiProcessCrashed(void) const
 {
 	int		status;
 	int		return_value;
@@ -480,6 +485,7 @@ int		Cgi::TryWaitCgiProcess(bool force_terminate)
 void	Cgi::CreateErrorResponse(http::Response &response) const
 {
 	http::error500(*_request, response);
+	http::add_length(response, false);
 }
 
 Cgi::CgiVariableMissing::CgiVariableMissing(void) { }

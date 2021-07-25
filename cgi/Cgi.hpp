@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/07/21 12:35:21 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/25 21:38:30 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/25 22:09:05 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -88,7 +88,7 @@ class Cgi
 		bool	ParseHeaders(const string &headers);
 		bool	AddHeader(const string &headers, string &add_to,\
 			const string &header_name);
-		bool	CheckCgiProcessExecuted(void) const;
+		bool	CheckCgiProcessCrashed(void) const;
 		int		TryWaitCgiProcess(bool force_terminate = false);
 		void	CreateErrorResponse(http::Response &response) const;
 
