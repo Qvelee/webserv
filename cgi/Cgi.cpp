@@ -6,14 +6,11 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/07/21 12:35:15 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/25 18:54:42 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/25 21:13:10 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Cgi.hpp"
-
-// TODO timeout скрипта
-// TODO если ошибка вызвать error500
 
 Cgi::Cgi(const http::Request &request, const string &cgi_handler) :\
 	_fd_stdin(-1), _fd_stdout(-1), _cgi_variables(NULL),\
