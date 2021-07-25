@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/07/21 12:35:21 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/25 22:09:05 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/25 23:29:33 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,6 +25,7 @@
 # include <fcntl.h>
 # include <sys/types.h>
 # include <sys/wait.h>
+# include <sys/stat.h>
 # include <sstream>
 
 using	std::string;
@@ -90,7 +91,8 @@ class Cgi
 			const string &header_name);
 		bool	CheckCgiProcessCrashed(void) const;
 		int		TryWaitCgiProcess(bool force_terminate = false);
-		void	CreateErrorResponse(http::Response &response) const;
+		void	CreateErrorResponse(http::Response &response, \
+			bool error_not_found = false) const;
 
 		State	_state;
 		bool	_chunked_headers_send;

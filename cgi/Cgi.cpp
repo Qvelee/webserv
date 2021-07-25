@@ -6,11 +6,13 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/07/21 12:35:15 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/25 22:24:27 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/25 23:38:32 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Cgi.hpp"
+
+// TODO add 404 error script
 
 Cgi::Cgi(const http::Request &request, const string &cgi_handler) :\
 	_already_send_bytes(0), _fd_stdin(-1), _fd_stdout(-1), \
@@ -244,18 +246,27 @@ Cgi::Status	Cgi::ContinueIO(IIOController *fd_controller, http::Response &respon
 			TryWaitCgiProcess(true);
 			return READY;
 		}
-		if (_state == FINISHED)
-		{
-			FillResponse(response);
-			TryWaitCgiProcess(true);
-			return READY;
-		}
 		if (_state == RECVCHUNKS)
 		{
 			FillChunkResponse(response);
 			_body.clear();
 			_chunked_headers_send = true;
 			return CHUNKED;
+		}
+		if (_state == FINISHED)
+		{
+			FillResponse(response);
+			TryWaitCgiProcess(true);
+			if (response.body == "" && response.code == http::NoError &&\
+				response.header.empty() && response.status == "")
+			{
+				struct stat	temp;
+				if (stat(_cgi_arguments[1], &temp) == -1)
+					CreateErrorResponse(response, true);
+				else
+					CreateErrorResponse(response);
+			}
+			return READY;
 		}
 		if (_state == FINCHUNKS)
 		{
@@ -482,9 +493,13 @@ int		Cgi::TryWaitCgiProcess(bool force_terminate)
 	return return_value;	
 }
 
-void	Cgi::CreateErrorResponse(http::Response &response) const
+void	Cgi::CreateErrorResponse(http::Response &response,
+	bool error_not_found) const
 {
-	http::error500(*_request, response);
+	if (error_not_found)
+		http::error404(*_request, response);
+	else
+		http::error500(*_request, response);
 	http::add_length(response, false);
 }
 
