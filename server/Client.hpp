@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/13 13:58:58 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/25 12:15:43 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/25 16:12:28 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,8 +17,9 @@
 # include "Cgi.hpp"
 # include "IIOController.hpp"
 # include "Errors.hpp"
+# include <sstream>
 
-
+using	std::string;
 
 class Client
 {
@@ -38,18 +39,21 @@ class Client
 		};
 
 		void	CreateResponse(const char *request, int request_size,\
-			const std::map<std::string, config::tServer> &config);
+			const std::map<string, config::tServer> &config);
 
-		int					getSocket(void) const;
-		void				setSocket(int socket_ID);
-		const std::string	&getResponse() const;
-		const State			getState() const;
-		void				setState(State state);
-		int					getAlreadySendBytes() const;
-		void				setAlreadySendBytes(int bytes);
-		void				CgiAddFd(void) const;
-		bool				CgiProcess(void);
-		void				ChunkResponseToString(void);
+		int				getSocket(void) const;
+		void			setSocket(int socket_ID);
+		void			setClientPort(ushort port);
+		void			setClientIp(const string &ip);
+		void			setServerPort(ushort port);
+		void			setServerIp(const string &ip);
+		const string	&getResponse() const;
+		const State		getState() const;
+		void			setState(State state);
+		int				getAlreadySendBytes() const;
+		void			setAlreadySendBytes(int bytes);
+		void			CgiAddFd(void) const;
+		bool			CgiProcess(void);
 	private:
 		Client(Client const &);
 
@@ -66,9 +70,12 @@ class Client
 		bool	InitCgi(void);
 
 		int				_client_socket;
-		int				_client_port;
-		std::string		_request_string;
-		std::string		_response_string;
+		string			_client_port;
+		string			_client_ip;
+		string			_server_port;
+		string			_server_ip;
+		string			_request_string;
+		string			_response_string;
 		http::Request	_request;
 		http::Response	_response;
 		int				_bytes_already_send;

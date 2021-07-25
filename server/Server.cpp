@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/06 12:56:02 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/25 12:22:12 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/25 16:25:32 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,8 +31,10 @@ Server::~Server()
 
 Server	&Server::operator=(const Server &) { return *this; }
 
-bool	Server::Setup(ushort port, const std::string &ip,\
-	const std::map<std::string, config::tServer> &config,\
+int		Server::getSocket(void) const { return _server_socket; }
+
+bool	Server::Setup(ushort port, const string &ip,\
+	const std::map<string, config::tServer> &config,\
 	IIOController *fd_controller)
 {
 	_config = config;
@@ -75,8 +77,6 @@ bool	Server::CreateSocket(void)
 	_socket_address.sin_port = htons(_server_port);
 	return SUCCESS;
 }
-
-int		Server::getSocket() const { return _server_socket; }
 
 void	Server::AddClientsSockets(void)
 {
@@ -162,14 +162,22 @@ void	Server::HandleClients(void)
 
 void	Server::AcceptNewClient(void)
 {
-	int		newSocket;
-	Client	*newClient;
+	int			newSocket;
+	Client		*newClient;
+	sockaddr	client_info;
+	socklen_t	client_info_size = sizeof(client_info);
+	sockaddr_in	*client_info_in;
 
-	newSocket = accept(_server_socket, NULL, NULL);	
+	newSocket = accept(_server_socket, &client_info, &client_info_size);
 	if (newSocket == -1 && errno != EAGAIN)
 		Error("can't accept incoming connetion");
+	client_info_in = reinterpret_cast<sockaddr_in*>(&client_info);
 	newClient = new Client(_fd_controller);
 	newClient->setSocket(newSocket);
+	newClient->setClientPort(ntohs(client_info_in->sin_port));
+	newClient->setClientIp(GetIpStr(client_info_in->sin_addr));
+	newClient->setServerPort(_server_port);
+	newClient->setServerIp(_server_ip);
 	_clients.push_back(newClient);
 }
 
@@ -246,4 +254,12 @@ int		Server::SendData(int socket, const char *buffer,\
 		return -1;
 	}
 	return bytes;
+}
+
+string	Server::GetIpStr(in_addr ip) const
+{
+	string	ip_str;
+
+	ip_str = inet_ntoa(ip);
+	return ip_str;
 }

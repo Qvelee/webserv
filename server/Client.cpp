@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/13 14:03:29 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/25 13:57:48 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/25 16:07:35 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,6 +32,26 @@ Client	&Client::operator=(Client const &) {return *this; }
 int		Client::getSocket(void) const { return _client_socket; }
 
 void	Client::setSocket(int socket_ID) { _client_socket = socket_ID; }
+
+void	Client::setClientPort(ushort port)
+{
+	std::stringstream	stream;
+
+	stream << port;
+	_client_port = stream.str();
+}
+
+void	Client::setClientIp(const string &ip) { _client_ip = ip; }
+
+void	Client::setServerPort(ushort port)
+{
+	std::stringstream	stream;
+
+	stream << port;
+	_server_port = stream.str();
+}
+
+void	Client::setServerIp(const string &ip) { _server_ip = ip; }
 
 const std::string	&Client::getResponse() const { return _response_string; }
 
@@ -91,6 +111,10 @@ void	Client::CreateResponse(const char *request, int requset_size,\
 
 bool	Client::InitCgi(void)
 {
+	_request.serv_config.cgi.insert(std::make_pair("SERVER_PORT", _server_port));
+	_request.serv_config.cgi.insert(std::make_pair("SERVER_ADDR", _server_ip));
+	_request.serv_config.cgi.insert(std::make_pair("REMOTE_PORT", _client_port));
+	_request.serv_config.cgi.insert(std::make_pair("REMOTE_ADDR", _client_ip));
 	try { _cgi = new Cgi(_request, _request.serv_config.cgi_handler); }
 	catch(std::exception ex)
 	{
