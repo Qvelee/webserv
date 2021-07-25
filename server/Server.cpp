@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/06 12:56:02 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/25 12:20:43 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/25 12:22:12 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -90,28 +90,28 @@ void	Server::AddClientsSockets(void)
 		client_socket = client->getSocket();
 		switch (client->getState())
 		{
-			case Client::State::SLEEP:
+			case Client::SLEEP:
 				_fd_controller->AddFDToWatch(client_socket, IIOController::READ);
 				break;
-			case Client::State::RECVING:
+			case Client::RECVING:
 				_fd_controller->AddFDToWatch(client_socket, IIOController::READ);
 				break;
-			case Client::State::SENDING:
+			case Client::SENDING:
 				_fd_controller->AddFDToWatch(client_socket, IIOController::WRITE);
 				break;
-			case Client::State::FINISHEDRECV:
+			case Client::FINISHEDRECV:
 				_fd_controller->AddFDToWatch(client_socket, IIOController::WRITE);
-				client->setState(Client::State::SENDING);
+				client->setState(Client::SENDING);
 				break;
-			case Client::State::FINISHEDSEND:
+			case Client::FINISHEDSEND:
 				_fd_controller->AddFDToWatch(client_socket, IIOController::READ);
-				client->setState(Client::State::SLEEP);
+				client->setState(Client::SLEEP);
 				break;
-			case Client::State::CGIPROCESSING:
+			case Client::CGIPROCESSING:
 				client->CgiAddFd();
 				_fd_controller->AddFDToWatch(client_socket, IIOController::WRITE);
 				break;
-			case Client::State::CGICHUNKED:
+			case Client::CGICHUNKED:
 				client->CgiAddFd();
 				_fd_controller->AddFDToWatch(client_socket, IIOController::WRITE);
 				break;
@@ -136,20 +136,20 @@ void	Server::HandleClients(void)
 		
 		switch (client->getState())
 		{
-			case Client::State::SLEEP:
+			case Client::SLEEP:
 				status = TryRecvRequest(*client);
 				break;
-			case Client::State::RECVING:
+			case Client::RECVING:
 				status = TryRecvRequest(*client);
 				break;
-			case Client::State::SENDING:
+			case Client::SENDING:
 				status = TrySendResponse(*client);
 				break;
-			case Client::State::CGIPROCESSING:
+			case Client::CGIPROCESSING:
 				if (client->CgiProcess() == SUCCESS)
 					status = TrySendResponse(*client);
 				break;
-			case Client::State::CGICHUNKED:
+			case Client::CGICHUNKED:
 				status = TrySendResponse(*client);
 				break;
 			default:
@@ -213,10 +213,10 @@ bool	Server::TrySendResponse(Client &client)
 		bytes += client.getAlreadySendBytes();
 		if (bytes == client.getResponse().size())
 		{
-			if (client.getState() != Client::State::CGICHUNKED)
-				client.setState(Client::State::FINISHEDSEND);
+			if (client.getState() != Client::CGICHUNKED)
+				client.setState(Client::FINISHEDSEND);
 			else
-				client.setState(Client::State::CGIPROCESSING);
+				client.setState(Client::CGIPROCESSING);
 			bytes = 0;
 		}
 		client.setAlreadySendBytes(bytes);
