@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/06 12:56:02 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/25 12:15:25 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/25 12:20:43 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -136,7 +136,6 @@ void	Server::HandleClients(void)
 		
 		switch (client->getState())
 		{
-<<<<<<< HEAD
 			case Client::State::SLEEP:
 				status = TryRecvRequest(*client);
 				break;
@@ -152,16 +151,6 @@ void	Server::HandleClients(void)
 				break;
 			case Client::State::CGICHUNKED:
 				status = TrySendResponse(*client);
-=======
-			case Client::SLEEP:
-				status = TryRecvRequest(*client, read_fds);
-				break;
-			case Client::RECVING:
-				status = TryRecvRequest(*client, read_fds);
-				break;
-			case Client::SENDING:
-				status = TrySendResponse(*client, write_fds);
->>>>>>> add_test_for_static_file
 				break;
 			default:
 				break;
@@ -200,16 +189,8 @@ bool	Server::TryRecvRequest(Client &client)
 			delete[] request;
 			return FAILURE;
 		}
-<<<<<<< HEAD
 		client.CreateResponse(request, request_size, _config);
 		delete[] request;
-=======
-		if (client.CreateResponse(request, request_size, _config) == SUCCESS)
-			client.setState(Client::FINISHEDRECV);
-		else
-			client.setState(Client::RECVING);
-		delete request;
->>>>>>> add_test_for_static_file
 	}
 	return SUCCESS;
 }
@@ -232,14 +213,10 @@ bool	Server::TrySendResponse(Client &client)
 		bytes += client.getAlreadySendBytes();
 		if (bytes == client.getResponse().size())
 		{
-<<<<<<< HEAD
 			if (client.getState() != Client::State::CGICHUNKED)
 				client.setState(Client::State::FINISHEDSEND);
 			else
 				client.setState(Client::State::CGIPROCESSING);
-=======
-			client.setState(Client::FINISHEDSEND);
->>>>>>> add_test_for_static_file
 			bytes = 0;
 		}
 		client.setAlreadySendBytes(bytes);
