@@ -45,7 +45,7 @@ typedef struct sServerInformation{
 	string				route_for_uploaded_files;//where
 	bool				is_cgi;
 	map<string, string> cgi;
-	map<string, string> cgi_handler;
+	string				cgi_handler;
 }tServerInformation;
 
 typedef struct sLocation{

@@ -572,7 +572,7 @@ namespace config{
 					size_t n = url.path.find("."+itCgiHandler->first);
 					char buf[256];
 					int i = 0;
-					while (i!= 256)
+					while (i != 256)
 					{
 						buf[i] = 0;
 						i++;
@@ -581,6 +581,7 @@ namespace config{
 					if ( n != std::string::npos)
 					{
 						serverInformation.is_cgi = true;
+						serverInformation.cgi_handler = itCgiHandler->second;
 						serverInformation.cgi["SCRIPT_NAME"] = url.path.substr(0, n + key.length());
 						serverInformation.cgi["SCRIPT_FILENAME"] = buf + url.path.substr(0, n + key.length());//
 						serverInformation.cgi["QUERY_STRING"] = url.raw_query;
@@ -589,7 +590,7 @@ namespace config{
 						//serverInformation.cgi["REQUEST_METHOD"] = ;
 						//serverInformation.cgi["CONTENT_TYPE"] =;
 						//serverInformation.cgi["CONTENT_LENGTH"] =;
-						}
+					}
 
 					itCgiHandler++;
 				}
