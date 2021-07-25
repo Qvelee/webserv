@@ -6,11 +6,16 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/07/21 12:35:15 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/24 22:30:32 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/25 12:56:20 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Cgi.hpp"
+
+// TODO timeout скрипта
+// TODO redirect?
+// TODO add error pages
+// TODO send file in args
 
 Cgi::Cgi(const http::Request &request) :\
 	_fd_stdin(-1), _fd_stdout(-1), _script_arguments(NULL),\
@@ -26,6 +31,10 @@ Cgi::Cgi(const http::Request &request) :\
 	_chunked_headers_send = false;
 
 	if (FindVariable("SCRIPT_NAME", request.serv_config.cgi) == FAILURE)
+		throw "execept"; // TODO add exception
+	if (FindVariable("SCRIPT_FILENAME", request.serv_config.cgi) == FAILURE)
+		throw "execept"; // TODO add exception
+	if (FindVariable("PATH_INFO", request.serv_config.cgi) == FAILURE)
 		throw "execept"; // TODO add exception
 	if (FindVariable("PATH_TRANSLATED", request.serv_config.cgi) == FAILURE)
 		throw "execept"; // TODO add exception
@@ -137,16 +146,15 @@ bool	Cgi::ExecCgi(void)
 			// here all open fd will duplicate (because of fork)
 			// pipes fd too => need to close them. for by 3 to 1024
 			// is stupid but simple way.
-			// main reason: pipes will have 2 exits and 2 entrance =>
-			// 	if 1 entrance will get EOF, it will not appear on exit.
+			// main reason: pipes will have 2 exits and 2 entrances =>
+			// 	if 1 entrance will get EOF, it will not appear on exit
 			// 	because of 2 open entrances;
-			// 2 reason: close duplicated sockets;
-			// 3 reason: if we have other cgi processing on server
+			// 2 reason: if we have other cgi processing on server
 			// 	all pipes from it will diplicate too. as result
 			// 	all cgi processes will freeze;
 			for (int i = 3; i < 1024; i++)
 				close(i);
-			execve(_cgi_script.c_str(), _script_arguments, _cgi_variables); // TODO send file in args
+			execve(_cgi_script.c_str(), _script_arguments, _cgi_variables);
 			exit(errno);
 		default:
 			// because cgi process use _fd_cgi_input[0] to read data
@@ -190,9 +198,6 @@ bool	Cgi::AddCgiFdToWatch(IIOController *fd_controller) const
 		fd_controller->AddFDToWatch(_fd_cgi_output[0], IIOController::IOMode::READ);
 	return SUCCESS;
 }
-
-// TODO timeout скрипта
-// TODO redirect?
 
 Cgi::Status	Cgi::ContinueIO(IIOController *fd_controller, http::Response &response)
 {

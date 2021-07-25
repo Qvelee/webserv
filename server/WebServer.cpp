@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/07/16 14:00:27 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/24 15:58:10 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/25 12:35:33 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,7 +39,10 @@ bool		WebServer::Setup(const config::WebserverConf &config)
 			config.getServerMap().at((*it).first);
 		if (server->Setup((*it).first, (*it).second, server_conf, \
 			&_fd_controller) == FAILURE)
+		{
+			delete server;
 			return FAILURE;
+		}
 		_servers.push_back(server);
 	}
 	return SUCCESS;
