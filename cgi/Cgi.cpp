@@ -6,13 +6,11 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/07/21 12:35:15 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/26 10:42:56 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/26 10:47:03 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Cgi.hpp"
-
-// TODO add 404 error script
 
 Cgi::Cgi(const http::Request &request, const string &cgi_handler) :\
 	_already_send_bytes(0), _fd_stdin(-1), _fd_stdout(-1), \
