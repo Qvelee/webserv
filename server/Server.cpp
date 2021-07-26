@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/06 12:56:02 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/26 11:57:58 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/26 12:21:21 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -222,7 +222,7 @@ bool	Server::TrySendResponse(Client &client)
 			delete &client;
 			return FAILURE;
 		}
-	bytes += client.getAlreadySendBytes();
+		bytes += client.getAlreadySendBytes();
 		if (static_cast<size_t>(bytes) == client.getResponse().size())
 		{
 			if (client.getState() != Client::CGICHUNKED)
