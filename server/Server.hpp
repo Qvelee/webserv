@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/06 12:56:25 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/25 16:19:51 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/26 09:37:50 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,7 +20,6 @@
 # include <string>
 # include <cstring>
 # include <vector>
-
 # include <sys/socket.h>
 # include <sys/select.h>
 # include <netinet/in.h>
@@ -28,7 +27,6 @@
 # include <netdb.h>
 # include <unistd.h>
 # include <errno.h>
-# include <fcntl.h>
 
 // -- server settings --
 # define MAX_CONNECTIONS 5

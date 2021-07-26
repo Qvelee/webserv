@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/07/21 12:35:15 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/25 23:38:32 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/26 10:42:56 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -115,19 +115,25 @@ void	Cgi::GetArguments(const string &script_filename)
 	_cgi_arguments[2] = NULL;
 }
 
-bool	Cgi::Start(void)
+bool	Cgi::Start(http::Response &response_if_error)
 {
 	if (CopyStdIO() == FAILURE)
-		return FAILURE;
+		return CreateErrorResponse(response_if_error);
 	if (CreatePipes() == FAILURE)
-		return FAILURE;
+		return CreateErrorResponse(response_if_error);
 	if (dup2(_fd_cgi_input[0], STDIN_FILENO) == -1)
+	{
+		CreateErrorResponse(response_if_error);
 		return Error("can't replace stdin");
+	}
 	if (dup2(_fd_cgi_output[1], STDOUT_FILENO) == -1)
+	{
+		CreateErrorResponse(response_if_error);
 		return Error("can't replace stdout");
+	}
 	if (ExecCgi())
-		return FAILURE;
-	if (CheckCgiProcessCrashed())
+		return CreateErrorResponse(response_if_error);
+	if (CheckCgiProcessCrashed(response_if_error))
 		return FAILURE;
 	_state = WRITING;
 	return SUCCESS;
@@ -170,7 +176,7 @@ bool	Cgi::ExecCgi(void)
 			for (int i = 3; i < 1024; i++)
 				close(i);
 			execve(_cgi_handler.c_str(), _cgi_arguments, _cgi_variables);
-			Error("execve failed"); // TODO change message
+			Error("failed to execute {-}", _cgi_handler, true);
 			exit(errno);
 		default:
 			// because cgi process use _fd_cgi_input[0] to read data
@@ -219,11 +225,8 @@ Cgi::Status	Cgi::ContinueIO(IIOController *fd_controller, http::Response &respon
 {
 	bool	status = FAILURE;
 
-	if (CheckCgiProcessCrashed() == FAILURE)
-	{
-		CreateErrorResponse(response);
+	if (CheckCgiProcessCrashed(response) == FAILURE)
 		return READY;
-	}
 	switch (_state)
 	{
 		case WRITING:
@@ -452,17 +455,22 @@ bool	Cgi::AddHeader(const string &headers, string &add_to,\
 	return FAILURE;
 }
 
-bool	Cgi::CheckCgiProcessCrashed(void) const
+bool	Cgi::CheckCgiProcessCrashed(http::Response &response_if_error) const
 {
 	int		status;
 	int		return_value;
 
 	return_value = waitpid(_cgi_process, &status, WNOHANG);
-	if (return_value != 0)
+	if (return_value > 0)
 	{
+		if (WEXITSTATUS(status) == 0)
+			return SUCCESS;
 		errno = WEXITSTATUS(status);
 		Error("can't launch cgi process {-}", _cgi_handler, true);
-		return FAILURE;
+		if (WEXITSTATUS(status) == 2)
+			return CreateErrorResponse(response_if_error, true);
+		else
+			return CreateErrorResponse(response_if_error);
 	}
 	return SUCCESS;
 }
@@ -488,12 +496,10 @@ int		Cgi::TryWaitCgiProcess(bool force_terminate)
 		if (WIFSIGNALED(status))
 			return_value = WTERMSIG(status);
 	}
-	if (return_value < 0)
-		Error("can't finish cgi process with pid {-}", _cgi_process, true);
 	return return_value;	
 }
 
-void	Cgi::CreateErrorResponse(http::Response &response,
+bool	Cgi::CreateErrorResponse(http::Response &response,
 	bool error_not_found) const
 {
 	if (error_not_found)
@@ -501,6 +507,7 @@ void	Cgi::CreateErrorResponse(http::Response &response,
 	else
 		http::error500(*_request, response);
 	http::add_length(response, false);
+	return FAILURE;
 }
 
 Cgi::CgiVariableMissing::CgiVariableMissing(void) { }

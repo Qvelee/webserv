@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/07/21 12:35:21 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/25 23:29:33 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/26 10:36:24 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,7 +20,7 @@
 # include <cerrno>
 # include <string.h>
 # include <unistd.h>
-# include <stdlib.h>
+# include <cstdlib>
 # include <map>
 # include <fcntl.h>
 # include <sys/types.h>
@@ -44,7 +44,7 @@ class Cgi
 			CHUNKED
 		};
 
-		bool	Start(void);
+		bool	Start(http::Response &response_if_error);
 		bool	AddCgiFdToWatch(IIOController *fd_controller) const;
 		Status	ContinueIO(IIOController *fd_controller, http::Response &response);
 	private:
@@ -89,9 +89,9 @@ class Cgi
 		bool	ParseHeaders(const string &headers);
 		bool	AddHeader(const string &headers, string &add_to,\
 			const string &header_name);
-		bool	CheckCgiProcessCrashed(void) const;
+		bool	CheckCgiProcessCrashed(http::Response &response_if_error) const;
 		int		TryWaitCgiProcess(bool force_terminate = false);
-		void	CreateErrorResponse(http::Response &response, \
+		bool	CreateErrorResponse(http::Response &response, \
 			bool error_not_found = false) const;
 
 		State	_state;

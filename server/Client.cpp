@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/13 14:03:29 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/25 22:57:56 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/26 10:37:41 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -119,13 +119,12 @@ bool	Client::InitCgi(void)
 	try { _cgi = new Cgi(_request, _request.serv_config.cgi_handler); }
 	catch(std::exception ex)
 	{
-		std::cerr << ex.what() << std::endl;
+		Error(string(ex.what()));
 		http::error500(_request, _response);
 		return FAILURE;
 	}
-	if (_cgi->Start() == FAILURE)
+	if (_cgi->Start(_response) == FAILURE)
 	{
-		http::error500(_request, _response);
 		delete _cgi;
 		_cgi = NULL;
 		return FAILURE;
