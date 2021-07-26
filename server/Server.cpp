@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/06 12:56:02 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/26 11:00:00 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/26 11:57:58 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -121,7 +121,7 @@ void	Server::AddClientsSockets(void)
 	}
 }
 
-void	Server::HandleClients(void)
+void	Server::HandleClients(size_t clients_timeout)
 {
 	Client		*client;
 	bool		status;
@@ -137,9 +137,12 @@ void	Server::HandleClients(void)
 		switch (client->getState())
 		{
 			case Client::SLEEP:
+				if ((status = CheckTimeout(client, clients_timeout)) == FAILURE)
+					break;
 				status = TryRecvRequest(*client);
 				break;
 			case Client::RECVING:
+				client->setLastRequestTime(GetTimeSeconds());
 				status = TryRecvRequest(*client);
 				break;
 			case Client::SENDING:
@@ -178,6 +181,7 @@ void	Server::AcceptNewClient(void)
 	newClient->setClientIp(GetIpStr(client_info_in->sin_addr));
 	newClient->setServerPort(_server_port);
 	newClient->setServerIp(_server_ip);
+	newClient->setLastRequestTime(GetTimeSeconds());
 	_clients.push_back(newClient);
 }
 
@@ -262,4 +266,26 @@ string	Server::GetIpStr(in_addr ip) const
 
 	ip_str = inet_ntoa(ip);
 	return ip_str;
+}
+
+size_t	Server::GetTimeSeconds(void) const
+{
+	timeval	time;
+
+	gettimeofday(&time, NULL);
+	return (time.tv_sec + time.tv_usec / 1000 / 1000);
+}
+
+bool	Server::CheckTimeout(Client *client, size_t clients_timeout)
+{
+	if (GetTimeSeconds() - client->getLastRequestTime() > clients_timeout)
+	{
+		std::cerr << "Client with port " << client->getClientPort() <<\
+			" and IP " << client->getClientIp() << " was removed from server " <<\
+			"because of timeout" << std::endl;
+		close(client->getSocket());
+		delete client;
+		return FAILURE;
+	}
+	return SUCCESS;
 }

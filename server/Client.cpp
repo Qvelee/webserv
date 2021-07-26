@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/13 14:03:29 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/26 10:37:41 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/26 11:36:02 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,6 +33,8 @@ int		Client::getSocket(void) const { return _client_socket; }
 
 void	Client::setSocket(int socket_ID) { _client_socket = socket_ID; }
 
+const string	&Client::getClientPort(void) { return _client_port; }
+
 void	Client::setClientPort(ushort port)
 {
 	std::stringstream	stream;
@@ -40,6 +42,8 @@ void	Client::setClientPort(ushort port)
 	stream << port;
 	_client_port = stream.str();
 }
+
+const string	&Client::getClientIp(void) { return _client_ip; }
 
 void	Client::setClientIp(const string &ip) { _client_ip = ip; }
 
@@ -62,6 +66,10 @@ void	Client::setState(State state) { _connection_state = state; }
 int		Client::getAlreadySendBytes() const { return _bytes_already_send; }
 
 void	Client::setAlreadySendBytes(int bytes) { _bytes_already_send = bytes; }
+
+size_t	Client::getLastRequestTime(void) { return _last_request; }
+
+void	Client::setLastRequestTime(size_t time) { _last_request = time; }
 
 void	Client::CreateResponse(const char *request, int requset_size,\
 	const std::map<std::string, config::tServer> &config)

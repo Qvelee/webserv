@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/07/16 14:00:27 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/25 22:58:43 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/26 11:57:27 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,12 +50,14 @@ bool		WebServer::Setup(const config::WebserverConf &config)
 
 bool		WebServer::Connection(void)
 {
+	size_t	timeout_seconds = 180; // 3 minutes
+
 	InitFdSets();
-	if (_fd_controller.Wait() == FAILURE)
+	if (_fd_controller.Wait(timeout_seconds) == FAILURE)
 		return Error("select");
 	for (std::vector<Server*>::iterator it = _servers.begin();\
 		it < _servers.end(); it++)
-		(*it)->HandleClients();
+		(*it)->HandleClients(timeout_seconds);
 	return SUCCESS;
 }
 

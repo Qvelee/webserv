@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/06 12:56:25 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/26 09:37:50 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/26 11:41:31 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,6 +22,7 @@
 # include <vector>
 # include <sys/socket.h>
 # include <sys/select.h>
+# include <sys/time.h>
 # include <netinet/in.h>
 # include <arpa/inet.h>
 # include <netdb.h>
@@ -51,7 +52,7 @@ class Server
 			const std::map<string, config::tServer> &config,\
 			IIOController *fd_controller);
 		void	AddClientsSockets(void);
-		void	HandleClients(void);
+		void	HandleClients(size_t clients_timeout);
 	private:
 		Server(const Server &);
 
@@ -65,6 +66,8 @@ class Server
 		int		SendData(int socket_ID, const char *buffer,\
 			int buffer_size, int start_pos) const;
 		string	GetIpStr(in_addr ip) const;
+		bool	CheckTimeout(Client *client, size_t clients_timeout);
+		size_t	GetTimeSeconds(void) const;
 		
 		std::map<string, config::tServer>	_config;
 

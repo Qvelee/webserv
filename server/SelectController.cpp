@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/07/21 19:37:40 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/22 21:28:59 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/26 11:43:28 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,9 +25,11 @@ SelectController::~SelectController() { };
 SelectController	&SelectController::operator=(const SelectController &)
 { return *this; }
 
-bool	SelectController::Wait(void)
+bool	SelectController::Wait(size_t timeout_seconds)
 {
-	if (select(_max_fd + 1, &_read_set, &_write_set, NULL, NULL) == -1)
+	_timeout.tv_sec = timeout_seconds;
+	_timeout.tv_usec = 0;
+	if (select(_max_fd + 1, &_read_set, &_write_set, NULL, &_timeout) == -1)
 		return FAILURE;
 	return SUCCESS;
 }

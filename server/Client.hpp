@@ -6,7 +6,7 @@
 /*   By: nelisabe <nelisabe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/13 13:58:58 by nelisabe          #+#    #+#             */
-/*   Updated: 2021/07/25 21:44:16 by nelisabe         ###   ########.fr       */
+/*   Updated: 2021/07/26 11:35:18 by nelisabe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,7 +43,9 @@ class Client
 
 		int				getSocket(void) const;
 		void			setSocket(int socket_ID);
+		const string	&getClientPort(void);
 		void			setClientPort(ushort port);
+		const string	&getClientIp(void);
 		void			setClientIp(const string &ip);
 		void			setServerPort(ushort port);
 		void			setServerIp(const string &ip);
@@ -52,6 +54,8 @@ class Client
 		void			setState(State state);
 		int				getAlreadySendBytes() const;
 		void			setAlreadySendBytes(int bytes);
+		size_t			getLastRequestTime(void);
+		void			setLastRequestTime(size_t time);
 		void			CgiAddFd(void) const;
 		bool			CgiProcess(void);
 	private:
@@ -81,6 +85,7 @@ class Client
 		int				_bytes_already_send;
 		Cgi				*_cgi;
 		IIOController	*_fd_controller;
+		size_t			_last_request;
 
 		RecvStatus		_recv_status;
 		State			_connection_state;
