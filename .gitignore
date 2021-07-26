@@ -1,2 +1,13 @@
+OLD_CMakeLists.txt
+/cmake-build-debug
+OLD_CMakeLists.txt
+text
+/.idea
 *.[oa]
-*test*
+a.out
+.vscode/
+subject*
+client
+webserv
+temp/
+
