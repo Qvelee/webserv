@@ -2,12 +2,17 @@
 
 Implementation of an HTTP-server in accordance with the rfc 7230-31 standard, supports cgi requests
 
-## Usage
+### Build
 
-``make`` create ``webserv``  
+To build project just run `make` in project's root directory, that will create `webserv` executable.
+
+To remove all files created by program enter make fclean, or make clean to remove all except executable.
+
+### Usage
+
 ``./webserv [path_to_config_file]`` starts the server. If the path is not specified, ``./webserver.conf`` is used
 
-## Configuration file
+### Configuration file
 Required settings:  
 ```
 server {
