@@ -6,7 +6,7 @@ Implementation of an HTTP-server in accordance with the rfc 7230-31 standard, su
 
 To build project just run `make` in project's root directory, that will create `webserv` executable.
 
-To remove all files created by program enter make fclean, or make clean to remove all except executable.
+To remove all files created by program run `make fclean`, or `make clean` to remove all except executable.
 
 ### Usage
 
