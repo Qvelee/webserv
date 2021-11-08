@@ -24,8 +24,8 @@ Server::~Server()
 	if (_server_socket != -1)
 		close(_server_socket);
 	if (!_clients.empty())
-		for (std::vector<Client*>::iterator it = _clients.begin();\
-			it < _clients.end(); it++)
+		for (std::list<Client*>::iterator it = _clients.begin();\
+			it != _clients.end(); ++it)
 			delete *it;
 }
 
@@ -83,8 +83,8 @@ void	Server::AddClientsSockets(void)
 	Client	*client;
 	int		client_socket;
 
-	for (std::vector<Client*>::iterator it = _clients.begin();\
-		it < _clients.end(); it++)
+	for (std::list<Client*>::iterator it = _clients.begin();\
+		it != _clients.end(); ++it)
 	{
 		client = *it;
 		client_socket = client->getSocket();
@@ -129,8 +129,8 @@ void	Server::HandleClients(size_t clients_timeout)
 	status = SUCCESS;
 	if (_fd_controller->CheckIfFDReady(_server_socket, IIOController::READ))
 		AcceptNewClient();
-	for (std::vector<Client*>::iterator it = _clients.begin();\
-		it < _clients.end(); it++)
+	for (std::list<Client*>::iterator it = _clients.begin();\
+		it != _clients.end(); ++it)
 	{
 		client = *it;
 		

@@ -76,7 +76,7 @@ class Server
 		int						_server_socket;
 		string					_server_ip;
 		t_sockaddr_in			_socket_address; // struct with address info for socket
-		std::vector<Client*>	_clients;
+		std::list<Client*>		_clients;
 		IIOController			*_fd_controller;
 
 		const int				_IO_BUFFER_SIZE;
